@@ -10,7 +10,7 @@ describe("middleware-routes", () => {
     assert.equal(isPublicMarketingPath("/"), true);
     assert.equal(isPublicMarketingPath("/guides/best-anime-to-watch-with-friends"), true);
     assert.equal(isPublicMarketingPath("/watch/demon-slayer-with-friends"), true);
-    assert.equal(isPublicMarketingPath("/compare/anidachi-vs-teleparty"), true);
+    assert.equal(isPublicMarketingPath("/compare/anidachi-vs-kosmi"), true);
     assert.equal(isPublicMarketingPath("/glossary/shonen-anime"), true);
     assert.equal(isPublicMarketingPath("/watch-anime-together"), true);
     assert.equal(isPublicMarketingPath("/privacy"), true);

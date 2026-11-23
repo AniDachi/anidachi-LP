@@ -141,10 +141,10 @@ export default function PricingPage() {
 						</Link>
 						, or{" "}
 						<Link
-							href="/guides/best-watch-party-apps-for-anime"
+							href="/compare"
 							className="font-medium text-ani-text underline decoration-ani-line underline-offset-2 hover:text-ani-primary"
 						>
-							best watch party apps for anime
+							best watch party apps
 						</Link>
 						.
 					</p>

@@ -271,8 +271,8 @@ export default function FirstAnimeWatchPartyChecklistPage() {
             </Link>
           </li>
           <li>
-            <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-              AniDachi vs Teleparty comparison
+            <Link href="/guides/best-teleparty-alternatives-for-anime" className="hover:underline">
+              Best Teleparty alternatives
             </Link>
           </li>
         </ul>

@@ -256,10 +256,10 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
         </li>
         <li>
           <Link
-            href="/guides/watch2gether-alternatives-for-youtube"
+            href="/guides/watch2gether-alternatives-for-anime"
             className="hover:underline"
           >
-            Watch2Gether alternatives for YouTube
+            Watch2Gether alternatives
           </Link>
         </li>
         <li>

@@ -160,7 +160,7 @@ export default function YoutubeWatchPartyChromeExtensionPage() {
           </Link>
           . Teleparty compare:{" "}
           <Link
-            href="/guides/does-teleparty-work-with-youtube"
+            href="/guides/teleparty-not-working-youtube"
           >
             Does Teleparty work with YouTube?
           </Link>

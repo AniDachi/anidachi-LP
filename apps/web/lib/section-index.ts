@@ -11,20 +11,9 @@ export type SectionEntry = { href: string; label: string; description?: string }
 export type SectionGroup = { id: string; heading: string; entries: SectionEntry[] };
 
 export const COMPARE_ENTRIES: SectionEntry[] = [
-  { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty", description: "A Teleparty alternative for Crunchyroll, YouTube and Netflix nights." },
-  { href: "/compare/anidachi-vs-rave", label: "AniDachi vs Rave", description: "Crunchyroll and YouTube rooms against Rave's multi-platform sync." },
-  { href: "/compare/anidachi-vs-watch2gether", label: "AniDachi vs Watch2Gether", description: "YouTube watch parties and Crunchyroll anime groups compared." },
-  { href: "/compare/anidachi-vs-kosmi", label: "AniDachi vs Kosmi", description: "Each viewer's own player vs Kosmi's free browser rooms." },
-  { href: "/compare/anidachi-vs-syncup", label: "AniDachi vs SyncUp", description: "Two extensions for Crunchyroll nights: calls, room sizes and hosting." },
-  { href: "/compare/anidachi-vs-scener", label: "AniDachi vs Scener", description: "A Scener alternative for anime watch parties." },
-  { href: "/compare/anidachi-vs-hyperbeam", label: "AniDachi vs Hyperbeam", description: "Per-viewer Crunchyroll sync vs a shared cloud browser." },
-  { href: "/compare/anidachi-vs-metastream", label: "AniDachi vs Metastream", description: "A Metastream alternative for Crunchyroll anime nights." },
-  { href: "/compare/anidachi-vs-syncplay", label: "AniDachi vs Syncplay", description: "Browser-based Crunchyroll rooms vs Syncplay's desktop sync for local files." },
-  { href: "/compare/anidachi-vs-kast", label: "AniDachi vs Kast", description: "Per-viewer playback vs Kast for anime on Crunchyroll." },
-  { href: "/compare/anidachi-vs-roll-together", label: "AniDachi vs Roll Together", description: "Crunchyroll watch party extensions compared." },
-  { href: "/compare/anidachi-vs-anime-watch-parties-extension", label: "AniDachi vs an anime watch parties extension", description: "Crunchyroll-first rooms, chat and personal history." },
-  { href: "/compare/anidachi-vs-twoseven", label: "AniDachi vs TwoSeven", description: "For long-distance couples on Crunchyroll and YouTube." },
-  { href: "/compare/anidachi-vs-discord-screen-share", label: "AniDachi vs Discord screen share", description: "Why Crunchyroll black-screens on Discord, and the synced alternative." },
+  { href: "/compare/anidachi-vs-kosmi", label: "Kosmi alternatives", description: "Sites like Kosmi for Netflix, Crunchyroll and phones, with free calls." },
+  { href: "/compare/anidachi-vs-hyperbeam", label: "Hyperbeam alternatives", description: "Shared-browser and synced-player alternatives to Hyperbeam." },
+  { href: "/compare/anidachi-vs-metastream", label: "Metastream alternatives", description: "Apps like Metastream for watching web videos and streaming together." },
 ];
 
 export const GLOSSARY_ENTRIES: SectionEntry[] = [

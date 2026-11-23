@@ -31,6 +31,39 @@ export const DISCORD_HUB_MERGE_SOURCES = [
 ] as const;
 
 /**
+ * Owner-approved 2026-11-23 (ANI-44 steps 4-5, ANI-79/ANI-80): competitor pages folded into
+ * one page per searched competitor, the /compare pillar or the Discord hub. Keys are the
+ * destinations. "anidachi vs <competitor>" gets no searches for any competitor.
+ */
+export const COMPETITOR_PAGE_MERGES: Record<string, readonly string[]> = {
+  "/guides/watch2gether-alternatives-for-anime": [
+    "/guides/watch2gether-alternatives-for-youtube",
+    "/compare/anidachi-vs-watch2gether",
+  ],
+  "/guides/rave-alternatives-for-youtube": [
+    "/guides/rave-alternatives-for-anime",
+    "/compare/anidachi-vs-rave",
+    "/guides/does-rave-work-with-youtube",
+  ],
+  "/guides/kast-alternatives-for-youtube": [
+    "/guides/kast-alternatives-for-anime",
+    "/compare/anidachi-vs-kast",
+  ],
+  "/compare": [
+    "/compare/anidachi-vs-scener",
+    "/compare/anidachi-vs-twoseven",
+    "/compare/anidachi-vs-roll-together",
+    "/compare/anidachi-vs-syncup",
+    "/compare/anidachi-vs-anime-watch-parties-extension",
+    "/compare/anidachi-vs-syncplay",
+  ],
+  "/discord-watch-party": [
+    "/compare/anidachi-vs-discord-screen-share",
+    "/guides/switch-from-discord-screen-share",
+  ],
+};
+
+/**
  * Temporary recrawl sitemap (owner-approved 2026-11-20, ANI-38). Lists old URLs that
  * now redirect, so Google refetches them and moves their signals to the new page.
  * On 20 Nov several were still indexed under their own address, last crawled before
@@ -43,6 +76,19 @@ export const RECRAWL_REDIRECT_PATHS: readonly string[] = [
   // Folded into the Discord hub on 2026-11-22. Indexed (last crawled 26 Jul 2026), so a
   // recrawl leads Google to the hub, which it had never fetched.
   "/guides/youtube-watch-party-with-discord",
+  // Folded into the Teleparty alternatives page on 2026-11-23 (ANI-76). Both indexed.
+  "/guides/best-teleparty-alternatives-for-youtube",
+  "/compare/anidachi-vs-teleparty",
+  // Teleparty question pages merged on 2026-11-23 (ANI-77). Both indexed.
+  "/guides/is-teleparty-safe",
+  "/guides/does-teleparty-work-with-youtube",
+  // Folded into the /compare pillar on 2026-11-23 (ANI-78). Indexed.
+  "/guides/best-watch-party-apps-for-anime",
+  // Competitor pages folded on 2026-11-23 (ANI-79/ANI-80). All indexed except the
+  // Watch2Gether YouTube twin, which Google never knew.
+  ...Object.values(COMPETITOR_PAGE_MERGES)
+    .flat()
+    .filter((path) => path !== "/guides/watch2gether-alternatives-for-youtube"),
 ];
 
 export const RECRAWL_SITEMAP_PATH = "/sitemap-redirects.xml";

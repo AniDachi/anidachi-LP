@@ -170,10 +170,10 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
         <p className="text-foreground/80 leading-relaxed mb-8">
           For the full screen-share vs sync breakdown, read{" "}
           <Link
-            href="/compare/anidachi-vs-discord-screen-share"
+            href="/discord-watch-party"
             className="text-brand-orange hover:underline"
           >
-            AniDachi vs Discord screen share
+            Discord watch party
           </Link>
           .
         </p>
@@ -229,7 +229,7 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
           <li>
             For migration from Go Live, follow{" "}
             <Link
-              href="/guides/switch-from-discord-screen-share"
+              href="/discord-watch-party"
               className="text-brand-orange hover:underline"
             >
               switch from Discord screen share
@@ -270,10 +270,10 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
           </li>
           <li>
             <Link
-              href="/compare/anidachi-vs-discord-screen-share"
+              href="/discord-watch-party"
               className="hover:underline"
             >
-              AniDachi vs Discord screen share
+              Discord watch party
             </Link>
           </li>
           <li>

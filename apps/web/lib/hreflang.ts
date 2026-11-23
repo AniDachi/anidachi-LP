@@ -26,7 +26,7 @@ export const HREFLANG_PAIRS = [
   { en: "/guides/how-to-screen-share-netflix-on-discord", de: "/de/netflix-auf-discord-streamen" },
   { en: "/watch-youtube-together", de: "/de/youtube-watchparty" },
   { en: "/watch-crunchyroll-together", de: "/de/crunchyroll-watchparty" },
-  { en: "/compare/anidachi-vs-watch2gether", de: "/de/watch2gether-alternative" },
+  { en: "/guides/watch2gether-alternatives-for-anime", de: "/de/watch2gether-alternative" },
   { en: "/tools/crunchyroll-schedule", de: "/de/tools/crunchyroll-kalender" },
   { en: "/pricing", de: "/de/preise" },
   { en: "/extension", de: "/de/erweiterung" },

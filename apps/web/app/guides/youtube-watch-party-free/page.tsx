@@ -136,7 +136,7 @@ export default function YoutubeWatchPartyFreePage() {
         <li>
           <strong>Teleparty:</strong> Free live YouTube sync — confirm support in{" "}
           <Link
-            href="/guides/does-teleparty-work-with-youtube"
+            href="/guides/teleparty-not-working-youtube"
             className="text-brand-orange hover:underline"
           >
             Does Teleparty work with YouTube?
