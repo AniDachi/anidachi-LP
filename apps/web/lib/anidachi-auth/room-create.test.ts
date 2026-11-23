@@ -196,3 +196,17 @@ test("room source validation failure keeps the existing stable response", async 
 		body: { error: "Invalid room source", code: "INVALID_ROOM_SOURCE" },
 	});
 });
+
+test("catalog creation requires a supported platform, an idempotency key and an empty playback source", async () => {
+  const base = { participantSessionId: "catalog-host", lobbyProvider: "disneyplus", clientRequestId: "fresh-room" };
+  const request = (body: Record<string, unknown>) => handleRoomCreateRequestBody({
+    readBody: async () => JSON.stringify(body), create: async input => input,
+  });
+  for (const lobbyProvider of ["netflix", "disneyplus"]) {
+    const input = { ...base, lobbyProvider };
+    assert.deepEqual(await request(input), { ok: true, value: input });
+  }
+  for (const invalid of [{lobbyProvider: "other"}, {sourceUrl: "https://example.com"}, {clientRequestId: ""}]) {
+    assert.equal((await request({...base, ...invalid})).ok, false);
+  }
+});

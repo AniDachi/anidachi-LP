@@ -1,3 +1,9 @@
+// Shared official brand artwork from the website asset bundle.
+const primeVideoLogo = new URL("../../web/public/platforms/primevideo-smile.svg", import.meta.url).href;
+const disneyPlusLogo = new URL("../../web/public/platforms/disneyplus.svg", import.meta.url).href;
+
+const hboMaxLogo = new URL("../../web/public/platforms/hbomax.png", import.meta.url).href;
+
 export function ProviderLogo({
 	label,
 	provider,
@@ -27,6 +33,12 @@ export function ProviderLogo({
 				</svg>
 			</span>
 		);
+	}
+	const brand = provider === "amazon" ? "primevideo" : provider;
+	if (brand === "primevideo" || brand === "disneyplus" || brand === "hbomax") {
+		return <span aria-hidden="true" className={`resource-provider-logo ${brand}`}>
+			<img src={{ disneyplus: disneyPlusLogo, hbomax: hboMaxLogo, primevideo: primeVideoLogo }[brand]} alt="" />
+		</span>;
 	}
 	if (provider === "youtube") {
 		return (

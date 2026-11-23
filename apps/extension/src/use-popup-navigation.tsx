@@ -1,6 +1,6 @@
 import { type ReactNode, type RefObject, useCallback, useLayoutEffect, useState } from "react";
 import type { PopupTab } from "./popup-app";
-import { readPopupView, writePopupNavigation } from "./popup-view-state";
+import { DEFAULT_POPUP_TAB, readPopupView, writePopupNavigation } from "./popup-view-state";
 
 export function PopupRetainedPanel({ active, tab, children }: { active: boolean; tab: PopupTab; children: ReactNode }) {
   const [visited, setVisited] = useState(active);
@@ -9,8 +9,8 @@ export function PopupRetainedPanel({ active, tab, children }: { active: boolean;
 }
 
 export function usePopupNavigation(owner: string | null, shell: RefObject<HTMLElement | null>, suspended = false) {
-  const [state, setState] = useState<{ owner: string | null; tab: PopupTab }>({ owner, tab: owner ? readPopupView(owner).tab : "resources" });
-  const tab = state.owner === owner ? state.tab : owner ? readPopupView(owner).tab : "resources";
+  const [state, setState] = useState<{ owner: string | null; tab: PopupTab }>(() => ({ owner, tab: owner ? readPopupView(owner).tab : DEFAULT_POPUP_TAB }));
+  const tab = state.owner === owner ? state.tab : owner ? readPopupView(owner).tab : DEFAULT_POPUP_TAB;
   if (state.owner !== owner) setState({ owner, tab });
   const select = useCallback((next: PopupTab) => {
     if (next === tab) return;

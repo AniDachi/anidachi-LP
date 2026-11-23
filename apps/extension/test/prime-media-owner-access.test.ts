@@ -1,0 +1,117 @@
+// @vitest-environment happy-dom
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
+import {PrimeMediaOwnerAccess} from "../src/prime-media-owner-access";
+const send = vi.fn();
+const prompts = vi.fn();
+const scope = {provider:"primevideo" as const, tabId:3,roomId:"room",participantSessionId:"me"};
+let owner: PrimeMediaOwnerAccess;
+beforeEach(() => {
+  send.mockReset();
+  vi.stubGlobal("chrome",{runtime:{sendMessage:send,onMessage:{addListener:vi.fn()}}});
+  prompts.mockReset();
+  owner = new PrimeMediaOwnerAccess(scope, prompts);
+});
+afterEach(() => {owner.close();vi.unstubAllGlobals();});
+describe("scoped Prime media access",() => {
+  it("redeems each tile ticket and grant just once and clears the frame immediately on revocation",() => {
+    const source = document.createElement("video");
+    const stream = new MediaStream();
+    source.srcObject = stream;
+    owner.update([{participantId:"p",local:false,element:source}]);
+    expect(owner.handle({action:"ticket",participantId:"elsewhere"})).toBeNull();
+    const ticket = owner.handle({action:"ticket",participantId:"p"})!;
+    const grant = owner.handle({action:"redeem",ticket})!;
+    expect(owner.handle({action:"redeem",ticket})).toBeNull();
+    const target = document.createElement("video");
+    expect(owner.bind(grant,target)).toBeTypeOf("function");
+    expect(owner.bind(grant,target)).toBeUndefined();
+    expect(target.srcObject).toBe(stream);
+    const unused = owner.handle({action:"ticket",participantId:"p"})!;
+    owner.update([]);
+    expect(target.srcObject).toBeNull();
+    expect(owner.handle({action:"redeem",ticket:unused})).toBeNull();
+    owner.detach();
+    owner.update([{participantId:"p",local:false,element:source}]);
+    expect(owner.handle({action:"ticket",participantId:"p"})).toBeNull();
+    owner.attach();
+    expect(owner.handle({action:"ticket",participantId:"p"})).toBeTypeOf("string");
+  });
+  it("never acquires a device after a pending permission is revoked",async () => {
+    let valid = true;
+    const getUserMedia = vi.fn();
+    const query = vi.fn(async () => ({state:"prompt"}));
+    vi.stubGlobal("navigator",{permissions:{query},mediaDevices:{getUserMedia}});
+    const capture = owner.capture("camera",{video:true},()=>valid,()=>valid);
+    await vi.waitFor(() => expect(prompts).toHaveBeenCalledWith([{device:"camera", ticket:expect.any(String)}]));
+    const [{ticket}] = prompts.mock.calls[0][0];
+    expect(owner.handle({action:"permission",ticket,documentId:"frame"})).toBe("camera");
+    valid = false;
+    owner.update([]);
+    expect(owner.handle({action:"settle",ticket,documentId:"frame",allowed:true})).toBeNull();
+    await expect(capture).rejects.toThrow();
+    expect(getUserMedia).not.toHaveBeenCalled();
+    expect(prompts).toHaveBeenLastCalledWith([]);
+    expect(send).not.toHaveBeenCalled();
+  });
+  it("cancels an unanswered prompt on detach and ignores late approval", async () => {
+    vi.stubGlobal("navigator",{permissions:{query:async()=>({state:"prompt"})},mediaDevices:{getUserMedia:vi.fn()}});
+    const capture = owner.capture("microphone",{audio:true},()=>true,()=>true);
+    const rejected = expect(capture).rejects.toThrow();
+    await vi.waitFor(() => expect(prompts).toHaveBeenCalled());
+    const [{ticket}] = prompts.mock.calls[0][0];
+    owner.detach();
+    await rejected;
+    expect(prompts).toHaveBeenLastCalledWith([]);
+    owner.attach();
+    expect(owner.handle({action:"permission",ticket,documentId:"frame"})).toBeNull();
+    expect(owner.handle({action:"settle",ticket,documentId:"frame",allowed:true})).toBeNull();
+  });
+  it("does not move a pending permission lookup into a replacement Prime document", async () => {
+    let finishQuery!: (value: {state: string}) => void;
+    const query = vi.fn(() => new Promise(resolve => {finishQuery = resolve;}));
+    vi.stubGlobal("navigator", {permissions: {query}, mediaDevices: {getUserMedia: vi.fn()}});
+    const capture = owner.capture("camera", {video:true}, () => true, () => true);
+    owner.detach();
+    owner.attach();
+    finishQuery({state:"prompt"});
+    await Promise.resolve();
+    expect(prompts).not.toHaveBeenCalled();
+    await expect(capture).rejects.toThrow();
+  });
+  it("retires a pending camera request when the user turns the camera off", async () => {
+    let enabled = true;
+    vi.stubGlobal("navigator",{permissions:{query:async()=>({state:"prompt"})},mediaDevices:{getUserMedia:vi.fn()}});
+    const capture = owner.capture("camera", {video:true}, () => enabled, () => true);
+    const rejected = expect(capture).rejects.toThrow();
+    await vi.waitFor(() => expect(prompts).toHaveBeenCalled());
+    enabled = false;
+    owner.update([]);
+    expect(prompts).toHaveBeenLastCalledWith([]);
+    await rejected;
+  });
+  it("accepts approval only from the requesting frame and starts the intended device once", async () => {
+    const getUserMedia = vi.fn(async () => new MediaStream());
+    vi.stubGlobal("navigator",{permissions:{query:async()=>({state:"prompt"})},mediaDevices:{getUserMedia}});
+    const capture = owner.capture("microphone",{audio:true},()=>true,()=>true);
+    await vi.waitFor(() => expect(prompts).toHaveBeenCalled());
+    const [{ticket}] = prompts.mock.calls[0][0];
+    expect(owner.handle({action:"permission",ticket,documentId:"frame"})).toBe("microphone");
+    expect(owner.handle({action:"permission",ticket,documentId:"other"})).toBeNull();
+    expect(owner.handle({action:"settle",ticket,documentId:"other",allowed:true})).toBeNull();
+    expect(getUserMedia).not.toHaveBeenCalled();
+    owner.handle({action:"settle",ticket,documentId:"frame",allowed:true});
+    await capture;
+    expect(getUserMedia).toHaveBeenCalledExactlyOnceWith({audio:true});
+    expect(prompts).toHaveBeenLastCalledWith([]);
+    expect(owner.handle({action:"settle",ticket,documentId:"frame",allowed:true})).toBeNull();
+  });
+  it("checks camera and microphone independently and never prompts for automatic restoration",async () => {
+    const getUserMedia = vi.fn(async () => ({}));
+    const query = vi.fn(async ({name}) => ({state:name === "camera" ? "granted" : "prompt"}));
+    vi.stubGlobal("navigator",{permissions:{query},mediaDevices:{getUserMedia}});
+    await owner.capture("camera",{video:true},()=>true,()=>false);
+    await expect(owner.capture("microphone",{audio:true},()=>true,()=>false)).rejects.toThrow();
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    expect(send).not.toHaveBeenCalled();
+  });
+});

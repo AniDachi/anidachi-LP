@@ -53,9 +53,9 @@ select is(list_watch_history_v3_provider_page('f1111111-1111-4111-8111-111111111
 select is(browse_watch_history_v3('f1111111-1111-4111-8111-111111111111','{"mode":"personal","limit":1}','titles')->>'totalTitleCount','0','legacy browse filters Netflix before counting');
 select is(browse_watch_history_v3('f1111111-1111-4111-8111-111111111111','{"mode":"personal","limit":1,"providerVersion":2}','titles')->>'totalTitleCount','2','v2 browse counts Netflix');
 select is(browse_watch_history_v3('f1111111-1111-4111-8111-111111111111','{"mode":"personal","limit":1,"provider":"netflix"}','titles')->>'totalTitleCount','2','explicit Netflix provider opts in without version');
-select throws_ok($$select browse_watch_history_v3('f1111111-1111-4111-8111-111111111111','{"mode":"personal","providerVersion":3}','titles')$$,'22023','watch_history_browse_invalid','SQL rejects unknown provider version');
+select throws_ok($$select browse_watch_history_v3('f1111111-1111-4111-8111-111111111111','{"mode":"personal","providerVersion":6}','titles')$$,'22023','watch_history_browse_invalid','SQL rejects unknown provider version');
 select throws_ok($$select browse_watch_history_v3('f1111111-1111-4111-8111-111111111111','{"mode":"personal","providerVersion":null}','titles')$$,'22023','watch_history_browse_invalid','SQL rejects null provider version');
-select throws_ok($$select list_watch_history_v3_provider_page('f1111111-1111-4111-8111-111111111111',1,1,3)$$,'22023','watch_history_invalid_page','SQL list rejects unknown provider version');
+select throws_ok($$select list_watch_history_v3_provider_page('f1111111-1111-4111-8111-111111111111',1,1,6)$$,'22023','watch_history_invalid_page','SQL list rejects unknown provider version');
 select throws_ok($$select validate_watch_identity_v3(pg_temp.n_event()||'{"artworkUrl":"https://occ-0.nflxso.net.evil.test/a"}')$$,'22023','watch_history_identity_invalid','SQL rejects artwork CDN lookalike');
 select throws_ok($$select validate_watch_identity_v3(pg_temp.n_event()||'{"artworkUrl":"https://127.0.0.1/a"}')$$,'22023','watch_history_identity_invalid','SQL rejects artwork private host');
 

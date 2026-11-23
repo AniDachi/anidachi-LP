@@ -6,9 +6,16 @@ capabilities; it must not inspect YouTube selectors or infer YouTube state.
 
 ## Supported Surface
 
-- The overlay mounts only on finite-duration YouTube `/watch?v=<id>` pages.
-- Feed previews, Shorts, embeds, channel pages, search, and other YouTube routes
-  are blocked from adapter fallback and do not receive the AniDachi overlay.
+- Shared playback and watch history use finite-duration YouTube `/watch?v=<id>` pages.
+- An admitted room docks on Home, search, feeds (including subscriptions and history),
+  playlists, channels, hashtags, Gaming, Podcasts and the Shorts feed. The participant
+  can keep chatting and calling. Catalog previews, Shorts and the native mini-player
+  do not become the room video. Outside a room these catalog pages show no capsule.
+- Leaving the player as host publishes a catalog pause. Starting another supported
+  video brings browsing guests to its watch ID. Guests browse independently and can
+  use **Back to video** while the host has a player open. The room's offscreen
+  connection and call survive supported full-page navigations. Account settings,
+  Studio, embeds and external pages are outside the persistent room surface.
 - A YouTube room can navigate only to another valid YouTube watch source.
   Cross-provider navigation is rejected by both the extension and Room Worker.
 - Navigation uses a canonical watch URL and a bounded room hash. It does not use

@@ -24,11 +24,22 @@ if (!["staging", "production"].includes(channel)) {
 const manifestPath = path.join(dir, "manifest.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 const hostPermissions = manifest.host_permissions ?? [];
-const contentMatches = (manifest.content_scripts ?? []).flatMap(
+const scripts = manifest.content_scripts ?? [];
+const portraitScripts = scripts.filter(script => script.js?.includes("content-scripts/disney-portrait.js"));
+if (portraitScripts.length > (channel === "staging" ? 1 : 0)) throw new Error("Unexpected Disney portrait bridge");
+for (const script of portraitScripts) assertExactAllowlist("Disney portrait bridge", script.matches, ["https://www.disneyplus.com/*"]);
+const contentMatches = scripts.filter(script => !portraitScripts.includes(script)).flatMap(
   (script) => script.matches ?? [],
 );
 const permissions = manifest.permissions ?? [];
 const optionalPermissions = manifest.optional_permissions ?? [];
+
+// Chrome WAR matches accept an origin with /* only. Content-script route
+// patterns are legal elsewhere but must never enter this manifest field.
+for (const resource of manifest.web_accessible_resources ?? [])
+  for (const match of resource.matches ?? [])
+    if (typeof match !== "string" || !/^(?:https?|\*):\/\/[^/]+\/\*$/.test(match))
+      throw new Error(`Invalid web_accessible_resources match pattern (path must be /*): ${match}`);
 
 function assertProductionReactRuntime(rootDir) {
   const pending = [rootDir];
@@ -59,13 +70,63 @@ function assertProductionReactRuntime(rootDir) {
 
 assertProductionReactRuntime(dir);
 
-const videoHosts = [
+const amazonVideoMatches = [
+  "amazon.com",
+  "amazon.co.uk",
+  "amazon.de",
+  "amazon.co.jp",
+  "amazon.ca",
+  "amazon.in",
+  "amazon.com.mx",
+].flatMap((host) => [
+  `https://*.${host}/Amazon-Video`,
+  `https://*.${host}/Amazon-Video/*`,
+  `https://*.${host}/*/Amazon-Video`,
+  `https://*.${host}/*/Amazon-Video/*`,
+  `https://*.${host}/gp/video`,
+  `https://*.${host}/gp/video/*`,
+  `https://*.${host}/*/gp/video`,
+  `https://*.${host}/*/gp/video/*`,
+  `https://*.${host}/dp/*`,
+  `https://*.${host}/*/dp/*`,
+]);
+
+const hboOrigins = ["www.hbomax.com", "play.hbomax.com", "hbomax.com", "play.max.com", "www.max.com", "max.com"]
+  .map(host => `https://${host}/*`);
+const stagingVideoOrigins = channel === "staging" ? [
+  "https://www.disneyplus.com/*",
+  ...hboOrigins,
+] : [];
+const videoContentMatches = [
+  ...stagingVideoOrigins,
   "https://youtube.com/*",
   "https://*.youtube.com/*",
   "https://youtu.be/*",
   "https://*.youtu.be/*",
   "https://*.youtube-nocookie.com/*",
   "https://www.netflix.com/*",
+  "https://*.primevideo.com/*",
+  ...amazonVideoMatches,
+  "https://crunchyroll.com/*",
+  "https://*.crunchyroll.com/*",
+];
+
+const videoOrigins = [
+  ...stagingVideoOrigins,
+  "https://youtube.com/*",
+  "https://*.youtube.com/*",
+  "https://youtu.be/*",
+  "https://*.youtu.be/*",
+  "https://*.youtube-nocookie.com/*",
+  "https://www.netflix.com/*",
+  "https://*.primevideo.com/*",
+  "https://*.amazon.com/*",
+  "https://*.amazon.co.uk/*",
+  "https://*.amazon.de/*",
+  "https://*.amazon.co.jp/*",
+  "https://*.amazon.ca/*",
+  "https://*.amazon.in/*",
+  "https://*.amazon.com.mx/*",
   "https://crunchyroll.com/*",
   "https://*.crunchyroll.com/*",
 ];
@@ -97,11 +158,11 @@ const expectedByChannel = {
     web: "https://staging.anidachi.app/*",
     api: "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     hostPermissions: [
-      ...videoHosts,
+      ...videoOrigins,
       "https://staging.anidachi.app/*",
       "https://anidachi-api-staging.vladislav-gul7.workers.dev/*",
     ],
-    contentMatches: videoHosts,
+    contentMatches: videoContentMatches,
     buildIdPart: "-staging-",
     extensionId: "ndkfphbchhfephdodcpehdcoclojagje",
   },
@@ -110,11 +171,11 @@ const expectedByChannel = {
     web: "https://www.anidachi.app/*",
     api: "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
     hostPermissions: [
-      ...videoHosts,
+      ...videoOrigins,
       "https://www.anidachi.app/*",
       "https://anidachi-api-production.vladislav-gul7.workers.dev/*",
     ],
-    contentMatches: videoHosts,
+    contentMatches: videoContentMatches,
     buildIdPart: "-production-",
     extensionId: "gpkolofebdhfpapbbgdkdkmlmjfidgmn",
   },
@@ -134,12 +195,40 @@ assertExactAllowlist(
   expected.contentMatches,
 );
 
-const publicResources = manifest.web_accessible_resources ?? [];
-if (publicResources.length !== 1 || publicResources[0].extension_ids?.length) {
-  throw new Error("Expected one public logo resource entry limited to supported sites");
+const expectedPrimeMatches = ["https://*.primevideo.com/*", ...amazonVideoMatches];
+const primeMainScripts = (manifest.content_scripts ?? []).filter((script) =>
+  script.world === "MAIN" && (script.matches ?? []).includes("https://*.primevideo.com/*"));
+if (primeMainScripts.length !== 1 || primeMainScripts[0].all_frames === true ||
+    primeMainScripts[0].run_at !== "document_start" || primeMainScripts[0].matches.length !== expectedPrimeMatches.length ||
+    !(primeMainScripts[0].js ?? []).length) {
+  throw new Error("Prime Video requires exactly one top-frame document_start MAIN bridge on its narrow host");
 }
-assertExactAllowlist("public resource", publicResources[0].resources ?? [], ["Anidachi_logo.png"]);
-assertExactAllowlist("public resource match", publicResources[0].matches ?? [], videoHosts);
+
+assertExactAllowlist("Prime MAIN matches", primeMainScripts[0].matches, expectedPrimeMatches);
+const hboMain = (manifest.content_scripts ?? []).filter(script =>
+  script.world === "MAIN" && script.matches?.some(match => hboOrigins.includes(match)));
+if (channel === "staging") {
+  if (hboMain.length !== 1 || hboMain[0].run_at !== "document_start" || hboMain[0].all_frames === true ||
+      !hboMain[0].js?.includes("content-scripts/hbomax.js"))
+    throw new Error("Staging HBO Max requires one top-frame catalog bridge at document_start");
+  assertExactAllowlist("HBO MAIN matches", hboMain[0].matches, hboOrigins);
+}
+const overlayScripts = (manifest.content_scripts ?? []).filter((script) =>
+  script.world !== "MAIN" && (script.matches ?? []).includes("https://*.primevideo.com/*"));
+if (overlayScripts.length !== 1) throw new Error("Expected one Prime overlay content script");
+assertExactAllowlist("overlay matches", overlayScripts[0].matches, videoContentMatches);
+
+const publicResources = manifest.web_accessible_resources ?? [];
+if (publicResources.length !== 2 || publicResources.some(entry => entry.extension_ids?.length)) {
+  throw new Error("Expected exactly the provider logo and Prime call tile resource entries");
+}
+const logo = publicResources.find(entry => entry.resources?.includes("Anidachi_logo.png"));
+const tile = publicResources.find(entry => entry.resources?.includes("prime-media-tile.html"));
+assertExactAllowlist("logo resource", logo?.resources ?? [], ["Anidachi_logo.png"]);
+assertExactAllowlist("logo match", logo?.matches ?? [], videoOrigins);
+assertExactAllowlist("Prime tile resource", tile?.resources ?? [], ["prime-media-tile.html", "prime-media-permission.html"]);
+assertExactAllowlist("Prime tile match", tile?.matches ?? [], ["https://www.youtube.com/*", "https://youtube.com/*", "https://m.youtube.com/*", "https://crunchyroll.com/*", "https://www.crunchyroll.com/*", ...stagingVideoOrigins, ...videoOrigins.filter(origin => origin === "https://www.netflix.com/*" || origin.includes(".primevideo.com/") || origin.includes(".amazon."))]);
+if (!permissions.includes("offscreen")) throw new Error("Missing offscreen permission for persistent Prime calls");
 
 if (manifest.name !== expected.name) {
   throw new Error(`Expected manifest.name ${expected.name}, got ${manifest.name}`);

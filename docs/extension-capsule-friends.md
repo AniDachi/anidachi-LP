@@ -18,6 +18,12 @@ otherwise Add friend is in the window header. The Add friend view keeps Back,
 one sentence about single-person use, the URL, Copy link and New link. Keyboard
 focus follows the view transition. Errors have a retry or manual-copy path.
 
+## Disney+ catalog rooms on staging
+
+The pilot stores the catalog platform when the host creates a room before starting a film or episode. Both a copied invitation and an accepted Inbox invitation use the room's current destination. Before playback, Join room opens Disney+ Home. Once the host starts a title, opening the original invitation goes to that title. Browsing a film's detail page alone does not select it for guests.
+
+Existing pilot rooms created before platform storage can still open Home from a copied link with the Disney+ lobby hint. An older room's Inbox invitation uses its first persisted playback source.
+
 ## Room invitation truth
 
 `CapsuleFriendsPanel` presents data supplied by `OverlayApp`; it does not invent

@@ -29,6 +29,7 @@ for (const scenario of [
       const robotsOutput = robots();
       if (scenario.noindex) {
         assert.equal(robotsOutput.sitemap, undefined);
+        assert.deepEqual(robotsOutput.rules, [{ userAgent: "*", disallow: ["/"] }]);
       } else {
         // The second entry is the temporary recrawl sitemap (ANI-38); drop it with the route.
         assert.deepEqual(robotsOutput.sitemap, [`${scenario.seo}/sitemap.xml`, `${scenario.seo}${RECRAWL_SITEMAP_PATH}`]);

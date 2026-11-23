@@ -1,5 +1,271 @@
 # Current Development State
 
+## HBO Max staging candidate — November 21, 2026
+
+The HBO Max candidate adds on-demand movies and episodes to rooms, catalog browsing and watch history. Movie catalog and playable IDs are distinct. The staging acceptance uses two signed-in profiles. See the [HBO Max adapter notes](hbomax-adapter.md).
+
+## YouTube rooms in the catalog — November 21, 2026
+
+The YouTube staging candidate keeps admitted participants connected to the same room and call on Home, search, feeds, playlists and channels. Host playback of a new on-demand video brings the guest to that video. A browsing guest can use **Back to video** to return to the current one. See [YouTube adapter notes](youtube-adapter-notes.md) for supported surfaces.
+
+## Crunchyroll rooms in the catalog — November 20, 2026
+
+On staging, a confirmed Crunchyroll room keeps its chat and call when a
+participant browses the streaming catalog. Starting another episode brings
+browsing guests to that episode. Guests can also select **Back to video** from
+the Play tab on the capsule while the host's player is open. Both paths keep
+the guest's site language. The room uses the existing Crunchyroll playback and
+watch-history adapters. Two signed-in Crunchyroll profiles remain the live
+acceptance step before release.
+
+## Netflix rooms in the catalog — November 20, 2026
+
+The November 23 staging candidate also offers Netflix in the extension's Room tab. Hosts can create a room before choosing a title. A guest can join in the catalog through either a copied link or Inbox.
+
+The Netflix staging candidate keeps a confirmed room and its call when a participant
+returns to the catalog. Participants browse independently until the host starts
+playback. The guest then opens the host's exact watch ID. Device consent is requested
+in the current tab. Live two-profile acceptance is required before release.
+A guest browsing Netflix can also select **Back to video** beside the room pill
+when the host has a player open, including while paused. It returns to the same
+room and episode. The action disappears when the host returns to the catalog.
+
+## Prime rooms in the catalog — November 19, 2026
+
+The current Prime candidate keeps a confirmed room open when its player closes,
+including at the end of a title. The room pill moves to the catalog. Participants
+can browse independently, keep talking and return to synchronized playback when
+the host plays a title. This supersedes the November 18 close-as-departure rule
+for confirmed Prime rooms. The explicit room controls still end or leave the room.
+See the [provider behavior](prime-video-adapter-notes.md#rooms-in-the-prime-catalog)
+and [acceptance scenarios](superpowers/plans/2026-11-16-prime-video-adapter.md#rooms-in-the-prime-catalog).
+
+## Prime definitive natural close — November 18, 2026
+
+Loaded `8876fbf4` confirmed the reported Amazon ASIN, exact room invite launch,
+aligned playback/seek and ten known episodes in website history. A native episode
+end then closed Prime while leaving the room alive. Owner reaffirmed that a
+definitively closed player should leave/end the room; only episode/season
+transitions preserve it. Automatic reopening candidate PR574 was closed unmerged.
+
+Candidate `codex/prime-natural-player-close`, based on staging `a646ef58`, pairs Prime's
+completed-timeline Close with trusted native media unload and reuses exact-session
+departure. It adds no polling or provider-setting changes. Loaded acceptance is
+pending; the available accounts do not establish different-market playback.
+See [active plan](superpowers/plans/2026-11-16-prime-video-adapter.md#task-24-definitive-natural-close-leaves-the-room).
+
+## Amazon SPA identity — November 18, 2026
+
+`codex/prime-amazon-readiness` fixes the reproduced metadata wait on Amazon's
+Love in Disguise after storefront navigation: marketing and page ASINs differ.
+Current page/SDK agreement now permits playback metadata while exact episode
+and launch guards remain. Single-season catalog loading and transient Prime
+intro/status handling are corrected in the same extension-only candidate.
+The original paused player passes a read-only candidate inspection without
+reload; final loaded-artifact/two-account acceptance is still a separate gate.
+See [provider notes](prime-video-adapter-notes.md#amazon-spa-identity-and-intro-recovery).
+
+## Prime player close — November 17, 2026
+
+Owner-approved candidate `codex/prime-player-close-room` makes explicit native
+player close leave the room: host ends it, guest leaves individually. In-player
+episode/season changes, autoplay and reload keep their existing continuity.
+The extension uses trusted close intent plus confirmed SDK state and existing
+exact-session departure retries. No backend, schema, permissions or production
+change. See [provider notes](prime-video-adapter-notes.md#intentional-player-close).
+Loaded-artifact acceptance follows the owner's update of the reviewed build;
+automated results do not establish cross-region playback.
+
+## Prime two-account acceptance corrections — November 17, 2026
+
+Testing the loaded staging artifact with two accounts reproduced a guest reload
+stuck on `Joining room`, plus ad-inclusive duration in the capsule. Candidate
+`codex/prime-room-reload-fix`, based on staging `0f84123f`, keeps consumed
+invitations blocked while allowing the matching saved account/tab room
+session to reconnect through fresh server admission. Unrelated saved sessions
+no longer produce a permanent pending join. Capsule time and duration now use
+the same content timeline. See [provider notes](prime-video-adapter-notes.md#two-account-acceptance-and-reload-correction).
+Loaded-artifact acceptance of this correction remains separate from the tests;
+both available Prime players reported US, so different-region acceptance is
+still unverified. No backend, permissions or production change is included.
+
+## Prime direct-episode readiness — November 17, 2026
+
+`codex/prime-metadata-readiness`, based on staging `29fafc86`, fixes indefinite
+metadata waiting when Prime gives an episode page its parent-season canonical
+URL. The verified episode/season relationship now admits this normal provider
+shape without relaxing foreign-source, membership or playback checks. A real
+Rings of Power S3 E2 metadata probe confirms the parser fix; loaded-artifact
+acceptance remains separate. See
+[provider notes](prime-video-adapter-notes.md#direct-episode-links-and-parent-season-canonical).
+
+## Direct Prime launch correction — November 17, 2026
+
+`codex/prime-direct-launch`, based on staging `9f294b07`, removes the
+unsolicited marketplace picker. Invitations and Resume open their supplied
+verified episode URL directly; Amazon handles regional redirects. Existing
+recipient preferences no longer alter the destination. Pending room/Resume
+recovery and exact episode/account checks remain in force. See
+[provider notes](prime-video-adapter-notes.md#direct-prime-launch-correction--november-17-2026).
+
+## Prime player readiness follow-up — November 17, 2026
+
+Based on staging `d765b69f`, `codex/prime-player-readiness` separates confirmed
+primary-player presence from verified episode metadata. The capsule can mount
+while metadata is pending; room creation/join, playback commands and history
+remain gated by the verified source. Initial pending UI also waits for launch
+recovery before restoring a saved room. A room-only handoff is no longer consumed
+by the personal Resume reader. See
+[provider notes](prime-video-adapter-notes.md#player-presence-and-source-readiness).
+Final loaded-artifact and independent-account acceptance remain separate.
+
+## Prime title identity follow-up — November 17, 2026
+
+Based on staging `ae767836`, `codex/prime-title-identity` fixes Gilmore Girls
+S2 E1 detection with the current loaded artifact. The page and SDK use different
+spacing in the same episode title. Display-label equality no longer rejects
+otherwise verified identity; GTI, route, type, season, ordinal and membership
+guards remain. SPA inspection also avoids reparsing irrelevant initial HTML.
+Candidate MAIN verification restored the capsule on the original paused player.
+See [provider notes](prime-video-adapter-notes.md#display-labels-are-not-playback-identity).
+
+## Prime native SPA metadata follow-up — November 17, 2026
+
+Based on staging `bd333006`, `codex/prime-spa-metadata` fixes the reproduced
+Supernatural → Home → Grimm failure: Prime retains initial hydration/canonical
+HTML after native navigation, while the visible page and SDK already show Grimm.
+The MAIN adapter and catalog now read the committed current page context, with
+the existing identity/availability checks. Live candidate-bridge verification
+restored the capsule on the failing tab without reload. Permissions and backend
+are unchanged; final packaged-artifact and broader regional acceptance are
+separate from that source-level check. See the
+[provider notes](prime-video-adapter-notes.md#native-spa-metadata-and-missing-capsule-on-grimm).
+
+## Prime capsule detection follow-up
+
+Based on delivered staging `1443ae27`, `codex/prime-capsule-detection` closes a
+confirmed Back/Forward-cache lifecycle gap and exercises delayed player mount
+on all eight existing Prime/Amazon domain families, including subdomains and
+regional/language routes. Permissions, shared contracts and backend remain
+unchanged. See the [provider notes](prime-video-adapter-notes.md#capsule-detection-and-cached-page-return).
+Authenticated regional/two-account acceptance remains owner-led.
+
+## Prime Video staging baseline and launch follow-up: November 16, 2026
+
+Merged staging [PR #557](https://github.com/AniDachi/anidachi-LP/pull/557),
+`2bbf955d66e6825fe376128356cbb4aeef98bd69`, delivers reviewed Prime source
+contracts, additive SQL/server admission, the MAIN-world player adapter and
+popup/website history presentation. Scope is exact HTTPS `www.primevideo.com`
+detail URLs. Series history uses the verified season-1 compactGTI as an explicit
+anchor. The baseline emits partial catalogs; the Task 8 follow-up described
+below adds verified full-series loading. Current clients explicitly request provider and
+capacity version 3, with a separate Prime 200-title bucket and exact v1/v2
+compatibility. Legacy `amazon`, pricing and shared media policy are unchanged.
+
+Local protocol/API/web/extension, room harness, disposable SQL and Worker runtime
+evidence is recorded in the [provider notes](prime-video-adapter-notes.md).
+Native Prime research observed content-clock behavior through ads and episode
+replacement; it did not exercise the loaded extension. The narrow staging
+artifact built at `66ce7f85` passed validation, including the Prime MAIN script
+and bundled logo. Whole-branch source review passed at `16aea5dd` without
+critical or important findings. The owner subsequently loaded the artifact:
+the actual MAIN bridge confirmed episode identity, pause, transient 1.25 rate,
+seek and restoration. Graphify's
+safe refresh stopped on an inherited `ref_clsx` ownership collision before
+publication; the curated graph is unchanged. Loaded movie/ads,
+fullscreen/chat/resume and two-client room/history acceptance are still open.
+
+Compatible staging Web/Worker and the additive migration are delivered. Actual
+loaded extension room creation and authenticated saved episode history passed;
+the former `Invalid room source (400)` is resolved. Resume reached the exact
+saved episode but landed on Prime's detail/Resume screen. Delivered staging
+[PR #559](https://github.com/AniDachi/anidachi-LP/pull/559) at `2a93c598` adds `autoplay=1` to initial room invitation
+launch and shared website/popup Resume navigation while retaining canonical
+identity, bounded intent and room exclusion. Actual website Resume now opens the
+primary player automatically. Delivered staging
+[PR #560](https://github.com/AniDachi/anidachi-LP/pull/560) at `def49ed8`
+fixes cancellation before Prime's first SDK snapshot and captures initial
+room/Resume data before the provider clears the fragment. Controller receipts
+confirm website Resume restored `625.824822` seconds and an invitation opened
+previously unwatched episode 5 and joined automatically. These are same-account
+checks; two independent accounts/devices for synchronization remain open.
+
+Delivered staging [PR #561](https://github.com/AniDachi/anidachi-LP/pull/561)
+at `465f79a9` fixes a separate native Create room failure: Prime can keep a
+season URL in the address bar while playing an episode. Overlay creation reads
+the current adapter descriptor's source URL and fingerprint together after
+identity/session preparation. A Prime binding without a descriptor returns a
+retryable loading message; ordinary descriptor-less adapters retain the URL
+fallback. Source validation is unchanged. Regression tests cover the reported
+Fallout season/episode pair, native episode replacement during preparation and
+both fallback cases. Build, staging CI and loaded Fallout S1 E4 creation passed;
+the persisted room source matched the playing episode and the test room was
+ended. The tested extension candidate has the same tree as the staging merge.
+The [ordered procedure](prime-video-adapter-notes.md#ordered-delivery-and-rollback)
+records the bounded schema-first exception; final deployment receipts belong in
+the feature PR and controller report. Preserve Prime rows and epochs on rollback.
+Production promotion, Store publication and public support announcements remain
+outside this authorization. See the
+[execution plan](superpowers/plans/2026-11-16-prime-video-adapter.md).
+
+Task 8 on `codex/prime-history-catalog` addresses history showing only saved
+episodes. It adds bounded same-origin season metadata loading with strict
+series/episode identity, completeness and cancellation checks. Complete
+snapshots use the existing editor/server contract; personal progress remains
+separate. Live read-only Upload evidence covers four seasons and 29 episodes.
+No SQL migration or Worker behavior change is needed. The candidate passed
+independent review, extension checks and narrow artifact validation. Live
+acceptance caught an empty ATF placeholder rejected before the real BTF episode
+list was read; the reviewed correction retains strict validation of declared
+list/count/pagination evidence. Shape-faithful tests cover the real current page
+and all four seasons. Loaded acceptance and delivery receipts are tracked in
+[PR #562](https://github.com/AniDachi/anidachi-LP/pull/562); see also the
+[provider notes](prime-video-adapter-notes.md#full-series-catalog-follow-up-evidence).
+
+Task 9 on `codex/prime-regional-routes`, based on delivered staging `61d814d7`,
+addresses a confirmed missing overlay on SOR at `/region/na/detail/` and the
+owner's broader regional-address request. Browser recognition is being separated
+from canonical room/history identity, with exact official Prime marketplace
+hosts and verified ASIN/full-GTI mappings. Live SOR evidence also has an empty
+season roster despite a verified season-1 self record and episode membership;
+that can support current-episode progress, but cannot prove a complete series
+catalog. The observed Amazon movie page uses an ASIN key and a distinct public
+canonical alias. Sanitized fixtures preserve both actual shapes. Extension checks
+and independent review passed after correcting stale deferred-alias launches and
+order-dependent malformed mappings. Chrome then rejected the first artifact's
+resource match paths; the reviewed correction separates resource origins from
+content routes and tests rejection of invalid manifests. Corrected narrow build
+and validation passed at `90caab1d`. The owner chose to perform browser acceptance
+personally; it is still pending. CI and delivery receipts belong to
+[PR #563](https://github.com/AniDachi/anidachi-LP/pull/563). Server schemas,
+production and other chats are outside this follow-up.
+
+The owner's subsequent Task 10 request expands those eight Prime/Amazon domain
+families to HTTPS base domains and subdomains, including ordinary numeric,
+hyphenated and nested DNS labels. Browser admission and manifest matching are
+updated together in the same PR #563. Extension check and the local 3,165-test
+suite passed; review, artifact and final CI receipts are tracked in that PR.
+Resource matches retain Chrome's
+origin-only `/*` constraint; Amazon injection retains video/share routes.
+Verified SDK identity, canonical persisted URLs and exact same-origin catalog
+transport remain authoritative. Other providers and server schemas are outside
+this amendment; the owner still owns browser acceptance.
+
+Task 11 is the owner-authorized Amazon launch-continuity follow-up in the same
+PR #563. Diagnosis found that observed exact Amazon episode links are discarded
+before room/history persistence, and launch consumers use the canonical
+primevideo.com URL. The candidate preserves canonical identity while carrying
+bounded observed navigation hints, selecting the recipient's marketplace with
+explicit recovery when no route is known, and retaining intent through full
+redirects. It includes additive nullable storage, versioned server reads with
+unchanged legacy RPC/stored JSON shapes, explicit history-read opt-in, a Prime
+invitation launch step and a shared extension resolver. Independent source/fix
+reviews, 771 SQL assertions and frozen legacy Web/protocol replay passed.
+Delivery and artifact receipts are tracked in
+[PR #563](https://github.com/AniDachi/anidachi-LP/pull/563); the existing `49f86b06`
+artifact does not include this follow-up. Owner-led regional/two-account
+acceptance remains open. See the provider notes and active plan for scope.
+
 ## Free20 production launch: November 7, 2026
 
 The owner authorized the production cutover after reporting Store approval of

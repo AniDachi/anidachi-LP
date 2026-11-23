@@ -525,6 +525,7 @@ test("staging gate routes extension access checks to the account verifier withou
 test("staging gate lets an extension bearer reach only the supported Watch History v3 methods", () => {
   const allowedRequests = [
     ["/api/watch-history/v3", "GET"],
+    ["/api/watch-history/poster", "GET"],
     ["/api/watch-history/v3/browse", "GET"],
     ["/api/watch-history/v3/browse/title-episodes", "GET"],
     ["/api/watch-history/v3/browse/sessions", "GET"],
@@ -536,6 +537,8 @@ test("staging gate lets an extension bearer reach only the supported Watch Histo
     ["/api/watch-history/v3/delete", "POST"],
     ["/api/watch-history/v3/rooms", "POST"],
     ["/api/watch-history/v3/title-episodes", "GET"],
+    ["/api/watch-history/v3/disney-portraits", "GET"],
+    ["/api/watch-history/v3/disney-portraits", "POST"],
     ["/api/watch-history/v3/catalog/attempt", "POST"],
     ["/api/watch-history/v3/catalog", "POST"],
   ] as const;
@@ -559,6 +562,7 @@ test("staging gate lets an extension bearer reach only the supported Watch Histo
 
   for (const [pathname, method] of [
     ["/api/watch-history/v3", "POST"],
+    ["/api/watch-history/poster", "POST"],
     ["/api/watch-history/v3/browse", "POST"],
     ["/api/watch-history/v3/browse/title-episodes", "POST"],
     ["/api/watch-history/v3/browse/sessions", "POST"],
@@ -571,6 +575,8 @@ test("staging gate lets an extension bearer reach only the supported Watch Histo
     ["/api/watch-history/v3/delete", "DELETE"],
     ["/api/watch-history/v3/rooms", "GET"],
     ["/api/watch-history/v3/title-episodes", "POST"],
+    ["/api/watch-history/v3/disney-portraits", "DELETE"],
+    ["/api/watch-history/v3/disney-portraits/extra", "POST"],
     ["/api/watch-history/v3/catalog/attempt", "GET"],
     ["/api/watch-history/v3/catalog", "GET"],
     ["/api/watch-history/v3/catalog/extra", "POST"],

@@ -1,7 +1,9 @@
+import { ROOMS_PILOT } from "./popup-room-launch";
 import type { PopupTab } from "./popup-app";
 import type { PopupHistoryConditions } from "./popup-watch-filters";
 
 const KEY = "anidachi.popupView.v1";
+export const DEFAULT_POPUP_TAB: PopupTab = ROOMS_PILOT ? "rooms" : "resources";
 type HistoryView = {
   generation: number;
   branches: Record<string, boolean>;
@@ -17,6 +19,7 @@ type PopupView = {
   conditions: PopupHistoryConditions;
 };
 const tabs = new Set<PopupTab>(["resources", "friends", "inbox"]);
+if (ROOMS_PILOT) tabs.add("rooms");
 function record<T>(value: unknown, valid: (value: unknown) => value is T): Record<string, T> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   return Object.fromEntries(Object.entries(value).filter(([key, entry]) => key.length <= 512 && valid(entry)).slice(-128));
@@ -28,7 +31,7 @@ const position = (value: unknown): value is number => typeof value === "number" 
 // Local presentation preferences only: no history records, artwork, progress, auth or
 // access proofs. Keep just the most recent account and bound every map.
 export function readPopupView(owner: string): PopupView {
-  const empty: PopupView = { owner, tab: "resources", scroll: {}, search: "", conditions: { period: "all-time", fromDate: "", throughDate: "" } };
+  const empty: PopupView = { owner, tab: DEFAULT_POPUP_TAB, scroll: {}, search: "", conditions: { period: "all-time", fromDate: "", throughDate: "" } };
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? "null");
     if (!raw || raw.owner !== owner) return empty;
@@ -42,7 +45,7 @@ export function readPopupView(owner: string): PopupView {
         fromDate: typeof raw.conditions.fromDate === "string" ? raw.conditions.fromDate.slice(0, 10) : "",
         throughDate: typeof raw.conditions.throughDate === "string" ? raw.conditions.throughDate.slice(0, 10) : "",
       } : empty.conditions,
-      tab: tabs.has(raw.tab) ? raw.tab : "resources",
+      tab: tabs.has(raw.tab) ? raw.tab : DEFAULT_POPUP_TAB,
       scroll: Object.fromEntries(Object.entries(scroll).filter(([key]) => tabs.has(key as PopupTab))),
       ...(Number.isSafeInteger(history?.generation) && history.generation >= 1 ? { history: {
         generation: history.generation,

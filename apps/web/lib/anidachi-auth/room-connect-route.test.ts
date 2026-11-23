@@ -94,11 +94,12 @@ test("delayed host connect cannot reopen a room finalized after admission", asyn
     assert.equal("roomToken" in await response.json(), false);
   });
 });
-test("ordinary pre-cutover lobby connect still activates the room and issues a token", async () => {
+test("issuing a host ticket leaves the lobby available for failed-admission cleanup", async () => {
   await fixture({}, async state => {
     const response = await connect();
     assert.equal(response.status, 200);
-    assert.equal(state.status, "live");
+    assert.equal(state.status, "lobby");
+    assert.equal(state.host_connected_at, null);
     assert.equal(typeof (await response.json()).roomToken, "string");
   });
 });

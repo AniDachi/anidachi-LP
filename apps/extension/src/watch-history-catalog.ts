@@ -1,9 +1,13 @@
+import { loadHboMaxCatalog, readHboMaxCatalogContext } from "./source-adapters/hbomax/catalog";
+import { readDisneyPlusCatalog, resolveDisneyPlusCatalog } from "./source-adapters/disneyplus/catalog";
+import { runPrimeCommand } from "./source-adapters/primevideo/bridge-client";
+import type { PrimeSnapshot } from "./source-adapters/primevideo/contract";
 import { isHistoryRecordingEnabled } from "./history-recording-choice";
 import { canCaptureWatchHistory, parseWatchHistoryLease, personalEnvelopeEligible } from "./watch-history-access";
 import {
   WatchCatalogBeginAckSchema, WatchCatalogBeginRequestSchema,
   WatchCatalogCommitAckSchema, WatchCatalogCommitRequestSchema,
-  type WatchCatalogBeginAck, type WatchCatalogBeginRequest,
+  type WatchCatalogSnapshotInput, type WatchCatalogBeginAck, type WatchCatalogBeginRequest,
   type WatchCatalogCommitAck, type WatchCatalogCommitRequest,
 } from "@anidachi/protocol";
 import { runNetflixCommand } from "./source-adapters/netflix/bridge-client";
@@ -63,7 +67,7 @@ export function createWatchHistoryCatalogCoordinator(dependencies: Dependencies)
 
   function begin(owner: string, pageId: string, raw: unknown): Promise<WatchCatalogBeginAck | null> {
     const parsed = WatchCatalogBeginRequestSchema.safeParse(raw);
-    if (!parsed.success || !parsed.data.context.region) return Promise.resolve(null);
+    if (!parsed.success || (!parsed.data.context.region && parsed.data.provider !== "disneyplus" && parsed.data.provider !== "hbomax")) return Promise.resolve(null);
     const input = structuredClone(parsed.data);
     const id = key(owner, input.titleKey);
     const old = jobs.get(id);
@@ -131,15 +135,25 @@ export function createWatchHistoryPageResolver(dependencies: {
   send(message: WatchHistoryMessage): Promise<WatchHistoryMessageResponse>;
   command?: typeof runCrunchyrollMainCommand;
   netflixCommand?: typeof runNetflixCommand;
+  primeCommand?: typeof runPrimeCommand;
+  hboCatalogContext?: (seriesId: string, playbackId: string) => WatchCatalogBeginRequest["context"] | null;
+  loadHboCatalog?: (seriesId: string, playbackId: string, signal: AbortSignal) => Promise<WatchCatalogSnapshotInput | null>;
+  disneyCatalog?: (seriesId: string, playbackId: string) => WatchCatalogSnapshotInput | null;
+  loadDisneyCatalog?: (seriesId: string, playbackId: string) => Promise<WatchCatalogSnapshotInput | null>;
   pageId?: string;
   now?: () => number;
 }) {
   const pageId = dependencies.pageId ?? crypto.randomUUID();
   const command = dependencies.command ?? runCrunchyrollMainCommand;
   const netflixCommand = dependencies.netflixCommand ?? runNetflixCommand;
+  const primeCommand = dependencies.primeCommand ?? runPrimeCommand;
+  const hboCatalogContext = dependencies.hboCatalogContext ?? ((seriesId, playbackId) => readHboMaxCatalogContext(document, seriesId, playbackId));
+  const loadHboCatalog = dependencies.loadHboCatalog ?? ((seriesId, playbackId, signal) => loadHboMaxCatalog(document, seriesId, playbackId, signal));
+  const disneyCatalog = dependencies.disneyCatalog ?? ((seriesId, playbackId) => readDisneyPlusCatalog(document, seriesId, playbackId));
+  const loadDisneyCatalog = dependencies.loadDisneyCatalog ?? dependencies.disneyCatalog ?? ((seriesId, playbackId) => resolveDisneyPlusCatalog(document, seriesId, playbackId));
   const now = dependencies.now ?? Date.now;
   const mappings = new Map<string, { promise: Promise<CrunchyrollHistoryMetadata | null>; attemptedAt: number; abort: AbortController; settled: boolean }>();
-  const activeCatalogs = new Map<string, { abort: AbortController; signature: string; visitId: string; promise: Promise<void> }>();
+  const activeCatalogs = new Map<string, { abort: AbortController; signatures: Set<string>; visitId: string; promise: Promise<void> }>();
   const attemptedCatalogs = new Set<string>();
   const visits = new Map<string, string>();
   let disposed = false;
@@ -157,18 +171,43 @@ export function createWatchHistoryPageResolver(dependencies: {
   async function resolve(event: WatchHistoryLocalEvent, owner: string, options: { refreshCatalog: boolean }): Promise<void> {
     const pending = event.identityPending;
     const netflixIdentity = event.provider === "netflix" && event.netflixIdentity?.kind === "episode" ? event.netflixIdentity : null;
-    if (disposed || (!netflixIdentity && (!pending || event.provider !== "crunchyroll")) || !await eligible(event, owner)) return;
-    const watchId = netflixIdentity?.providerEpisodeIdentifier ?? pending!.watchId;
+    const primeIdentity = event.provider === "primevideo" && event.primevideoIdentity?.kind === "episode" ? event.primevideoIdentity : null;
+    const disneyIdentity = event.provider === "disneyplus" && event.disneyplusIdentity?.kind === "episode" ? event.disneyplusIdentity : null;
+    const hboIdentity = event.provider === "hbomax" && event.hbomaxIdentity?.kind === "episode" ? event.hbomaxIdentity : null;
+    const domIdentity = hboIdentity ?? disneyIdentity;
+    if (disposed || (!domIdentity && !primeIdentity && !netflixIdentity && (!pending || event.provider !== "crunchyroll"))) return;
+    const watchId = domIdentity?.providerEpisodeIdentifier ?? primeIdentity?.providerEpisodeIdentifier ?? netflixIdentity?.providerEpisodeIdentifier ?? pending!.watchId;
     const sourceKey = `${owner}:${event.accountGeneration}:${event.clientSessionKey}:${watchId}`;
     if (options.refreshCatalog && sourceKey !== currentSource) {
       currentSource = sourceKey;
       abortCatalogs();
       sourceAbort = new AbortController();
     }
+    const sourceSignal = sourceAbort.signal;
+    if (!await eligible(event, owner) || (options.refreshCatalog && sourceSignal.aborted)) return;
     let netflix: NetflixSnapshot | null = null;
+    let prime: PrimeSnapshot | null = null;
     let metadata: CrunchyrollHistoryMetadata | null = null;
     let resolution: Promise<unknown> = Promise.resolve();
-    if (netflixIdentity) {
+    let domContext: WatchCatalogBeginRequest["context"] | null = null;
+    if (domIdentity) {
+      if (!options.refreshCatalog || sourceKey !== currentSource) return;
+      if (hboIdentity) {
+        domContext = hboCatalogContext(hboIdentity.providerSeriesId, watchId);
+      } else {
+        const snapshot = disneyCatalog(domIdentity.providerSeriesId, watchId);
+        if (snapshot?.provider === event.provider && snapshot.providerSeriesId === domIdentity.providerSeriesId) domContext = snapshot.context;
+      }
+      if (!domContext) return;
+    } else if (primeIdentity) {
+      if (!options.refreshCatalog || sourceKey !== currentSource) return;
+      const response = await primeCommand({ action: "snapshot", contentId: watchId }, sourceAbort.signal);
+      prime = response?.ok ? response.snapshot ?? null : null;
+      if (!prime || prime.phase !== "content" || prime.metadata.identity?.kind !== "episode" ||
+        prime.metadata.identity.seriesAnchorSeasonId !== primeIdentity.seriesAnchorSeasonId ||
+        prime.metadata.identity.providerSeasonIdentifier !== primeIdentity.providerSeasonIdentifier ||
+        prime.metadata.identity.providerEpisodeIdentifier !== watchId || sourceAbort.signal.aborted || !await eligible(event, owner)) return;
+    } else if (netflixIdentity) {
       if (!options.refreshCatalog || sourceKey !== currentSource) return;
       const response = await netflixCommand({ action: "snapshot", movieId: watchId }, sourceAbort.signal);
       netflix = response?.ok ? response.snapshot ?? null : null;
@@ -193,48 +232,92 @@ export function createWatchHistoryPageResolver(dependencies: {
         accountGeneration: event.accountGeneration, clientEventId: event.clientEventId, identity: metadata.identity,
         episodeNumber: metadata.episodeNumber, artworkUrl: metadata.artworkUrl });
     }
-    const context = netflix?.metadata.context ?? metadata?.context;
-    if (!options.refreshCatalog || disposed || sourceKey !== currentSource || !context?.region) { await resolution; return; }
-    const provider = netflixIdentity ? "netflix" as const : "crunchyroll" as const;
-    const providerSeriesId = netflixIdentity?.providerSeriesId ?? metadata!.identity.providerSeriesId;
+    const context = domContext ?? prime?.metadata.context ?? netflix?.metadata.context ?? metadata?.context;
+    if (!options.refreshCatalog || disposed || sourceSignal.aborted || sourceKey !== currentSource || !context || (!context.region && !domIdentity)) { await resolution; return; }
+    const provider = hboIdentity ? "hbomax" as const : disneyIdentity ? "disneyplus" as const : primeIdentity ? "primevideo" as const : netflixIdentity ? "netflix" as const : "crunchyroll" as const;
+    const providerSeriesId = domIdentity?.providerSeriesId ?? primeIdentity?.seriesAnchorSeasonId ?? netflixIdentity?.providerSeriesId ?? metadata!.identity.providerSeriesId;
     const titleKey = `${provider}:series:${providerSeriesId}`;
     const jobKey = `${owner}:${event.accountGeneration}:${titleKey}`;
     if (!visits.has(sourceKey)) visits.set(sourceKey, `${pageId}:${visits.size + 1}`);
     const visitId = visits.get(sourceKey)!;
     const signature = contextKey(context);
     const active = activeCatalogs.get(jobKey);
-    if (active?.signature === signature && active.visitId === visitId) { await Promise.all([resolution, active.promise]); return; }
+    if (active?.signatures.has(signature) && active.visitId === visitId) { await Promise.all([resolution, active.promise]); return; }
     active?.abort.abort();
     const attemptKey = `${jobKey}:${visitId}:${signature}`;
     if (attemptedCatalogs.has(attemptKey)) { await resolution; return; }
     attemptedCatalogs.add(attemptKey);
     const abort = new AbortController();
-    const input: WatchCatalogBeginRequest = { schemaVersion: 3, provider, accountGeneration: event.accountGeneration,
+    const signatures = new Set([signature]);
+    let input: WatchCatalogBeginRequest = { schemaVersion: 3, provider, accountGeneration: event.accountGeneration,
       titleKey, providerSeriesId, context: structuredClone(context),
       historyAccess: { accessVersion: 1, accessEpoch: event.captureProof!.access.accessEpoch } };
     const collecting = (async () => {
       let revision: number | null = null;
-      try {
+      const isCurrent = () => !disposed && !abort.signal.aborted && sourceKey === currentSource;
+      const mayCollect = async () => isCurrent() && await eligible(event, owner) && isCurrent();
+      function hboSourceMatches(context: WatchCatalogBeginRequest["context"]) {
+        const latest = hboCatalogContext(providerSeriesId, watchId);
+        if (!latest || (latest.region !== context.region && !(latest.region === null && domContext?.region === null))) return false;
+        return contextKey({ ...latest, region: context.region }) === contextKey(context);
+      }
+      async function begin() {
         const response = await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-begin", expectedOwnerUserId: owner, pageId: visitId, input });
-        if (!response.ok) return;
+        if (!response.ok) return false;
         const parsed = WatchCatalogBeginAckSchema.safeParse(response.data);
-        if (!parsed.success || !matches(owner, input, parsed.data)) return;
+        if (!parsed.success || !matches(owner, input, parsed.data)) return false;
         revision = parsed.data.revision;
-        if (disposed || abort.signal.aborted || !parsed.data.refreshRequired || !await eligible(event, owner)) return;
-        const result = netflix
+        return parsed.data.refreshRequired && await mayCollect();
+      }
+      async function release() {
+        if (revision === null) return false;
+        const issuedRevision = revision;
+        revision = null;
+        const response = await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-release", expectedOwnerUserId: owner,
+          pageId: visitId, accountGeneration: input.accountGeneration, titleKey, revision: issuedRevision }).catch(() => null);
+        return response?.ok === true;
+      }
+      try {
+        if (!await begin() || (hboIdentity && !hboCatalogContext(providerSeriesId, watchId))) return;
+        const result = hboIdentity
+          ? { ok: true, catalog: await loadHboCatalog(providerSeriesId, watchId, abort.signal) }
+          : disneyIdentity
+          ? { ok: true, catalog: await loadDisneyCatalog(providerSeriesId, watchId) }
+          : prime
+          ? await primeCommand({ action: "catalog", contentId: watchId, generation: prime.generation }, abort.signal)
+          : netflix
           ? await netflixCommand({ action: "catalog", movieId: watchId, generation: netflix.generation }, abort.signal)
           : await command("historyCatalog", { seriesId: input.providerSeriesId, context: input.context }, 120_000, abort.signal);
-        if (!result?.ok || !result.catalog || (netflix && (result.catalog.provider !== input.provider || result.catalog.titleKey !== input.titleKey || contextKey(result.catalog.context) !== contextKey(input.context))) || disposed || abort.signal.aborted || !await eligible(event, owner)) return;
+        if (!result?.ok || !result.catalog || !await mayCollect()) return;
+        const snapshot = result.catalog;
+        if (domIdentity || netflix || prime) {
+          if (snapshot.provider !== provider || snapshot.titleKey !== titleKey || snapshot.providerSeriesId !== providerSeriesId) return;
+          if (contextKey(snapshot.context) !== contextKey(input.context)) {
+            // A provider can first expose its territory in the admitted catalog response.
+            // Acquire a new immutable revision before publishing that inventory.
+            if (!hboIdentity || input.context.region !== null || snapshot.context.region === null ||
+              contextKey({ ...snapshot.context, region: null }) !== contextKey(input.context)) return;
+            if (!await release() || !await mayCollect()) return;
+            const discoveredContext = { ...input.context, region: snapshot.context.region };
+            if (!hboSourceMatches(discoveredContext)) return;
+            const discoveredSignature = contextKey(discoveredContext);
+            signatures.add(discoveredSignature);
+            attemptedCatalogs.add(`${jobKey}:${visitId}:${discoveredSignature}`);
+            input = { ...input, context: discoveredContext };
+            if (!await begin()) return;
+          }
+        }
+        if (!isCurrent() || revision === null) return;
+        if (hboIdentity && !hboSourceMatches(input.context)) return;
         await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-commit", expectedOwnerUserId: owner, pageId: visitId,
-          input: { ...input, revision: parsed.data.revision, snapshot: netflix ? { ...result.catalog, context: input.context } : result.catalog } });
+          input: { ...input, revision, snapshot: domIdentity || netflix || prime ? { ...snapshot, context: input.context } : snapshot } });
       } catch { /* One bounded attempt per context/visit; a new visit can retry. */ }
       finally {
-        if (revision !== null) await dependencies.send({ type: "ANIDACHI_WATCH_HISTORY_V3", command: "catalog-release", expectedOwnerUserId: owner,
-          pageId: visitId, accountGeneration: input.accountGeneration, titleKey, revision }).catch(() => undefined);
+        await release();
         if (activeCatalogs.get(jobKey)?.abort === abort) activeCatalogs.delete(jobKey);
       }
     })();
-    activeCatalogs.set(jobKey, { abort, signature, visitId, promise: collecting });
+    activeCatalogs.set(jobKey, { abort, signatures, visitId, promise: collecting });
     await Promise.all([resolution, collecting]);
   }
   function abortCatalogs(visitId?: string): void {

@@ -330,6 +330,10 @@ describe("authenticated room client", () => {
   });
 
   it.each([
+    [{
+      sourceUrl: "https://www.primevideo.com/detail/0HAQAA7JM43QWX0H6GUD3IOF70?jic=8%7CEgRzdm9k&ref_=atv_hm_hom_c_lAPtVn_brws_2_1",
+      videoFingerprint: "primevideo|detail/0TBFWHTQWLSMFW67KBP9IC4UMU",
+    }],
     [{ sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }],
     [{ videoFingerprint: "youtube|dQw4w9WgXcQ" }],
     [{
@@ -942,6 +946,28 @@ describe("authenticated room client", () => {
     socket?.message({ ...roomSnapshot(), serverSeq: 2 });
     await Promise.resolve();
     expect(acknowledgeAdmissionHandoff).toHaveBeenCalledOnce();
+  });
+
+  it("acknowledges a newer admission on the same live socket even while the previous ACK is in flight", async () => {
+    installControlledWebSocket();
+    let finish!: (value: boolean) => void;
+    const acknowledge = vi.fn().mockImplementationOnce(() => new Promise<boolean>(resolve => { finish = resolve; }))
+      .mockResolvedValue(true);
+    const first = {tabId: 12, roomId: "room-1", ownerUserId: roomParticipant.id, participantSessionId: "s1", generation: 7};
+    const client = new RoomClient();
+    client.connect({roomId: first.roomId, roomToken: "token", participant: roomParticipant, participantSessionId: first.participantSessionId,
+      videoFingerprint: "video-1", admissionHandoff: first, acknowledgeAdmissionHandoff: acknowledge, onEvent: vi.fn(), onStatus: vi.fn()});
+    const socket = ControlledWebSocket.instances[0]!;
+    socket.open();
+    socket.message(roomSnapshot());
+    const next = {...first, generation: 8};
+    client.rebindAdmissionHandoff({...next, participantSessionId: "other"});
+    client.rebindAdmissionHandoff(next);
+    finish(true);
+    await Promise.resolve();
+    expect(acknowledge.mock.calls.map(([handoff]) => handoff)).toEqual([first, next]);
+    expect(ControlledWebSocket.instances).toHaveLength(1);
+    client.close();
   });
 
   it.each(["history", "event", "transport"] as const)(

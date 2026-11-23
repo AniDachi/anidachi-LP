@@ -565,6 +565,14 @@ ${popupSettingsStyles}
     box-shadow: 0 0 14px rgba(249, 115, 22, 0.22);
   }
 
+  .resource-provider-logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .resource-provider-logo.disneyplus img { filter: brightness(0) invert(1); }
+
   .resource-provider-logo.netflix {
     color: #ef4444;
   }
@@ -3865,4 +3873,19 @@ ${popupSettingsStyles}
 ${popupInboxStyles}
 ${popupPeopleStyles}
 ${popupWatchHistoryStyles}
+
+  .popup-tabs:has(> :nth-child(4)) {grid-template-columns:repeat(4,minmax(0,1fr))}
+  .rooms-card {margin: 12px 2px; border:1px solid #363438; border-radius:16px; background:linear-gradient(155deg,#242226,#151418 68%); padding:16px; color:#f3eee7}
+  .rooms-kicker {font-size:12px; font-weight:600; color:#b8b2af; margin:0 0 10px}
+  .rooms-platforms {display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}
+  .rooms-provider {display:flex;align-items:center;gap:7px;min-width:0;width:100%;background:#151518;color:inherit;border:1px solid #3d393e;border-radius:10px;padding:11px;text-align:left;cursor:pointer}
+  .rooms-provider[aria-pressed=true] {border-color:#716054}
+  .rooms-provider:disabled {opacity:1;cursor:default}
+  .rooms-provider .resource-provider-logo {display:flex;flex:0 0 33px;width:33px;height:28px;align-items:center;justify-content:center}
+  .rooms-provider .netflix svg {height:25px;width:15px}
+  .rooms-provider img {width:100%;height:100%;object-fit:contain}
+  .rooms-check {margin-left:auto;color:#ff9d53}
+  .rooms-primary {width:100%;margin-top:14px;border:0;border-radius:100px;padding:11px;background:linear-gradient(105deg,#ffb45f,#ff841e);color:#251609;font:inherit;font-weight:700;cursor:pointer}
+  .rooms-primary:disabled {opacity:.45;cursor:default}
+  .rooms-card p {font-size:12px;margin:10px 0 0;color:#ffc79f}
 `;

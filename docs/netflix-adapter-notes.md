@@ -6,6 +6,8 @@ are tracked in [staging verification](netflix-staging-verification.md).
 
 ## Page and player boundary
 
+On staging, choosing Netflix in the extension's **Room** tab opens the Netflix catalog or uses an existing Netflix tab. Creation waits for a selected viewer and a ready catalog or player. A catalog room stores its platform with no playback source. Both a copied invitation and an Inbox invitation open the catalog until the host starts a title. The current watch ID then determines the guest's destination. An active room takes precedence over a new creation.
+
 Only HTTPS `www.netflix.com/watch/<positive-decimal-id>` is a source; IDs have at
 most 20 digits. Query/hash decorations are removed from the canonical persisted
 URL. Credentials, other hosts/routes, cross-provider URLs and mismatched player
@@ -86,8 +88,14 @@ remain consistent across collection; stale/mismatched attempts cannot commit.
 Explicit country comes from `reactContext.models.geo.data.requestCountry.id`;
 locale comes from `.locale.id`. Real research observed country `VN` and locale
 `uk-HU`, so locale suffix never supplies region. Missing usable context prevents
-a page attempt instead of fabricating it. Unknown availability remains partial;
-complete accepted current-region catalogs alone supply unseen episode cells.
+a page attempt instead of fabricating it. During catalog collection, an explicit
+episode availability flag takes precedence. When Netflix omits that flag, the
+adapter checks the exact season and episode IDs in the player’s native episode
+selector. A confirmed playing episode is also available. If neither source can
+establish availability, the catalog remains partial. The accepted regional
+catalog populates unseen episode cells without writing personal progress.
+Watch and Resume open the canonical Netflix episode URL; Netflix controls playback
+access for the active profile.
 Extraction is bounded to 100 seasons and 2,000 episodes and does not invent IDs
 or missing episodes.
 
