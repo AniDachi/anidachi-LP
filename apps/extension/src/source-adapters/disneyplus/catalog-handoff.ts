@@ -4,7 +4,7 @@ import { getStoredAuthTokens } from "../../auth-tokens";
 import { readSavedDisneyPlusMetadata } from "./history-metadata";
 import type { DisneyPlusPlaybackMetadata } from "./metadata";
 import { parseDisneyPlusCatalogTransfer, transferIncludesPlayback } from "./catalog-transfer";
-import { DISNEY_REDIRECT_TTL_MS, disneyLaunchFragment } from "./launch-redirect";
+import { DISNEY_REDIRECT_TTL_MS, DISNEY_ROOM_INVITE_TTL_MS, disneyLaunchFragment, disneyLaunchTitle } from "./launch-redirect";
 export { isDisneyPlusProfileBoundary } from "./catalog-transfer";
 
 const storedRecord = z.strictObject({ owner: z.string(), expires: z.number(), payload: z.string().max(256_000) });
@@ -29,6 +29,19 @@ export async function forgetDisneyPlusCatalogTab(tab: number): Promise<void> {
 	}).catch(() => undefined);
 }
 
+// Only Disney tabs can redeem a handoff. Clear it when Disney opens another title
+// or the catalog, before a later visit to the original detail page could reuse it.
+export async function discardUnrelatedDisneyLaunch(tab: number, href: string): Promise<void> {
+	if (!href.startsWith("https://www.disneyplus.com/")) return;
+	await inTab(tab, async () => {
+		const key = redirectKey(tab);
+		const record = redirectRecord.safeParse((await chrome.storage.session.get(key))[key]);
+		if (record.success && (record.data.playback !== disneyLaunchTitle(href) || record.data.expires <= Date.now())) {
+			await chrome.storage.session.remove(key);
+		}
+	}).catch(() => undefined);
+}
+
 async function ownerKey(): Promise<string | null> {
 	const auth = await getStoredAuthTokens();
 	// Neither tokens nor email addresses belong in a catalog handoff.
@@ -45,20 +58,24 @@ export async function handleDisneyPlusCatalogHandoff(message: { type?: unknown; 
 		const key = storageKey(tab);
 		const owner = await ownerKey();
 		if (!owner) return null;
-		if (message.action === "redirect") {
-			const playback = disneyPlusPlaybackId(sender.url ?? "");
-			if (!playback || typeof message.payload !== "string" || disneyPlusPlaybackId(message.payload) !== playback) return null;
+		if (message.action === "capture-launch" || message.action === "claim-launch") {
+			const playback = disneyLaunchTitle(sender.url ?? "");
+			if (!playback || typeof message.payload !== "string" || disneyLaunchTitle(message.payload) !== playback) return null;
 			const key = redirectKey(tab);
-			const url = new URL(message.payload);
-			if (url.pathname.toLowerCase().startsWith("/play/")) {
-				const fragment = disneyLaunchFragment(url.href);
-				if (fragment) await chrome.storage.session.set({ [key]: { playback, fragment, owner, expires: Date.now() + DISNEY_REDIRECT_TTL_MS } });
+			const fragment = disneyLaunchFragment(message.payload);
+			if (message.action === "capture-launch") {
+				if (!fragment) return null;
+				const ttl = fragment.startsWith("anidachiRoom=") ? DISNEY_ROOM_INVITE_TTL_MS : DISNEY_REDIRECT_TTL_MS;
+				await chrome.storage.session.set({ [key]: { playback, fragment, owner, expires: Date.now() + ttl } });
 				return fragment;
 			}
+			if (disneyPlusPlaybackId(message.payload) !== playback || disneyPlusPlaybackId(sender.url ?? "") !== playback) return null;
 			const record = redirectRecord.safeParse((await chrome.storage.session.get(key))[key]);
+			if (!record.success || record.data.playback !== playback) return null;
 			await chrome.storage.session.remove(key);
-			return record.success && !url.hash && record.data.owner === owner && record.data.playback === playback &&
-				record.data.expires > Date.now() && await ownerKey() === owner ? record.data.fragment : null;
+			if (new URL(message.payload).hash && fragment !== record.data.fragment) return null;
+			return record.data.owner === owner && record.data.expires > Date.now() &&
+				await ownerKey() === owner ? record.data.fragment : null;
 		}
 		const href = (await chrome.tabs.get(tab)).url ?? "";
 		const entity = disneyPlusEntityId(href), playback = disneyPlusPlaybackId(href);

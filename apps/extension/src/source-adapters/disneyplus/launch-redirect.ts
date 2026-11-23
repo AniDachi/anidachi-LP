@@ -1,9 +1,14 @@
-import { MAX_ROOM_ID_CHARS, disneyPlusPlaybackId, parsePersonalHistoryResumeUrl } from "@anidachi/protocol";
+import { MAX_ROOM_ID_CHARS, disneyPlusEntityId, disneyPlusFingerprint, disneyPlusPlaybackId, parsePersonalHistoryResumeUrl } from "@anidachi/protocol";
 
 export const DISNEY_REDIRECT_TTL_MS = 60_000;
+export const DISNEY_ROOM_INVITE_TTL_MS = 10 * 60_000;
+
+export function disneyLaunchTitle(href: string): string | null {
+  return disneyPlusPlaybackId(href) ?? disneyPlusEntityId(href);
+}
 
 export function disneyLaunchFragment(href: string): string | null {
-  if (!disneyPlusPlaybackId(href)) return null;
+  if (!disneyLaunchTitle(href)) return null;
   const hash = new URLSearchParams(new URL(href).hash.slice(1));
   if (hash.has("anidachiRoom")) {
     const ids = hash.getAll("anidachiRoom");
@@ -16,23 +21,32 @@ export function disneyLaunchFragment(href: string): string | null {
     ? new URLSearchParams({ anidachiResume: JSON.stringify(resume) }).toString() : null;
 }
 
-// Disney replaces its neutral /play link with a localized document, dropping the fragment.
-// The localized document refers back to that exact play link, even across a full reload.
-export function prepareDisneyLaunchRedirect(href: string, referrer: string): Promise<string | null> | null {
-  const id = disneyPlusPlaybackId(href);
-  if (!id || typeof chrome === "undefined" || !chrome.runtime?.sendMessage) return null;
-  const url = new URL(href);
-  const initial = url.pathname.toLowerCase().startsWith("/play/");
-  const fragment = disneyLaunchFragment(href);
-  const fromNeutral = disneyPlusPlaybackId(referrer) === id && new URL(referrer).pathname.toLowerCase().startsWith("/play/");
-  if (initial ? !fragment : url.hash || !fromNeutral) return null;
+function redirectMessage(action: "capture-launch" | "claim-launch", href: string): Promise<string | null> {
   return Promise.resolve(chrome.runtime.sendMessage({
-    type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF", action: "redirect", payload: href,
+    type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF", action, payload: href,
   })).then((saved: unknown) => typeof saved === "string" ? saved : null).catch(() => null);
 }
 
+// Disney may visit the localized player URL and then show the title details first.
+// Save the invitation at document start. Only the matching video can consume it.
+export function prepareDisneyLaunchRedirect(href: string, referrer: string) {
+  const title = disneyLaunchTitle(href);
+  if (!title || typeof chrome === "undefined" || !chrome.runtime?.sendMessage) return null;
+  const url = new URL(href);
+  const fragment = disneyLaunchFragment(href);
+  if (!fragment && (url.hash || disneyLaunchTitle(referrer) !== title)) return null;
+  const captured = fragment ? redirectMessage("capture-launch", href) : null;
+  return {
+    title,
+    claim(playerHref: string, fingerprint: string): Promise<string | null> | null {
+      if (disneyPlusPlaybackId(playerHref) !== title || disneyPlusFingerprint(title) !== fingerprint) return null;
+      return Promise.resolve(captured).then(() => redirectMessage("claim-launch", playerHref));
+    },
+  };
+}
+
 export function restoreDisneyLaunchFragment(initialHref: string, fragment: string | null): void {
-  const id = disneyPlusPlaybackId(initialHref);
+  const id = disneyLaunchTitle(initialHref);
   if (!id || !fragment || location.hash || disneyPlusPlaybackId(location.href) !== id) return;
   const url = new URL(location.href);
   url.hash = fragment;
