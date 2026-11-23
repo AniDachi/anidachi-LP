@@ -52,10 +52,10 @@ beforeEach(() => {
   room = { ...activeRoom };
 });
 
-async function renderPage() {
+async function renderPage(lobby?: string) {
   return renderToStaticMarkup(await RoomPage({
     params: Promise.resolve({ roomId: "test-room" }),
-    searchParams: Promise.resolve({}),
+    searchParams: Promise.resolve({lobby}),
   }));
 }
 
@@ -79,6 +79,15 @@ for (const participant of ["member", "host"]) {
     assert.match(html, /action="\/api\/rooms\/test-room\/join" method="POST"/);
   });
 }
+
+test("a Disney catalog invitation keeps sign-in and uses the membership form before launch", async () => {
+  room = {...activeRoom,...roomSourceCreationColumns({})};
+  const html = await renderPage("disneyplus");
+  assert.equal(authReturnPath, "/room/test-room?lobby=disneyplus");
+  assert.match(html, /action="\/api\/rooms\/test-room\/join\?lobby=disneyplus"/);
+  assert.doesNotMatch(html, /href="https:\/\/www\.disneyplus\.com/);
+  assert.doesNotMatch(await renderPage("https://example.com"), /join\?lobby=/);
+});
 
 test("a missing room keeps its terminal state without offering to join", async () => {
   room = null;
