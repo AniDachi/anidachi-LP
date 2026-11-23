@@ -1,4 +1,4 @@
-import { disneyPlusRoutePath, MAX_ROOM_ID_CHARS, type RoomLobbyProvider } from "@anidachi/protocol";
+import { disneyPlusRoutePath, hboMaxCatalogPath, MAX_ROOM_ID_CHARS, type RoomLobbyProvider } from "@anidachi/protocol";
 import { catalogRoomProvider } from "./catalog-room-routes";
 import { buildRoomShareableUrl } from "./room-url";
 
@@ -66,6 +66,24 @@ export function popupRoomInvite(roomId: string, provider: RoomLobbyProvider | nu
 	const url = new URL(buildRoomShareableUrl(roomId));
 	if (provider) url.searchParams.set("lobby", provider);
 	return url.href;
+}
+
+// HBO removes the fragment while rendering its catalog. Keep this invitation
+// only for admission in the document that actually opened it.
+export function captureHboLobbyInvite(href: string, navigation?: Pick<PerformanceNavigationTiming, "name" | "type">) {
+	if (!hboMaxCatalogPath(href)) return null;
+	const page = href.split("#")[0];
+	const original = href.includes("#") ? href : navigation?.type === "navigate" ? navigation.name : null;
+	if (!original || original.split("#")[0] !== page) return null;
+	let room = lobbyRoomFromUrl(original);
+	if (!room) return null;
+	return {
+		read(current: string) {
+			if (current.split("#")[0] !== page || (current.includes("#") && lobbyRoomFromUrl(current) !== room)) room = null;
+			return room;
+		},
+		consume() { room = null; },
+	};
 }
 
 // Module-local delivery between the content lifecycle and its React overlay.
