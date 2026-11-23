@@ -34,6 +34,7 @@ const SOURCES = [
   { href: "https://www.teleparty.com/premium", label: "Teleparty Premium page (19 Nov)" },
   { href: "https://kosmi.io/teleparty-alternative/", label: "Kosmi Teleparty alternative page" },
   { href: "https://rave.io/faq", label: "Rave FAQ" },
+  { href: "https://rave.io/", label: "Rave home page (App Store notice)" },
   { href: "https://w2g.tv/en/", label: "Watch2Gether home page" },
   {
     href: "https://support-apps.discord.com/hc/en-us/articles/26502500234519-Watch-Together-FAQ",
@@ -65,7 +66,7 @@ const faq = [
   {
     question: "What is the best Teleparty alternative?",
     answer:
-      "It depends on what's missing for you. For anime on Crunchyroll, or free voice and video calls next to Netflix or YouTube in desktop Chrome, AniDachi. For friends on phones, Rave or Kosmi. For no install at all, Kosmi or Watch2Gether. If Teleparty's free tier already covers your service and text chat is enough, staying on Teleparty is fine.",
+      "It depends on what's missing for you. For anime on Crunchyroll, or free voice and video calls next to Netflix or YouTube in desktop Chrome, AniDachi. For friends on phones, Kosmi, or Rave on Android. For no install at all, Kosmi or Watch2Gether. If Teleparty's free tier already covers your service and text chat is enough, staying on Teleparty is fine.",
   },
   {
     question: "What is the best free Teleparty alternative?",
@@ -75,7 +76,7 @@ const faq = [
   {
     question: "Is there a Teleparty alternative that works on phones?",
     answer:
-      "Yes. Rave has apps for iPhone, iPad and Android, and Kosmi rooms open in a phone browser. Teleparty's own mobile apps support fewer services than its browser extension. AniDachi is desktop Chrome only.",
+      "Yes. Kosmi rooms open in a phone browser, and Rave has an Android app. Rave's site says Apple removed Rave from the App Store (checked 23 Nov 2026), so iPhone users can't download it there. Teleparty's own mobile apps support fewer services than its browser extension. AniDachi is desktop Chrome only.",
   },
   {
     question: "What is the best Teleparty alternative for Crunchyroll?",
@@ -138,8 +139,8 @@ export default function BestTelepartyAlternativesPage() {
             The best Teleparty alternative depends on what Teleparty doesn&apos;t
             do for you. For Crunchyroll anime, or free voice and video calls on
             Netflix and YouTube in desktop Chrome, use AniDachi. For friends on
-            phones, use Rave or Kosmi. For no install at all, use Kosmi or
-            Watch2Gether.
+            phones, use Kosmi, or Rave on Android. For no install at all, use
+            Kosmi or Watch2Gether.
           </strong>{" "}
           Teleparty (formerly Netflix Party) is free on Netflix, YouTube,
           Disney+, Hulu, HBO Max and Prime Video with text chat, but Crunchyroll
@@ -184,7 +185,7 @@ export default function BestTelepartyAlternativesPage() {
               anidachi: "no",
               teleparty: "Apps with fewer services",
               kosmi: "yes",
-              rave: "yes",
+              rave: "Android; removed from Apple's App Store",
               w2g: "yes",
             },
           },
@@ -264,11 +265,12 @@ export default function BestTelepartyAlternativesPage() {
             ),
           },
           {
-            title: "Rave: an app for every device",
+            title: "Rave: an app for Android and computers",
             body: (
               <>
-                Apps for iPhone, iPad, Android, Windows, Mac, Linux and
-                Chromebook. Rave&apos;s FAQ lists YouTube, Netflix, Prime Video,
+                Apps for Android, Windows, Mac, Linux and Chromebook. Its FAQ
+                still lists iPhone and iPad, but a notice on rave.io says Apple
+                removed Rave from the App Store (checked 23 Nov 2026). Rave&apos;s FAQ lists YouTube, Netflix, Prime Video,
                 Disney+, HBO Max, Crunchyroll and more, no limit on group size, and
                 a free app with ads (Premium removes them). You sign in to your
                 streaming account inside Rave, and rented or bought YouTube and
@@ -318,7 +320,7 @@ export default function BestTelepartyAlternativesPage() {
         Teleparty Premium before anyone can watch. With AniDachi, the host
         creates a room from the Crunchyroll player and friends join free,
         each on their own Crunchyroll account. Rave also lists Crunchyroll and
-        runs on phones. Setup:{" "}
+        runs on Android phones. Setup:{" "}
         <Link href="/watch-crunchyroll-together">Crunchyroll watch party</Link>.
       </p>
       <h3 id="netflix" className="mt-6 scroll-mt-24 text-xl font-semibold text-ani-text">
@@ -327,7 +329,7 @@ export default function BestTelepartyAlternativesPage() {
       <p className="mb-4 leading-relaxed text-ani-muted">
         Teleparty is free on Netflix, so switch only for something it
         doesn&apos;t give you: free voice and video calls (AniDachi or Kosmi) or
-        phones (Rave or Kosmi). Everyone still needs their own Netflix access to
+        phones (Kosmi, or Rave on Android). Everyone still needs their own Netflix access to
         the same title. Setup:{" "}
         <Link href="/netflix-watch-party">Netflix watch party</Link>.
       </p>
