@@ -6,6 +6,8 @@ are tracked in [staging verification](netflix-staging-verification.md).
 
 ## Page and player boundary
 
+On staging, choosing Netflix in the extension's **Room** tab opens the Netflix catalog or uses an existing Netflix tab. Creation waits for a selected viewer and a ready catalog or player. A catalog room stores its platform with no playback source. Both a copied invitation and an Inbox invitation open the catalog until the host starts a title. The current watch ID then determines the guest's destination. An active room takes precedence over a new creation.
+
 Only HTTPS `www.netflix.com/watch/<positive-decimal-id>` is a source; IDs have at
 most 20 digits. Query/hash decorations are removed from the canonical persisted
 URL. Credentials, other hosts/routes, cross-provider URLs and mismatched player

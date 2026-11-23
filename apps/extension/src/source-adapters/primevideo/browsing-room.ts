@@ -3,7 +3,7 @@ import { getExpectedHostTime, type ClientEvent, type PlaybackState, type WatchSo
 import { supportsCatalogReturn, supportsCatalogRoom } from "../../catalog-room-routes";
 
 type Launch = (source: WatchSourceDescriptor, roomId: string, signal: AbortSignal) => Promise<boolean>;
-export type PrimeBrowsingBaseline = { fingerprint?: string; visit?: string };
+export type PrimeBrowsingBaseline = { fingerprint?: string; visit?: string; followFirstPlay?: boolean };
 
 type HostEvent = Extract<ClientEvent, { type: "HOST_STATE" }>;
 
@@ -73,7 +73,7 @@ export class PrimeBrowsingRoom {
     const baseline = this.baseline;
     if (!baseline || !target || target.videoFingerprint !== state.videoFingerprint) return;
     // A first snapshot establishes the baseline even if it arrives late.
-    if (!baseline.fingerprint) {
+    if (!baseline.fingerprint && !baseline.followFirstPlay) {
       baseline.fingerprint = target.videoFingerprint;
       baseline.visit = state.primePlayerVisit;
     }

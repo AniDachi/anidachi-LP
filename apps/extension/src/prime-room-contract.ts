@@ -13,7 +13,7 @@ export const PRIME_ROOM_INTERNAL = "ANIDACHI_PRIME_ROOM_INTERNAL";
 export const PRIME_ROOM_DOCUMENT_HANDOFF_MS = 30_000;
 export const PRIME_ROOM_PORT = "ANIDACHI_PRIME_ROOM_PORT";
 export const PRIME_ROOM_PAGE = "prime-room.html";
-export type BrowseBaseline = { fingerprint?: string; visit?: string };
+export type BrowseBaseline = { fingerprint?: string; visit?: string; followFirstPlay?: boolean };
 export type PrimeRoomIdentity = Pick<
 	RoomSessionRecord,
 	"ownerUserId" | "participantSessionId" | "roomId"

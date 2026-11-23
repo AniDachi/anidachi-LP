@@ -6,6 +6,8 @@ import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-h
 import type { PrimeLaunchHandoff } from "./prime-launch-capture";
 import { hasLivePrimeRoomSession, PrimeRoomClient, retireUnattachedPrimeRoom } from "./prime-room-client";
 import type { LivePrimeRoomSession } from "./prime-room-contract";
+import { useSyncExternalStore } from "react";
+import { ROOMS_PILOT, popupRoomProvider, lobbyRoomFromUrl, getPopupCreate, popupRoomInvite, setPopupCreate, subscribePopupCreate } from "./popup-room-launch";
 import { catalogRoomProvider, catalogWatchDestination, renderedHboMaxWatchUrl, catalogWatchSource, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
 import { followPrimeRoom } from "./prime-launch-client";
 import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
@@ -550,6 +552,7 @@ function requiresPlayableRoomSource(provider: VideoAdapter["provider"]) {
 }
 
 export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, initialPrimeRoom, primeBrowsing = false, onPrimeRoomChange, onPrimeClose, onPrimeRestoreLost, preservePrimeRoomOnUnmount }: OverlayAppProps) {
+	const popupCreate = useSyncExternalStore(subscribePopupCreate, getPopupCreate, () => null);
 	const disneyPlayer = adapter.provider === "disneyplus" && !primeBrowsing;
 	const disneyCatalog = adapter.provider === "disneyplus" && primeBrowsing;
 	const initialPrimeLaunchRef = useRef(initialPrimeLaunch ?? null);
@@ -4295,7 +4298,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				const restore = restoringBaseline.current;
 				catalogFollow.setRoom(nextRoomId);
 				catalogFollow.setBrowsing(browseMode.current,
-					restore && roomSessionIdentityMatches(restore, nextStoredRoomSession) ? restore.browsingBaseline ?? undefined : undefined);
+					restore && roomSessionIdentityMatches(restore, nextStoredRoomSession) ? restore.browsingBaseline ?? undefined :
+            ROOMS_PILOT && lobbyRoomFromUrl(location.href) === nextRoomId ? { followFirstPlay: true } : undefined);
 				restoringBaseline.current = undefined;
 			}
 			setRoomId(nextRoomId);
@@ -4530,6 +4534,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					() =>
 						isCurrentJoin() && sameInviteSource() &&
 						participantRef.current?.id === activeParticipant.id,
+          ROOMS_PILOT && browseMode.current && lobbyRoomFromUrl(location.href) === nextRoomId ? popupRoomProvider(location.href) : null,
 				);
 				if (!started && isCurrentJoin() && !sameInviteSource()) {
 					invitation?.consumeRoom();
@@ -5099,8 +5104,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	}, [adapter, identityLoaded, panelOpen]);
 
 	const createAndConnectRoom = useCallback(
-		async (reason: string) => {
-			if (browseMode.current || initialPrimeLaunchRef.current?.waiting) return null;
+		async (reason: string, expectedOwner?: string) => {
+			if ((browseMode.current && !(ROOMS_PILOT && popupRoomProvider(location.href) === adapter.provider)) || initialPrimeLaunchRef.current?.waiting) return null;
 			if (roomIdRef.current) {
 				logDebug("overlay.room", "create skipped while room is active", {
 					reason,
@@ -5121,6 +5126,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			}
 			const activeParticipant = refreshed.participant;
 			const activeAccessToken = refreshed.accessToken;
+      if (expectedOwner && activeParticipant?.id !== expectedOwner) return null;
 			setHostingPaywallOpen(false);
 			if (!activeParticipant || !activeAccessToken) {
 				setPanelOpen(true);
@@ -5161,13 +5167,20 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				}
 				// Read one coherent playing source after async identity/session work.
 				// Prime can replace the episode without changing the address bar.
-				const source = adapter.getSourceDescriptor();
+				const fromCatalog = browseMode.current;
+				const lobbyProvider = fromCatalog && ROOMS_PILOT ? popupRoomProvider(location.href) : null;
+				if (fromCatalog && (!lobbyProvider || lobbyProvider !== adapter.provider))
+					throw new Error("The page changed. Open Room and choose the platform again.");
+				const source = fromCatalog ? null : adapter.getSourceDescriptor();
+        if (reason === "popup" && !fromCatalog && !source) throw new Error("Start the video, or create a room from the catalog.");
 				if (!source && requiresPlayableRoomSource(adapter.provider)) {
 					setPlayerSourcePending(true);
 					const provider = adapter.provider === "hbomax" ? "HBO Max" : "Prime Video";
 					throw new Error(provider + " is loading. Try again in a moment.");
 				}
-				created = await createRoom(activeAccessToken, preparedRoomSession, {
+				created = await createRoom(activeAccessToken, preparedRoomSession, lobbyProvider ? {
+					lobbyProvider, title: lobbyProvider === "netflix" ? "Netflix watchroom" : "Disney+ watchroom", clientRequestId: createRequestIdRef.current,
+				} : {
 					sourceUrl: source?.sourceUrl ?? buildCurrentSourceUrlForInvite(),
      ...(source?.primeNavigation ? {primeNavigation:source.primeNavigation} : {}),
 					videoFingerprint: source?.videoFingerprint ?? adapter.getFingerprint(),
@@ -5499,8 +5512,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		}
 	}, [adapter, adapterActive, roomId, roomSnapshotReady, isConnected, isHost, playbackSyncController]);
 
-	const handleCreateRoom = async () => {
-		if (browseMode.current || roomCreatePending || initialPrimeLaunchRef.current?.waiting || canRetryPrimeInvite) {
+	const handleCreateRoom = async (reason: "manual" | "popup" = "manual", expectedOwner?: string) => {
+		if ((browseMode.current && !(ROOMS_PILOT && popupRoomProvider(location.href) === adapter.provider)) || roomCreatePending || initialPrimeLaunchRef.current?.waiting || canRetryPrimeInvite) {
 			return;
 		}
 
@@ -5527,7 +5540,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		setAuthMessage(null);
 		try {
 			await waitForOverlayPaint();
-			const created = await createAndConnectRoom("manual");
+			const created = await createAndConnectRoom(reason, expectedOwner);
 			if (!created) setRoomStartPending(false);
 		} catch (error) {
 			if (showActiveRoomConflict(error)) {
@@ -5551,6 +5564,15 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			setRoomCreatePending(false);
 		}
 	};
+
+	useEffect(() => {
+    if (!popupCreate || !ROOMS_PILOT || adapter.provider !== popupCreate.provider || !identityLoaded ||
+      roomSessionLoadedForUserId !== (participant?.id ?? null)) return;
+    if (getPopupCreate() !== popupCreate) return;
+    setPopupCreate(null);
+    if (popupCreate.owner !== participant?.id || roomIdRef.current || popupCreate.expires <= Date.now() || popupCreate.path !== location.pathname) return;
+    void handleCreateRoom("popup", popupCreate.owner);
+  }, [popupCreate, identityLoaded, participant?.id, roomSessionLoadedForUserId, adapter.provider]);
 
 	const handleEndRoom = async (event: ReactMouseEvent<HTMLButtonElement>) => {
 		if (!isTrustedOverlayActionEvent(event)) {
@@ -5732,7 +5754,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			return false;
 		}
 
-		const invite =
+		const invite = ROOMS_PILOT && popupRoomProvider(location.href) === adapter.provider ? popupRoomInvite(roomId, popupRoomProvider(location.href)) :
 			roomShareableLinkRef.current ?? buildRoomShareableUrl(roomId);
 		const copied = await copyRoomInviteText(
 			invite,
@@ -7125,7 +7147,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						remainingSeconds={roomId ? (isConnected && isHost ? (hostingTimeClock.observed ? liveHostingTime?.remainingSeconds ?? null : quotaRemainingSeconds) : null) : (accountHostingTime.mode === "legacy" ? freeQuotaNotice.availableSeconds : accountHostingTime.remainingSeconds)}
 						awaitingHostingTime={isHost && !legacyQuotaEnabled && hasFreeTimePresentation && (!liveHostingTime || liveHostingTime.snapshot.access.kind === "unknown")}
 						retainIdleTimeWhileConnecting={accountHostingTime.mode === "legacy" && !hostingTimeClock.observed}
-						onPrimaryAction={primaryRoomActionKind === "leave" ? handleLeaveRoom : primaryRoomActionKind === "end" ? handleRequestEndRoom : handleCreateRoom}
+						onPrimaryAction={primaryRoomActionKind === "leave" ? handleLeaveRoom : primaryRoomActionKind === "end" ? handleRequestEndRoom : () => handleCreateRoom()}
 						onCopyInvite={copyInvite} onSync={() => playbackSyncController.broadcastHostState()}
 						onToggleInvite={toggleInvitePanel} inviteOpen={invitePanelOpen} inviteDisabled={!authAuthenticated}
 						syncDisabled={!isConnected || !roomSnapshotReady || extensionContextInvalidated || playerSourcePending}

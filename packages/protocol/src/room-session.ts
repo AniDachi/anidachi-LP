@@ -22,8 +22,12 @@ export const ROOM_TOKEN_AUDIENCE = "anidachi-worker";
 export const ActiveRoomRoleSchema = z.enum(["host", "member"]);
 
 /** Platform of a room created in a catalog before any playback source exists. */
-export const RoomLobbyProviderSchema = z.literal("disneyplus");
+export const RoomLobbyProviderSchema = z.enum(["disneyplus", "netflix"]);
 export type RoomLobbyProvider = z.infer<typeof RoomLobbyProviderSchema>;
+export const ROOM_LOBBY_HOME: Record<RoomLobbyProvider, string> = {
+  disneyplus: "https://www.disneyplus.com/home",
+  netflix: "https://www.netflix.com/browse",
+};
 
 export const RoomSessionAdmissionInputSchema = z.strictObject({
   participantSessionId: ParticipantSessionIdSchema,

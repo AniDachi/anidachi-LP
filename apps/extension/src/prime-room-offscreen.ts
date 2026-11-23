@@ -226,6 +226,12 @@ export function registerPrimeRoomOffscreen() {
 			sender.url !== workerUrl
 		)
 			return false;
+    if (message.action === "popup-room") {
+      const connected = [...owners.values()].find(candidate => candidate.identity.ownerUserId === message.owner &&
+        candidate.status === "connected" && candidate.ready);
+      respond(connected ? {tabId:connected.tabId, roomId:connected.identity.roomId, provider:connected.provider} : null);
+      return false;
+    }
 		const tabId = message.tabId;
 		const owner = owners.get(tabId);
 		const live =

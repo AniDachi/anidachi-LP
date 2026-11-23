@@ -1,8 +1,9 @@
+import { ROOMS_PILOT, ROOM_LAUNCH_MESSAGE, popupRoomProvider, hasCatalogNavigation, lobbyRoomFromUrl, netflixProfileGate, netflixProfileReturn, setPopupCreate } from "../src/popup-room-launch";
 import { HBO_MAX_BROWSER_HOSTS, isHboMaxOrigin } from "@anidachi/protocol";
 import { HboMaxVideoAdapter } from "../src/source-adapters/hbomax/adapter";
 import { startHboMaxCatalogCapture } from "../src/source-adapters/hbomax/metadata";
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
-import { disneyLaunchTitle, prepareDisneyLaunchRedirect, restoreDisneyLaunchFragment } from "../src/source-adapters/disneyplus/launch-redirect";
+import { disneyLaunchTitle, prepareDisneyLaunchRedirect, restoreDisneyLaunchFragment, prepareDisneyLobbyRedirect, restoreDisneyLobbyFragment } from "../src/source-adapters/disneyplus/launch-redirect";
 import { getLivePrimeRoomSession } from "../src/prime-room-client";
 import type { LivePrimeRoomSession } from "../src/prime-room-contract";
 import { catalogPlayerProvider, catalogRoomProvider, supportsCatalogReturn, supportsCatalogRoom } from "../src/catalog-room-routes";
@@ -184,6 +185,7 @@ function startContentLifecycleSession(
   const primeLaunch = createPrimeLaunchCapture(location.href);
   const entryHref = location.href;
   let disneyRedirect = !restoredFromCache && window.top === window ? prepareDisneyLaunchRedirect(entryHref, document.referrer) : null;
+  const lobbyRedirect = !restoredFromCache && window.top === window ? prepareDisneyLobbyRedirect(entryHref, document.referrer) : null;
   const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
   const dependencies: ContentLifecycleDependencies = {
@@ -200,6 +202,13 @@ function startContentLifecycleSession(
   let checkingLiveRoom = false;
   let startupRoom: LivePrimeRoomSession | null = null;
   let catalogAdapter: VideoAdapter | null = null;
+  const pilotEnabled = ROOMS_PILOT && window.top === window && (isDisneyPlusOrigin(location.href) || location.origin === "https://www.netflix.com") &&
+    typeof chrome !== "undefined" && Boolean(chrome.runtime?.onMessage);
+  let needsPilotClaim = pilotEnabled;
+  let pilotLobby = ROOMS_PILOT && !restoredFromCache && Boolean(lobbyRoomFromUrl(location.href));
+  const netflixEntry = pilotEnabled && !restoredFromCache && location.origin === "https://www.netflix.com" && location.pathname === "/browse";
+  let pendingProfileReturn = netflixEntry && netflixProfileReturn(document.referrer);
+  let savedProfileInvite: Promise<unknown> | undefined;
   let lastPrimePlayerRoute: string | undefined;
   let verifiedPrimePlayerPath: string | undefined;
   let waitingForPrimeLaunch = false;
@@ -306,8 +315,8 @@ function startContentLifecycleSession(
         container: elementDebugSnapshot(adapter.container),
         video: videoDebugSnapshot(adapter.video),
       });
-      if (startupRoom) {
-        mounted = dependencies.mount(adapter, null, startupRoom, adapter === catalogAdapter);
+      if (startupRoom || (pilotLobby && adapter === catalogAdapter)) {
+        mounted = dependencies.mount(adapter, null, startupRoom ?? undefined, adapter === catalogAdapter);
         startupRoom = null;
       } else {
         mountWithLaunch(adapter);
@@ -364,6 +373,42 @@ function startContentLifecycleSession(
       }
     }
     const catalogRoute = catalogRoomProvider(location.href);
+    const launchProvider = pilotEnabled ? popupRoomProvider(location.href) : null;
+    if (netflixEntry && launchProvider === "netflix" && location.pathname === "/browse" && !startupRoom && !mounted) {
+      if (!savedProfileInvite && lobbyRoomFromUrl(entryHref) && netflixProfileGate(document)) {
+        pendingProfileReturn = true;
+        savedProfileInvite = chrome.runtime.sendMessage({type: ROOM_LAUNCH_MESSAGE, action: "remember-profile-invite"}).catch(() => null);
+      }
+      if (pendingProfileReturn && hasCatalogNavigation(document, "netflix")) {
+        pendingProfileReturn = false;
+        checkingLiveRoom = true;
+        void Promise.resolve(savedProfileInvite).then(() => chrome.runtime.sendMessage({type: ROOM_LAUNCH_MESSAGE, action: "take-profile-invite"}))
+          .catch(() => null).then(room => {
+            if (disposed) return;
+            if (typeof room === "string" && !location.hash && location.pathname === "/browse") {
+              const dest = new URL(location.href);
+              dest.hash = new URLSearchParams({anidachiRoom: room, anidachiLobby: "netflix"}).toString();
+              if (lobbyRoomFromUrl(dest.href) === room) history.replaceState(history.state, "", dest.href);
+            }
+            pilotLobby = Boolean(lobbyRoomFromUrl(location.href));
+            checkingLiveRoom = false;
+            reconcile();
+          });
+        return "idle";
+      }
+    }
+    if (pilotLobby && (mounted?.hasPrimeRoom?.() || !launchProvider)) pilotLobby = false;
+    if (pilotEnabled && !startupRoom && !mounted?.hasPrimeRoom?.() && (needsPilotClaim || pilotLobby) && launchProvider) {
+      const ready = catalogPlayerProvider(location.href) === launchProvider
+        ? detection.status === "ready" && detection.adapter.provider === launchProvider
+        : hasCatalogNavigation(document, launchProvider);
+      if (ready && needsPilotClaim) {
+        needsPilotClaim = false;
+        void claimPilot();
+      }
+      // A lobby invite can arrive before the platform renders its signed-in catalog.
+      if (pilotLobby && !ready && !mounted) return "idle";
+    }
     const path = location.origin + location.pathname;
     const route = parsePrimePageUrl(location.href)?.token;
     if (detection.status === "ready" && detection.adapter.provider === "primevideo" &&
@@ -373,7 +418,8 @@ function startContentLifecycleSession(
         verifiedPrimePlayerPath = path;
     }
     const allowed = catalogRoute || Boolean(mounted?.hasPrimeRoom?.() && route && verifiedPrimePlayerPath === path);
-    if (startupRoom && allowed && (detection.status !== "ready" ||
+    if (pilotLobby && launchProvider && catalogRoute === launchProvider && manager.current === catalogAdapter && catalogAdapter && detection.status !== "ready") return "idle";
+    if ((startupRoom || (pilotLobby && launchProvider && catalogRoute === launchProvider && !catalogPlayerProvider(location.href))) && allowed && (detection.status !== "ready" ||
         detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed")) {
       // No page video is needed for room UI. This unbound adapter never receives
       // player listeners, history, or playback control and cannot select a preview.
@@ -381,7 +427,7 @@ function startContentLifecycleSession(
       catalogAdapter = new Adapter(document.createElement("video"), document.createElement("div"));
       return manager.reconcile({ status: "ready", adapter: catalogAdapter });
     }
-    if (mounted?.isPrimeDocked?.() && !mounted.hasPrimeRoom?.()) {
+    if (!pilotLobby && mounted?.isPrimeDocked?.() && !mounted.hasPrimeRoom?.()) {
       manager.reconcile({ status: "blocked", provider: manager.current?.provider ?? "primevideo" });
     }
     if (supportsCatalogReturn(catalogRoute) && manager.current?.provider === catalogRoute && mounted?.hasPrimeRoom?.() && detection.status !== "ready") {
@@ -445,11 +491,32 @@ function startContentLifecycleSession(
     }, mountPollDelay);
   };
 
+  const claimPilot = async () => {
+    const path = location.pathname;
+    const claim = await chrome.runtime.sendMessage({type: ROOM_LAUNCH_MESSAGE, action:"claim"}).catch(() => null);
+    if (disposed || !claim?.id || !claim.owner || claim.provider !== popupRoomProvider(location.href) || path !== location.pathname || claim.expires <= Date.now()) return;
+    pilotLobby = true;
+    setPopupCreate({...claim,path});
+    reconcile();
+  };
+  const wakePilot = (message: {type?: string; action?: string}, sender: chrome.runtime.MessageSender) => {
+    if (sender.id === chrome.runtime.id && !sender.tab && message?.type === ROOM_LAUNCH_MESSAGE && message.action === "wake") {
+      needsPilotClaim = true;
+      reconcile();
+    }
+  };
+  if (pilotEnabled) {
+    chrome.runtime.onMessage.addListener(wakePilot);
+  }
   if (window.top === window && catalogRoomProvider(location.href) &&
       (overrides.lookupPrimeRoom || (typeof chrome !== "undefined" && typeof chrome.runtime?.sendMessage === "function"))) {
     checkingLiveRoom = true;
-    void dependencies.lookupPrimeRoom().catch(() => null).then(record => {
+    void Promise.all([dependencies.lookupPrimeRoom().catch(() => null), lobbyRedirect]).then(([record, fragment]) => {
       if (disposed) return;
+      if (ROOMS_PILOT && !record && fragment && new URLSearchParams(fragment).get("anidachiLobby") === "disneyplus") {
+        restoreDisneyLobbyFragment(entryHref, fragment);
+        pilotLobby = Boolean(lobbyRoomFromUrl(location.href));
+      }
       checkingLiveRoom = false;
       if (record && catalogRoomProvider(location.href)) {
         startupRoom = record;
@@ -500,6 +567,10 @@ function startContentLifecycleSession(
     }
     disposed = true;
     leavingDocument = pageHidden;
+    if (pilotEnabled) {
+      chrome.runtime.onMessage.removeListener(wakePilot);
+      setPopupCreate(null);
+    }
     primeLaunch.dispose();
     if (mountPollTimer !== null) {
       window.clearTimeout(mountPollTimer);
@@ -932,11 +1003,11 @@ export function mountOverlay(
   else activateAdapterBinding();
 
   function dockPrimeRoom() {
-    if (disposed || (!primeRoomId && !restoringRoom) || !supportsCatalogRoom(adapter.provider) || docked) return;
+    if (disposed || (!primeRoomId && !restoringRoom && !options.initiallyDocked) || !supportsCatalogRoom(adapter.provider) || docked) return;
     deactivateAdapterBinding();
     docked = true;
     Object.assign(host.style, { position: "fixed", inset: "0", width: "100%", height: "100%", borderRadius: "0" });
-    if (primeRoomId) placeHost(document.documentElement);
+    if (primeRoomId || (options.initiallyDocked && !options.initialPrimeRoom)) placeHost(document.documentElement);
     renderer.render(adapter, false, true);
   }
   return {

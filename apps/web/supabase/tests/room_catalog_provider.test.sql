@@ -20,15 +20,15 @@ $$;
 set local role service_role;
 select is((select room_record->>'lobby_provider' from pg_temp.catalog('cc7a1000-0000-4000-8000-000000000001','first',false)),
           'disneyplus', 'ordinary admission stores catalog in the same transaction');
-select is((select room_record->>'lobby_provider' from pg_temp.catalog('cc7a1000-0000-4000-8000-000000000002','second',true)),
-          'disneyplus', 'abuse-protected admission stores catalog');
-select is((select count(*)::int from public.rooms where lobby_provider='disneyplus' and source_url is null
+select is((select room_record->>'lobby_provider' from pg_temp.catalog('cc7a1000-0000-4000-8000-000000000002','second',true,'netflix')),
+          'netflix', 'abuse-protected admission stores catalog');
+select is((select count(*)::int from public.rooms where lobby_provider in ('disneyplus','netflix') and source_url is null
            and host_user_id in ('cc7a1000-0000-4000-8000-000000000001','cc7a1000-0000-4000-8000-000000000002')), 2,
           'catalog is durable without inventing a playable source');
 select is((select room_record->>'room_id' from pg_temp.catalog('cc7a1000-0000-4000-8000-000000000001','first',false)),
           (select room_id from public.rooms where client_request_id='first' and host_user_id='cc7a1000-0000-4000-8000-000000000001'), 'retry reuses the room');
-select is((select outcome from pg_temp.catalog('cc7a1000-0000-4000-8000-000000000001','different',false)),
-          'conflict', 'a different creation obeys the existing active-room rule');
+select is((select outcome from pg_temp.catalog('cc7a1000-0000-4000-8000-000000000001','different',false,'netflix')),
+          'conflict', 'choosing another platform obeys the existing active-room rule');
 select throws_ok($$select * from pg_temp.catalog('cc7a1000-0000-4000-8000-000000000001','third',false,'https://example.invalid')$$,
                  '22023','invalid catalog room','arbitrary destinations rejected');
 select ok(not has_function_privilege('anon', 'public.create_catalog_room_v1(text,uuid,text,text,text,text,integer,integer,boolean,boolean,integer,integer,boolean,text,text)', 'execute'), 'no anonymous admission grant');

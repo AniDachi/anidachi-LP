@@ -1,5 +1,9 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## Netflix catalog room creation on staging
+
+Verify the Room tab on two Netflix profiles. Create before playback, join from the catalog by copied link or Inbox, then start a title and check that the guest reaches the same watch ID. Returning to an active room must preserve its membership. See [Netflix adapter notes](../../netflix-adapter-notes.md).
+
 ## YouTube catalog continuity — November 21, 2026
 
 YouTube reuses the catalog room and offscreen media owner. Its automatic follow reservation uses the canonical watch URL’s `v` parameter. The Chromium transport harness supports `--youtube` for a host leaving the player for Home, loading search, returning to playback and leaving the supported site. The adapter lifecycle test covers a native mini-player remaining in the DOM on Home.

@@ -1,4 +1,6 @@
 import { handleHboMaxSavedMetadata } from "../src/source-adapters/hbomax/history-metadata";
+import { ROOMS_PILOT } from "../src/popup-room-launch";
+import { registerPopupRoomLaunch } from "../src/popup-room-launch-background";
 import { registerPrimeRoomTransport } from "../src/prime-room-background";
 import { installPrimeMediaBackground } from "../src/prime-media-background";
 import { registerPrimeLaunchBridge } from "../src/prime-launch-background";
@@ -287,6 +289,7 @@ async function waitForAdmissionCompletion(
 }
 
 export default defineBackground(() => {
+  if (ROOMS_PILOT) registerPopupRoomLaunch();
   void registerUninstallUrl();
   const installation = createInstallationSigners({
     get: () => storage.getItem(TRIAL_INSTALLATION_STORAGE_KEY),
