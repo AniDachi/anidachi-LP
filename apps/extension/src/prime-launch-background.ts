@@ -27,7 +27,7 @@ const KEY = "anidachi.primePending.v1";
 import { catalogContentId, catalogRoomProvider, catalogPlayerProvider, catalogWatchDestination, catalogWatchSource, isCatalogRoomSender, supportsCatalogReturn } from "./catalog-room-routes";
 const FollowSchema = z.strictObject({
 	type: z.literal("ANIDACHI_PRIME_LAUNCH"),
-	action: z.literal("follow"),
+	action: z.enum(["follow", "return-to-prime"]),
 	roomId: z.string().min(1).max(128),
 	contentId: z.string().min(1).max(MAX_VIDEO_FINGERPRINT_CHARS).regex(/^[A-Za-z0-9_-]+$/),
 	visit: z.uuid().optional(),
@@ -153,6 +153,7 @@ async function handle(
 		const claim: { source: WatchSourceDescriptor; receipt: string } | null = await chrome.runtime.sendMessage({
 			type: PRIME_ROOM_INTERNAL, action: "follow", tabId, identity, documentId: sender.documentId,
 			contentId: follow.data.contentId, visit: follow.data.visit,
+			...(follow.data.action === "return-to-prime" && { manualReturn: true }),
 		});
 		if (!claim) return { status: "cancelled" };
 		let navigated = false;

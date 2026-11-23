@@ -11,7 +11,7 @@ const original = loader._load;
 let user: string | null = "guest",
 	ended = false,
 	joined = 0;
-let lobbyProvider: "disneyplus" | "netflix" | null = null;
+let lobbyProvider: "disneyplus" | "netflix" | "primevideo" | null = null;
 let source = roomSourceCreationColumns({});
 loader._load = (id, parent, main) => {
 	if (id === "@/lib/anidachi-auth/session")
@@ -24,6 +24,7 @@ loader._load = (id, parent, main) => {
 				status: ended ? "ended" : "live",
 				host_user_id: "host",
 				lobby_provider: lobbyProvider,
+				lobby_marketplace: lobbyProvider === "primevideo" ? "amazon.de" : null,
 				...source,
 			}),
 			isRoomMember: async () => false,
@@ -79,6 +80,10 @@ test("Disney lobby invites respect membership admission and resolve the latest p
 	const netflixHome = "https://www.netflix.com/browse#anidachiRoom=abc&anidachiLobby=netflix";
 	assert.equal((await join()).headers.get("location"), netflixHome);
 	assert.equal((await join("disneyplus")).headers.get("location"), netflixHome);
+	lobbyProvider = "primevideo";
+	const primeHome = "https://www.amazon.de/gp/video/storefront#anidachiRoom=abc&anidachiLobby=primevideo";
+	assert.equal((await join()).headers.get("location"), primeHome);
+	assert.equal((await join("netflix")).headers.get("location"), primeHome);
 	const player =
 		"https://www.netflix.com/watch/80000123";
 	source = roomSourceCreationColumns({ sourceUrl: player });

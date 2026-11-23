@@ -14,7 +14,7 @@ export function isDisneyRoomSurface(href?: string): boolean {
 export function popupRoomProvider(href?: string): RoomLobbyProvider | null {
 	if (!href) return null;
 	const provider = catalogRoomProvider(href);
-	if (provider === "netflix") return provider;
+	if (provider === "netflix" || provider === "primevideo") return provider;
 	return provider === "disneyplus" && isDisneyRoomSurface(href) ? provider : null;
 }
 
@@ -23,6 +23,10 @@ export function netflixProfileGate(doc: Document): boolean {
 }
 
 export function hasCatalogNavigation(doc: Document, provider: RoomLobbyProvider): boolean {
+	if (provider === "primevideo") {
+		const catalog = doc.getElementById("dv-web-page-hydration-root");
+		return !!catalog?.querySelector('a[href*="/storefront"], a[href*="/detail/"], a[href*="/gp/video/"]');
+	}
 	if (provider === "netflix") {
 		if (netflixProfileGate(doc)) return false;
 		return Boolean(doc.querySelector('.main-header a[href^="/browse"], [data-uia="navigation"] a[href^="/browse"], .lolomo[data-uia]'));

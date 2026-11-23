@@ -2,7 +2,7 @@ import { resolveFree20RequestContext } from "@/lib/anidachi-auth/free20-abuse-co
 import { emitServerEvent } from "@/lib/analytics-server-events";
 import { Free20ContextError, type Free20AbuseContext } from "@/lib/anidachi-auth/free20-abuse";
 import { type NextRequest, NextResponse } from "next/server";
-import { FREE20_CLIENT_HEADER, parseFree20ClientVersion, RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
+import { FREE20_CLIENT_HEADER, parseFree20ClientVersion, RoomConnectAdmissionInputSchema } from "@anidachi/protocol";
 import { RoomUpdateRequiredError, roomUpdateRequiredBody } from "@/lib/anidachi-auth/room-update-required";
 import { activeRoomConflictResponse } from "@/lib/anidachi-auth/active-room-session";
 import { getSession } from "@/lib/anidachi-auth/session";
@@ -75,7 +75,7 @@ export async function POST(
   }
 
   const free20ClientVersion = parseFree20ClientVersion(request.headers.get(FREE20_CLIENT_HEADER));
-  const admissionInput = RoomSessionAdmissionInputSchema.safeParse(
+  const admissionInput = RoomConnectAdmissionInputSchema.safeParse(
     await request.json().catch(() => null),
   );
   if (!admissionInput.success) {
@@ -99,6 +99,9 @@ export async function POST(
     );
   }
 
+  if (admissionInput.data.expectedLobby && room.lobby_provider !== admissionInput.data.expectedLobby) {
+    return NextResponse.json({ error: "Open the original room invitation to join." }, { status: 409 });
+  }
   const now = new Date();
   const user = await getUserById(session.userId);
 	let accountAccess;

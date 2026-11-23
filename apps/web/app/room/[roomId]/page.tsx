@@ -78,7 +78,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
   const source = deriveDurableRoomSource(room);
   const launchUrl = source
     ? buildRoomSourceLaunchUrl(source.source, roomId)
-    : roomLobbyDestination(roomId, room.lobby_provider ?? lobby);
+    : roomLobbyDestination(roomId, room.lobby_provider ?? lobby, room.lobby_marketplace);
   const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
   const justJoined = joined === "1";
 

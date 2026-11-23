@@ -16,9 +16,9 @@ vi.mock("../src/popup-room-launch", async (original) => ({
 }));
 
 describe("popup room before playback", () => {
-	it.each([["disneyplus", false], ["disneyplus", true], ["netflix", false], ["netflix", true]] as const)("waits for the signed-in %s catalog (invite %s)", async (provider, invited) => {
+	it.each([["disneyplus", false], ["disneyplus", true], ["netflix", false], ["netflix", true], ["primevideo", false], ["primevideo", true]] as const)("waits for the signed-in %s catalog (invite %s)", async (provider, invited) => {
 		const hash = "anidachiRoom=abc&anidachiLobby=" + provider;
-		const home = provider === "netflix" ? "https://www.netflix.com/browse" : "https://www.disneyplus.com/home";
+		const home = provider === "primevideo" ? "https://www.amazon.de/-/en/gp/video/detail/B0HL3NHK3N" : provider === "netflix" ? "https://www.netflix.com/browse" : "https://www.disneyplus.com/home";
 		vi.useFakeTimers();
 		vi.stubGlobal("location", new URL(home + (invited ? "#" + hash : "")));
 		const sendMessage = vi.fn(async (message: { action?: string }) =>
@@ -37,7 +37,7 @@ describe("popup room before playback", () => {
 			await vi.advanceTimersByTimeAsync(1800);
 			expect(claims()).toHaveLength(0);
 			expect(mount).not.toHaveBeenCalled();
-			document.body.innerHTML = provider === "netflix" ? '<div class="main-header"><a href="/browse/genre/83">TV Shows</a></div>' : '<nav><a href="/pt-br/browse/watchlist">Minha lista</a></nav><main></main>';
+			document.body.innerHTML = provider === "primevideo" ? '<div id="dv-web-page-hydration-root"><a href="/gp/video/storefront">Startseite</a></div>' : provider === "netflix" ? '<div class="main-header"><a href="/browse/genre/83">TV Shows</a></div>' : '<nav><a href="/pt-br/browse/watchlist">Minha lista</a></nav><main></main>';
 			await vi.advanceTimersByTimeAsync(8000);
 			expect(claims()).toHaveLength(1);
 			expect(mount).toHaveBeenCalledTimes(1);
@@ -65,6 +65,9 @@ describe("popup room before playback", () => {
 		const base = "https://www.disneyplus.com/home#";
 		expect(disneyRedirectKey("https://www.disneyplus.com/pt-br/home")).toBe(disneyRedirectKey(base));
 		expect(disneyLaunchFragment(base + "anidachiRoom=abc&anidachiLobby=disneyplus")).toBe("anidachiRoom=abc&anidachiLobby=disneyplus");
+		expect(popupRoomProvider("https://www.primevideo.com/region/na/storefront")).toBe("primevideo");
+		expect(popupRoomProvider("https://www.amazon.com/dp/B0HL3NHK3N")).toBeNull();
+		expect(popupRoomProvider("https://www.amazon.de/gp/cart/view.html")).toBeNull();
 		const netflix = "https://www.netflix.com/browse#";
 		expect(lobbyRoomFromUrl(netflix + "anidachiRoom=abc&anidachiLobby=netflix")).toBe("abc");
 		expect(lobbyRoomFromUrl(netflix + "anidachiRoom=abc&anidachiLobby=disneyplus")).toBeNull();

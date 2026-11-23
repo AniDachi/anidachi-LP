@@ -1,6 +1,8 @@
 import type { Free20Request } from "./free20-abuse-client";
 import {
   ActiveRoomConflictResponseSchema,
+  PrimeMarketplaceSchema,
+  type PrimeMarketplace,
   RoomLobbyProviderSchema,
   type RoomLobbyProvider,
   ACCOUNT_HOSTING_OWNER_HEADER,
@@ -290,6 +292,7 @@ export interface AdmittedRoom extends CreatedRoom {
 
 export interface CreateRoomInput {
   lobbyProvider?: RoomLobbyProvider;
+  lobbyMarketplace?: PrimeMarketplace;
   sourceUrl?: string;
   primeNavigation?: import("@anidachi/protocol").PrimeNavigation;
   videoFingerprint?: string;
@@ -399,6 +402,7 @@ export type RoomHttpMessage =
   | {
       type: typeof ROOM_HTTP_MESSAGE_TYPE;
       command: "connect-room";
+      expectedLobby?: RoomLobbyProvider;
       accessToken: string;
       roomId: string;
       roomSession: PreparedRoomSession;
@@ -486,6 +490,7 @@ function isCreateRoomInput(value: unknown): value is CreateRoomInput {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
   const input = value as Record<string, unknown>;
   return (
+    (input.lobbyMarketplace === undefined || (input.lobbyProvider === "primevideo" && PrimeMarketplaceSchema.safeParse(input.lobbyMarketplace).success)) &&
     (input.lobbyProvider === undefined || RoomLobbyProviderSchema.safeParse(input.lobbyProvider).success) &&
     (input.sourceUrl === undefined || typeof input.sourceUrl === "string") &&
     (input.videoFingerprint === undefined || typeof input.videoFingerprint === "string") &&
@@ -514,10 +519,12 @@ export function connectRoomHttpMessage(
   roomId: string,
   accessToken: string,
   roomSession: PreparedRoomSession,
+  expectedLobby?: RoomLobbyProvider,
 ): RoomHttpMessage {
   return {
     type: ROOM_HTTP_MESSAGE_TYPE,
     command: "connect-room",
+    ...(expectedLobby && { expectedLobby }),
     roomId,
     accessToken,
     roomSession,
@@ -535,6 +542,7 @@ export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
   }
   if (message.command === "connect-room") {
     return typeof message.accessToken === "string" &&
+      (message.expectedLobby === undefined || RoomLobbyProviderSchema.safeParse(message.expectedLobby).success) &&
       typeof message.roomId === "string" &&
       isPreparedRoomSession(message.roomSession) &&
       message.roomSession.roomId === message.roomId;
@@ -662,6 +670,7 @@ export async function connectWebsiteRoomFromApi(
   accessToken: string,
   participantSessionId: string,
   contextRequest?: RoomContextRequest,
+  expectedLobby?: RoomLobbyProvider,
 ): Promise<{
   roomToken: string;
   capabilities?: RoomCapabilities | RoomMediaCapabilities;
@@ -681,7 +690,7 @@ export async function connectWebsiteRoomFromApi(
       {
         method: "POST",
         headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION), ...(contextRequest ? { [ACCOUNT_HOSTING_OWNER_HEADER]: contextRequest.ownerUserId } : {}) },
-        body: JSON.stringify(admission),
+        body: JSON.stringify({ ...admission, ...(expectedLobby && { expectedLobby }) }),
         signal: abortController.signal,
       },
     );
@@ -911,6 +920,7 @@ export async function handleRoomHttpMessage(
       message.accessToken,
       message.roomSession.participantSessionId,
       dependencies.request ? { request: dependencies.request, ownerUserId: message.roomSession.ownerUserId } : undefined,
+      message.expectedLobby,
     );
     admissionRequestConfirmedSettled = true;
     const roomSession = await confirmPreparedRoomSessionForSender(
@@ -1368,6 +1378,7 @@ export async function connectWebsiteRoom(
   roomId: string,
   accessToken: string,
   roomSession: PreparedRoomSession,
+  expectedLobby?: RoomLobbyProvider,
 ): Promise<{
   roomToken: string;
   capabilities?: RoomCapabilities | RoomMediaCapabilities;
@@ -1381,7 +1392,7 @@ export async function connectWebsiteRoom(
     roomId,
   });
   const response = assertRoomHttpResponse(
-    await sendRoomHttpMessage(connectRoomHttpMessage(roomId, accessToken, roomSession)),
+    await sendRoomHttpMessage(connectRoomHttpMessage(roomId, accessToken, roomSession, expectedLobby)),
   );
   if (!response.ok) throw bridgeError(response);
   if (!("connection" in response)) throw new Error("Room bridge response is missing connection");

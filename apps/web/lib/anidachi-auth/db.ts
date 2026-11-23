@@ -1,4 +1,4 @@
-import type { RoomLobbyProvider } from "@anidachi/protocol";
+import type { PrimeMarketplace, RoomLobbyProvider } from "@anidachi/protocol";
 import { type Free20AbuseContext, Free20ContextError } from "./free20-abuse";
 import { buildFree20ContextTransfer, transferFree20RoomContext } from "./free20-abuse-transfer";
 import { RoomUpdateRequiredError } from "./room-update-required";
@@ -118,6 +118,7 @@ export type SubscriptionRow = {
 
 export type RoomRow = {
   lobby_provider?: RoomLobbyProvider | null;
+  lobby_marketplace?: PrimeMarketplace | null;
 	hosting_time_mode?: "daily_free20" | null;
 	free20_abuse_protected?: boolean;
 	media_lease?: unknown;
@@ -681,6 +682,7 @@ export type ActiveRoomClaimResult =
 
 export async function createRoomWithActiveSession(params: {
 	lobbyProvider?: RoomLobbyProvider;
+	lobbyMarketplace?: PrimeMarketplace;
 	hostUserId: string;
 	participantSessionId: string;
 	capabilities: RoomCapabilities;
@@ -729,7 +731,8 @@ export async function createRoomWithActiveSession(params: {
 			},
 		);
 	const admitRoom = params.lobbyProvider
-		? () => db().rpc("create_catalog_room_v1", {
+		? () => db().rpc("create_catalog_room_v2", {
+			p_lobby_marketplace: params.lobbyMarketplace ?? null,
 			p_lobby_provider: params.lobbyProvider,
 			p_host_user_id: params.hostUserId,
 			p_participant_session_id: params.participantSessionId,

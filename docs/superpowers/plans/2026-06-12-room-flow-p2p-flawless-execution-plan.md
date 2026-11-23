@@ -1,5 +1,9 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## Prime Video catalog room creation on staging
+
+The Room tab uses the active Prime Video storefront or opens the standalone catalog. Catalog creation records the supported marketplace with room admission. Copied links and Inbox invitations can therefore land in the host's storefront before playback. When the host plays an episode, the existing Prime navigation descriptor supplies the playable edition. The guest's Back to video action uses the live room's current episode, including while the host is paused.
+
 ## Netflix catalog room creation on staging
 
 Verify the Room tab on two Netflix profiles. Create before playback, join from the catalog by copied link or Inbox, then start a title and check that the guest reaches the same watch ID. Returning to an active room must preserve its membership. See [Netflix adapter notes](../../netflix-adapter-notes.md).

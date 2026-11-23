@@ -51,6 +51,20 @@ function snapshot(
 }
 
 describe("Prime room document rebind", () => {
+	it("returns a browsing guest to the host's paused episode only while the host is in the player", () => {
+		const room = new PrimeRoomProjection(), initial = snapshot();
+		initial.hostState = { ...initial.hostState!, playing: false, hostSurface: "player" };
+		initial.participants.push({ ...initial.participants[0]!, id: "host", role: "host" });
+		room.consume(initial);
+		room.setBaseline({ fingerprint: initial.source!.videoFingerprint, visit });
+		expect(room.reserveFollow("guest", contentId, visit)).toBeNull();
+		expect(room.reserveFollow("guest", nextId, visit, true)).toBeNull();
+		expect(room.reserveFollow("guest", contentId, undefined, true)?.source).toEqual(initial.source);
+		room.setBaseline(null);
+		room.consume({ ...initial, serverSeq: 2, hostState: { ...initial.hostState, hostSurface: "catalog" } });
+		room.setBaseline({});
+		expect(room.reserveFollow("guest", contentId, undefined, true)).toBeNull();
+	});
 	it.each(["netflix", "crunchyroll"] as const)("publishes a %s host leaving an already paused episode exactly once", provider => {
 		const room = new PrimeRoomProjection();
 		const initial = snapshot();

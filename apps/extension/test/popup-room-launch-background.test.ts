@@ -92,7 +92,7 @@ it("only the popup can request creation, only its destination can claim it, and 
 	expect(await send("state", popup)).toEqual({ here: "netflix", room: null });
 	await send("open", popup, "netflix");
 	expect(update).toHaveBeenLastCalledWith(tab.id, { active: true });
-	expect(await send("claim", content)).toBeNull();
+	expect(await send("claim", content)).toBeUndefined();
 	expect(await send("claim", netflix)).toMatchObject({ owner: "owner", provider: "netflix" });
 	expect(await send("claim", netflix)).toBeNull();
 	const invite = { ...netflix, url: tab.url + "#anidachiRoom=abc&anidachiLobby=netflix" };
