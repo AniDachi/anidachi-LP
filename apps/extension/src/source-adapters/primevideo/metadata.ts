@@ -102,6 +102,7 @@ function seriesAnchor(
 	records: Map<string, PublicRecord>,
 	invalidRecords: Set<string>,
 	origin: string,
+	retailAnchor?: (url: string) => PublicRecord | null,
 ): string | null {
 	let confirmed: { full: string; compact: string } | null = null;
 	for (const list of lists) {
@@ -109,14 +110,26 @@ function seriesAnchor(
 		if (anchors.length !== 1) return null;
 		const candidate = anchors[0]!;
 		if (
-			!fullId(candidate.seasonId) ||
+			typeof candidate.seasonId !== "string" ||
 			typeof candidate.seasonLink !== "string" ||
 			invalidRecords.has(candidate.seasonId)
 		)
 			return null;
 		const link = primeObservedLink(candidate.seasonLink, origin);
 		const route = link ? parsePrimePageUrl(link) : null;
-		const known = records.get(candidate.seasonId);
+		let known = records.get(candidate.seasonId);
+		if (!fullId(candidate.seasonId)) {
+			// Retail switchers can expose only the ASIN for an unselected season.
+			if (!link || route?.token !== candidate.seasonId || !/^[A-Z0-9]{10}$/.test(route.token)) return null;
+			if (!lists.every(({ entries }) => {
+				const first = entries.filter(row => row.sequenceNumber === 1);
+				return first.length === 1 && first[0]!.seasonId === candidate.seasonId &&
+					primeObservedLink(first[0]!.seasonLink, origin) === link;
+			})) return null;
+			known = retailAnchor?.(link) ?? undefined;
+			if (!known || invalidRecords.has(known.id) || !primeRouteMatches(route.token, known)) return null;
+		}
+		const full = known?.id ?? candidate.seasonId;
 		const compact =
 			route && known && primeRouteMatches(route.token, known)
 				? known.compact
@@ -127,7 +140,7 @@ function seriesAnchor(
 			!compact ||
 			invalidRecords.has(compact) ||
 			(confirmed &&
-				(confirmed.full !== candidate.seasonId ||
+				(confirmed.full !== full ||
 					confirmed.compact !== compact))
 		)
 			return null;
@@ -139,8 +152,8 @@ function seriesAnchor(
 		)
 			return null;
 		for (const row of records.values())
-			if (row.compact === compact && row.id !== candidate.seasonId) return null;
-		confirmed = { full: candidate.seasonId, compact };
+			if (row.compact === compact && row.id !== full) return null;
+		confirmed = { full, compact };
 	}
 	return confirmed?.compact ?? null;
 }
@@ -152,6 +165,7 @@ export function readPrimePage(
 	territory: unknown,
 	locale: unknown,
 	advertisedNextId?: unknown,
+	retailAnchor?: (url: string) => PublicRecord | null,
 ): PrimePage | null {
 	const pageRoute = parsePrimePageUrl(
 		documentValue.defaultView?.location.href ?? "",
@@ -457,7 +471,7 @@ export function readPrimePage(
 		seasonTitle = text(seasonDetail.title);
 	if (!seriesTitle || !seasonTitle)
 		return null;
-	const anchor = seriesAnchor(lists, records, invalidRecords, origin);
+	const anchor = seriesAnchor(lists, records, invalidRecords, origin, retailAnchor);
 	const identity = anchor
 		? {
 				kind: "episode" as const,

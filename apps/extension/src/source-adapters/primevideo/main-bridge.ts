@@ -1,3 +1,4 @@
+import { createRetailSeasonAnchor } from "./retail-season-anchor";
 import {
 	boundedMessage,
 	PRIME_NAVIGATING,
@@ -45,6 +46,7 @@ function startNativeNextEpisode(sdk: PrimeSdk, targetId: string | undefined): bo
 }
 /** MAIN-world owner. Catalog I/O is limited to observed same-origin detail metadata. */
 export function startPrimeBridge(): () => void {
+	const retailAnchor = createRetailSeasonAnchor();
 	let navigating = false;
 	let stopped = false,
 		binding: Binding | null = null;
@@ -132,7 +134,7 @@ export function startPrimeBridge(): () => void {
 		}
 		const player = inspectPrimePlayer(document, lifecycle);
 		setPlayer(player?.video ?? null);
-		const sdk = inspectPrimeSdk(document, player);
+		const sdk = inspectPrimeSdk(document, player, retailAnchor.read);
 		if (!sdk) {
 			invalidate();
 			return null;
@@ -421,6 +423,7 @@ export function startPrimeBridge(): () => void {
 	function stop() {
 		if (stopped) return;
 		stopped = true;
+		retailAnchor.stop();
 		endObserver?.stop();
 		endObserver = null;
 		playerRoot?.removeAttribute(PRIME_PLAYER_STATE);

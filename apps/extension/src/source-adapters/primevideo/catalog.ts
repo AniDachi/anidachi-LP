@@ -1,3 +1,4 @@
+import { createPrimePageReader } from "./page-reader";
 import {
 	WATCH_CATALOG_MAX_EPISODES,
 	WatchCatalogSnapshotInputSchema,
@@ -5,7 +6,6 @@ import {
 } from "@anidachi/protocol";
 import type { PrimeSnapshot } from "./contract";
 import {
-	PRIME_CATALOG_PAGE_BYTES,
 	primeCatalogLocale,
 	primeSeasonMapping,
 	readPrimeCatalogHtml,
@@ -65,65 +65,9 @@ export async function loadPrimeCatalog(
 	const cancel = () => controller.abort();
 	signal.addEventListener("abort", cancel, { once: true });
 	const timeout = setTimeout(cancel, PRIME_CATALOG_MAIN_TIMEOUT);
-	let totalBytes = 0;
 	const alive = () =>
 		!controller.signal.aborted && !signal.aborted && isCurrent();
-	const read = async (url: string, mime: "text/html" | "application/json") => {
-		if (totalBytes >= TOTAL_BYTES)
-			throw new Error("Prime catalog size limit reached");
-		const response = await fetch(url, {
-			method: "GET",
-			credentials: "same-origin",
-			redirect: "error",
-			signal: controller.signal,
-			headers: { Accept: mime },
-		});
-		const length = response.headers.get("content-length");
-		if (
-			!alive() ||
-			!response.ok ||
-			response.redirected ||
-			response.url !== url ||
-			response.headers
-				.get("content-type")
-				?.split(";")[0]
-				?.trim()
-				.toLowerCase() !== mime ||
-			(length !== null &&
-				(!/^\d+$/.test(length) || Number(length) > PRIME_CATALOG_PAGE_BYTES)) ||
-			!response.body
-		) {
-			await response.body?.cancel();
-			throw new Error("Incomplete Prime catalog response");
-		}
-		const reader = response.body.getReader(),
-			decoder = new TextDecoder();
-		const abortRead = () => {
-			void reader.cancel().catch(() => undefined);
-		};
-		controller.signal.addEventListener("abort", abortRead, { once: true });
-		let bytes = 0,
-			raw = "";
-		try {
-			while (alive()) {
-				const part = await reader.read();
-				if (!alive()) throw new Error("Incomplete Prime catalog response");
-				if (part.done) break;
-				bytes += part.value.byteLength;
-				totalBytes += part.value.byteLength;
-				if (bytes > PRIME_CATALOG_PAGE_BYTES || totalBytes > TOTAL_BYTES)
-					throw new Error("Incomplete Prime catalog response");
-				raw += decoder.decode(part.value, { stream: true });
-			}
-			raw += decoder.decode();
-		} finally {
-			controller.signal.removeEventListener("abort", abortRead);
-			await reader.cancel().catch(() => undefined);
-			reader.releaseLock();
-		}
-		if (!alive()) throw new Error("Prime catalog request expired");
-		return raw;
-	};
+	const read = createPrimePageReader(controller.signal, alive, TOTAL_BYTES);
 	try {
 		const seasons: WatchCatalogSnapshotInput["seasons"] = [];
 		const fullIds = new Set<string>(),
