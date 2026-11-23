@@ -21,6 +21,7 @@ import { AUTH_TOKENS_KEY } from "../src/auth-tokens";
 import { WEB_HTTP_BASE } from "../src/constants";
 import { INTERFACE_PREFERENCES_STORAGE_KEY } from "../src/interface-preferences";
 import * as overlayApp from "../src/overlay-app";
+import * as popupRoomLaunch from "../src/popup-room-launch";
 import { getDefaultOverlayLayoutPreferencesV2, OVERLAY_LAYOUT_STORAGE_KEY_V2 } from "../src/overlay-layout-model";
 import { createPrimeLaunchCapture, type PrimeLaunchHandoff } from "../src/prime-launch-capture";
 import * as hostingAccessClient from "../src/hosting-access-client";
@@ -102,6 +103,33 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 }));
 
 describe("privileged overlay wiring", () => {
+	it.each(["before", "after"])("admits the HBO guest when the catalog clears the fragment %s extension startup", async timing => {
+		vi.spyOn(popupRoomLaunch, "ROOMS_PILOT", "get").mockReturnValue(true);
+		installActiveHostRoomRuntime();
+		Object.assign(chrome.runtime, {onMessage: {addListener: vi.fn(), removeListener: vi.fn()}});
+		const home = new URL("https://www.hbomax.com/home#anidachiRoom=room-a&anidachiLobby=hbomax");
+		const navigation = {name: home.href, type: "navigate"};
+		vi.stubGlobal("performance", { now: performance.now.bind(performance), getEntriesByType: () => [navigation] });
+		if (timing === "before") home.hash = "";
+		vi.stubGlobal("location", home);
+		const send = vi.mocked(chrome.runtime.sendMessage);
+		const original = send.getMockImplementation()!;
+		const admission = deferred<unknown>();
+		send.mockImplementation(async (...args: any[]) => args[0]?.command === "connect-room" ? admission.promise : original(...args));
+		const runtime = startContentLifecycle({ detect: () => ({ status: "none" }), lookupPrimeRoom: async () => null,
+			ensureStyles() {}, installKeyboardGuard: () => () => {}, startProviderStudy: () => null });
+		try {
+			home.hash = "";
+			document.body.innerHTML = '<nav><div data-testid="navigationMenu"><a data-testid="my-stuff_button"></a><button data-testid="profile_button"></button></div></nav>';
+			await act(async () => { runtime.reconcile(); });
+			await flushRoomActionWork();
+			const requests = send.mock.calls.map(([message]: any) => message).filter(message => message.command === "connect-room");
+			expect(requests).toMatchObject([{roomId: "room-a", expectedLobby: "hbomax"}]);
+		} finally {
+			await act(async () => runtime.dispose());
+			admission.resolve({ok: false});
+		}
+	});
 	it("docks the Disney catalog independently of the saved camera position and player toolbar", async () => {
 		installActiveHostRoomRuntime();
 		const saved = getDefaultOverlayLayoutPreferencesV2();

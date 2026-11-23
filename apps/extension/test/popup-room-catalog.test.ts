@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+	captureHboLobbyInvite,
 	lobbyRoomFromUrl,
 	getPopupCreate,
 	isDisneyRoomSurface,
@@ -16,6 +17,27 @@ vi.mock("../src/popup-room-launch", async (original) => ({
 }));
 
 describe("popup room before playback", () => {
+	it("keeps the HBO invitation when the catalog drops the fragment, until admission consumes it", () => {
+		const home = "https://play.max.com/br/pt/home";
+		const link = home + "#anidachiRoom=guest-room&anidachiLobby=hbomax";
+		for (const entry of [link, home]) {
+			const invite = captureHboLobbyInvite(entry, { type: "navigate", name: link });
+			expect(invite?.read(home)).toBe("guest-room");
+			expect(invite?.read(home)).toBe("guest-room");
+			invite?.consume();
+			expect(invite?.read(home)).toBeNull();
+		}
+		for (const next of [home + "#other", home + "#anidachiRoom=other&anidachiLobby=hbomax", home.replace("/home", "/movies")]) {
+			const invite = captureHboLobbyInvite(link);
+			expect(invite?.read(next)).toBeNull();
+			expect(invite?.read(home)).toBeNull();
+		}
+		for (const type of ["reload", "back_forward"] as const) {
+			expect(captureHboLobbyInvite(home, { type, name: link })).toBeNull();
+		}
+		expect(captureHboLobbyInvite(home, { type: "navigate", name: link.replace("play.max.com", "www.hbomax.com") })).toBeNull();
+		expect(captureHboLobbyInvite(link.replace("Lobby=hbomax", "Lobby=netflix"))).toBeNull();
+	});
 	it.each([["disneyplus", false], ["disneyplus", true], ["netflix", false], ["netflix", true], ["primevideo", false], ["primevideo", true], ["hbomax", false], ["hbomax", true]] as const)("waits for the signed-in %s catalog (invite %s)", async (provider, invited) => {
 		const hash = "anidachiRoom=abc&anidachiLobby=" + provider;
 		const home = {

@@ -1,4 +1,4 @@
-import { ROOMS_PILOT, ROOM_LAUNCH_MESSAGE, popupRoomProvider, hasCatalogNavigation, lobbyRoomFromUrl, netflixProfileGate, netflixProfileReturn, setPopupCreate } from "../src/popup-room-launch";
+import { ROOMS_PILOT, ROOM_LAUNCH_MESSAGE, captureHboLobbyInvite, popupRoomProvider, hasCatalogNavigation, lobbyRoomFromUrl, netflixProfileGate, netflixProfileReturn, setPopupCreate } from "../src/popup-room-launch";
 import { hasPrimeBrowserHost, HBO_MAX_BROWSER_HOSTS, isHboMaxOrigin } from "@anidachi/protocol";
 import { HboMaxVideoAdapter } from "../src/source-adapters/hbomax/adapter";
 import { startHboMaxCatalogCapture } from "../src/source-adapters/hbomax/metadata";
@@ -84,6 +84,7 @@ interface ResizeObserverBinding {
 }
 
 interface MountOverlayOptions {
+  initialLobbyInvite?: ReturnType<typeof captureHboLobbyInvite>;
   initialLaunch?: PrimeLaunchHandoff | null;
   initialPrimeRoom?: LivePrimeRoomSession;
   initiallyDocked?: boolean;
@@ -188,13 +189,19 @@ function startContentLifecycleSession(
   const lobbyRedirect = !restoredFromCache && window.top === window ? prepareDisneyLobbyRedirect(entryHref, document.referrer) : null;
   const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
+  const pilotEnabled = ROOMS_PILOT && window.top === window && (hasPrimeBrowserHost(location.href) || isDisneyPlusOrigin(location.href) || isHboMaxOrigin(location.origin) || location.origin === "https://www.netflix.com") &&
+    typeof chrome !== "undefined" && Boolean(chrome.runtime?.onMessage);
+  let hboLobbyInvite = pilotEnabled && !restoredFromCache && isHboMaxOrigin(location.origin)
+    ? captureHboLobbyInvite(entryHref, performance.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming | undefined)
+    : null;
   const dependencies: ContentLifecycleDependencies = {
     detect: detectLifecycleResult,
     ensureStyles: ensurePageStyles,
     installKeyboardGuard: installMessageComposerKeyboardGuard,
     lookupPrimeRoom: getLivePrimeRoomSession,
     mount: (adapter, initialLaunch, initialPrimeRoom, initiallyDocked) =>
-      mountOverlay(adapter, { initialLaunch, initialPrimeRoom, initiallyDocked }),
+      mountOverlay(adapter, { initialLaunch, initialPrimeRoom, initiallyDocked,
+        initialLobbyInvite: initiallyDocked && !initialPrimeRoom ? hboLobbyInvite : null }),
     startProviderStudy: startCrunchyrollStudyIfEnabled,
     ...overrides,
   };
@@ -202,10 +209,8 @@ function startContentLifecycleSession(
   let checkingLiveRoom = false;
   let startupRoom: LivePrimeRoomSession | null = null;
   let catalogAdapter: VideoAdapter | null = null;
-  const pilotEnabled = ROOMS_PILOT && window.top === window && (hasPrimeBrowserHost(location.href) || isDisneyPlusOrigin(location.href) || isHboMaxOrigin(location.origin) || location.origin === "https://www.netflix.com") &&
-    typeof chrome !== "undefined" && Boolean(chrome.runtime?.onMessage);
   let needsPilotClaim = pilotEnabled;
-  let pilotLobby = ROOMS_PILOT && !restoredFromCache && Boolean(lobbyRoomFromUrl(location.href));
+  let pilotLobby = ROOMS_PILOT && !restoredFromCache && Boolean(lobbyRoomFromUrl(entryHref) || hboLobbyInvite?.read(entryHref));
   const netflixEntry = pilotEnabled && !restoredFromCache && location.origin === "https://www.netflix.com" && location.pathname === "/browse";
   let pendingProfileReturn = netflixEntry && netflixProfileReturn(document.referrer);
   let savedProfileInvite: Promise<unknown> | undefined;
@@ -373,6 +378,10 @@ function startContentLifecycleSession(
       }
     }
     const catalogRoute = catalogRoomProvider(location.href);
+    if (hboLobbyInvite && !hboLobbyInvite.read(location.href)) {
+      hboLobbyInvite = null;
+      if (!mounted) pilotLobby = false;
+    }
     const launchProvider = pilotEnabled ? popupRoomProvider(location.href) : null;
     // Prime renders its catalog and full player at the same detail URL.
     const hasOpenPlayer = detection.status === "ready" && detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) !== "closed";
@@ -501,6 +510,8 @@ function startContentLifecycleSession(
     const path = location.pathname;
     const claim = await chrome.runtime.sendMessage({type: ROOM_LAUNCH_MESSAGE, action:"claim"}).catch(() => null);
     if (disposed || !claim?.id || !claim.owner || claim.provider !== popupRoomProvider(location.href) || path !== location.pathname || claim.expires <= Date.now()) return;
+    hboLobbyInvite?.consume();
+    hboLobbyInvite = null;
     pilotLobby = true;
     setPopupCreate({...claim,path});
     reconcile();
@@ -525,6 +536,7 @@ function startContentLifecycleSession(
       }
       checkingLiveRoom = false;
       if (record && catalogRoomProvider(location.href)) {
+        hboLobbyInvite?.consume();
         startupRoom = record;
         primeLaunch.dispose();
         discardConflictingRoomLaunch(record.roomId, location.href);
@@ -1074,7 +1086,7 @@ function createReactOverlayRenderer(appRoot: HTMLElement, options: MountOverlayO
       flushSync(() => {
         root.render(<OverlayApp adapter={adapter} adapterActive={active} primeBrowsing={browsing}
           onPrimeRoomChange={onPrimeRoomChange} onPrimeClose={onPrimeClose} onPrimeRestoreLost={onPrimeRestoreLost}
-          initialPrimeLaunch={options.initialLaunch} initialPrimeRoom={options.initialPrimeRoom}
+          initialPrimeLaunch={options.initialLaunch} initialPrimeRoom={options.initialPrimeRoom} initialLobbyInvite={options.initialLobbyInvite}
           preservePrimeRoomOnUnmount={preservePrimeRoomOnUnmount} />);
       });
     },

@@ -8,7 +8,7 @@ import type { PrimeLaunchHandoff } from "./prime-launch-capture";
 import { hasLivePrimeRoomSession, PrimeRoomClient, retireUnattachedPrimeRoom } from "./prime-room-client";
 import type { LivePrimeRoomSession } from "./prime-room-contract";
 import { useSyncExternalStore } from "react";
-import { ROOMS_PILOT, popupRoomProvider, lobbyRoomFromUrl, getPopupCreate, popupRoomInvite, setPopupCreate, subscribePopupCreate } from "./popup-room-launch";
+import { type captureHboLobbyInvite, ROOMS_PILOT, popupRoomProvider, lobbyRoomFromUrl, getPopupCreate, popupRoomInvite, setPopupCreate, subscribePopupCreate } from "./popup-room-launch";
 import { catalogRoomProvider, catalogWatchDestination, renderedHboMaxWatchUrl, catalogWatchSource, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
 import { followPrimeRoom, returnToPrimePlayer } from "./prime-launch-client";
 import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
@@ -346,6 +346,7 @@ interface OverlayAppProps {
 	onPrimeRoomChange?: (roomId: string | null) => void;
 	onPrimeRestoreLost?: () => void;
 	initialPrimeRoom?: LivePrimeRoomSession;
+	initialLobbyInvite?: ReturnType<typeof captureHboLobbyInvite>;
 	preservePrimeRoomOnUnmount?: () => boolean;
 	onPrimeClose?: () => void;
 	initialPrimeLaunch?: PrimeLaunchHandoff | null;
@@ -552,7 +553,9 @@ function requiresPlayableRoomSource(provider: VideoAdapter["provider"]) {
 	return provider === "primevideo" || provider === "hbomax";
 }
 
-export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, initialPrimeRoom, primeBrowsing = false, onPrimeRoomChange, onPrimeClose, onPrimeRestoreLost, preservePrimeRoomOnUnmount }: OverlayAppProps) {
+export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, initialPrimeRoom, initialLobbyInvite, primeBrowsing = false, onPrimeRoomChange, onPrimeClose, onPrimeRestoreLost, preservePrimeRoomOnUnmount }: OverlayAppProps) {
+	const lobbyInvite = useRef(initialLobbyInvite);
+	const readLobbyRoom = useCallback(() => lobbyInvite.current?.read(location.href) ?? lobbyRoomFromUrl(location.href), []);
 	const popupCreate = useSyncExternalStore(subscribePopupCreate, getPopupCreate, () => null);
 	const disneyPlayer = adapter.provider === "disneyplus" && !primeBrowsing;
 	const disneyCatalog = adapter.provider === "disneyplus" && primeBrowsing;
@@ -1845,7 +1848,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			setRoomShareableLink(null);
 			setRoomCapabilities(null);
 			clearStoredRoomSession(expected);
-			clearRoomHash();
+			clearRoomHash(lobbyInvite.current);
 			if (message !== undefined) {
 				setAuthMessage(message);
 			}
@@ -3775,7 +3778,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			setRoomShareableLink(null);
 			setRoomCapabilities(null);
 			clearStoredRoomSession();
-			clearRoomHash();
+			clearRoomHash(lobbyInvite.current);
 			setAuthMessage(null);
 			setRoomTerminalMessage(message || null);
 			if (feedback) showRoomActionFeedback(feedback);
@@ -4308,7 +4311,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				catalogFollow.setRoom(nextRoomId);
 				catalogFollow.setBrowsing(browseMode.current,
 					restore && roomSessionIdentityMatches(restore, nextStoredRoomSession) ? restore.browsingBaseline ?? undefined :
-            ROOMS_PILOT && lobbyRoomFromUrl(location.href) === nextRoomId ? { followFirstPlay: true } : undefined);
+            ROOMS_PILOT && readLobbyRoom() === nextRoomId ? { followFirstPlay: true } : undefined);
 				restoringBaseline.current = undefined;
 			}
 			setRoomId(nextRoomId);
@@ -4320,7 +4323,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				);
 			}
 			if (!isCurrentJoin()) return false;
-			if (nextRoomToken) ensureRoomHash(nextRoomId);
+			if (nextRoomToken) {
+				lobbyInvite.current?.consume();
+				ensureRoomHash(nextRoomId);
+			}
 			logDebug("overlay.room", "connect requested", {
 				roomId: nextRoomId,
 				authenticated: true,
@@ -4374,16 +4380,18 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			});
 			return true;
 		},
-		[adapter, onPrimeRestoreLost, setRoomStatus, terminateRoomSession, catalogFollow, roomClient, recordChatHistoryMessage],
+		[adapter, onPrimeRestoreLost, setRoomStatus, terminateRoomSession, catalogFollow, roomClient, recordChatHistoryMessage, readLobbyRoom],
 	);
 
 	const connectToExistingWebsiteRoom = useCallback(
 		async (nextRoomId: string, reason: string, invitation?: PrimeLaunchHandoff) => {
 			const sourceReady = () => !requiresPlayableRoomSource(adapter.provider) || !!adapter.getSourceDescriptor() ||
-				(ROOMS_PILOT && browseMode.current && lobbyRoomFromUrl(location.href) === nextRoomId);
+				(ROOMS_PILOT && browseMode.current && readLobbyRoom() === nextRoomId);
 			if (!sourceReady()) return;
 			const targetFingerprint = adapter.getFingerprint();
-			const sameInviteSource = () => !invitation || (activePlayer.current !== null && !invitation.hasDifferentRoomSource?.(activePlayer.current));
+			const catalogInvite = lobbyInvite.current?.read(location.href) === nextRoomId ? lobbyInvite.current : null;
+			const sameInviteSource = () => (!catalogInvite || catalogInvite.read(location.href) === nextRoomId) &&
+				(!invitation || (activePlayer.current !== null && !invitation.hasDifferentRoomSource?.(activePlayer.current)));
 			const skipActiveConnection = () => {
 				const activeRoomId = roomIdRef.current;
 				const activeStatus = statusRef.current;
@@ -4502,7 +4510,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						activeAccessToken,
 						preparedRoomSession,
 						ROOMS_PILOT && (adapter.provider === "primevideo" || adapter.provider === "hbomax") &&
-							browseMode.current && lobbyRoomFromUrl(location.href) === nextRoomId ? adapter.provider : undefined,
+							browseMode.current && readLobbyRoom() === nextRoomId ? adapter.provider : undefined,
 					);
 				} catch (error) {
 					if (preparedRoomSession) {
@@ -4546,7 +4554,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					() =>
 						isCurrentJoin() && sameInviteSource() &&
 						participantRef.current?.id === activeParticipant.id,
-          ROOMS_PILOT && browseMode.current && lobbyRoomFromUrl(location.href) === nextRoomId ? popupRoomProvider(location.href) : null,
+          ROOMS_PILOT && browseMode.current && readLobbyRoom() === nextRoomId ? popupRoomProvider(location.href) : null,
 				);
 				if (!started && isCurrentJoin() && !sameInviteSource()) {
 					invitation?.consumeRoom();
@@ -4570,7 +4578,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				}
 			}
 		},
-		[adapter, connectToRoomAsParticipant, refreshRoomActionIdentity, resetLocalRoomSession, updateRoomQuota],
+		[adapter, connectToRoomAsParticipant, refreshRoomActionIdentity, resetLocalRoomSession, updateRoomQuota, readLobbyRoom],
 	);
 
 	/*
@@ -4578,6 +4586,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	 * is still resolving, invalidate it so it cannot connect after room creation.
 	 */
 	const cancelPendingRoomJoin = useCallback(() => {
+		lobbyInvite.current?.consume();
 		roomJoinSequenceRef.current += 1;
 		roomJoinInFlightRef.current = null;
 		setRoomJoinAttempt(null);
@@ -4599,7 +4608,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		cancelPendingRoomJoin();
 		initialPrimeLaunchRef.current?.consumeRoom();
 		initialPrimeLaunchRef.current = null;
-		clearRoomHash();
+		clearRoomHash(lobbyInvite.current);
 		clearRoomSessionRecoveryHint();
 		roomReconnectSuppressedRef.current = true;
 		if (roomReconnectTimerRef.current !== null) {
@@ -5381,7 +5390,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			playerRoomClosedRef.current ||
 			!identityLoaded ||
 			(requiresPlayableRoomSource(adapter.provider) && !adapter.getSourceDescriptor() &&
-				!(ROOMS_PILOT && browseMode.current && lobbyRoomFromUrl(location.href))) ||
+				!(ROOMS_PILOT && browseMode.current && readLobbyRoom())) ||
 			roomSessionLoadedForUserId !== currentUserId ||
 			roomId ||
 			roomIdRef.current
@@ -5389,7 +5398,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			return;
 		}
 
-		const hashRoomId = (primeLaunchSuppressed ? null : getRoomIdFromHash()) ?? capturedPrimeRoomId;
+		const hashRoomId = (primeLaunchSuppressed ? null : getRoomIdFromHash() ?? lobbyInvite.current?.read(location.href)) ?? capturedPrimeRoomId;
 		const persistedRoomId =
 			storedRoomSession?.ownerUserId === currentUserId &&
 			capturedPrimeRestoreOwnerRef.current !== currentUserId
@@ -5426,6 +5435,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				if (invitation && (!activePlayer.current || initialPrimeLaunchRef.current !== invitation || playerRoomClosedRef.current ||
 					roomAuthSessionKeyRef.current !== login)) return;
 				if (showActiveRoomConflict(error)) {
+					lobbyInvite.current?.consume();
 					invitation?.consumeRoom();
 					logDebug("overlay.room", "initial join found another active room", {
 						attemptedRoomId: initialRoomId,
@@ -5442,7 +5452,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						resetAt: error.resetAt,
 					});
 					clearStoredRoomSession();
-					clearRoomHash();
+					clearRoomHash(lobbyInvite.current);
 					releaseRoomTabLock();
 					setAuthMessage(null);
 					setRoomTerminalMessage(roomJoinUnavailableMessage(error));
@@ -5461,7 +5471,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						code: error.code,
 					});
 					clearStoredRoomSession();
-					clearRoomHash();
+					clearRoomHash(lobbyInvite.current);
 					releaseRoomTabLock();
 					setAuthMessage(null);
 					setRoomTerminalMessage(roomJoinUnavailableMessage(error));
@@ -5636,7 +5646,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					setRoomToken(null);
 					setRoomShareableLink(null);
 					clearStoredRoomSession();
-					clearRoomHash();
+					clearRoomHash(lobbyInvite.current);
 					setAuthMessage(null);
 					showRoomActionFeedback("room-closed");
 					logDebug("overlay.room", "ended by host", { roomId: activeRoomId });
@@ -8032,7 +8042,8 @@ function getRoomIdFromHash(): string | null {
 	return params.get("anidachiRoom");
 }
 
-function clearRoomHash(): void {
+function clearRoomHash(invite?: ReturnType<typeof captureHboLobbyInvite>): void {
+	invite?.consume();
 	const params = new URLSearchParams(location.hash.replace(/^#/, ""));
 	if (!params.has("anidachiRoom")) {
 		return;
