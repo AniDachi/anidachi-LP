@@ -29,7 +29,7 @@ export type DubSlot = ScheduleSlot & {
 
 export type DubWeek = Omit<ScheduleWeek, "slots"> & { slots: DubSlot[] };
 
-const CHECKED = "15 Nov 2026";
+const CHECKED = "22 Nov 2026";
 const AS = (route: string): DubSource => ({
   label: "AnimeSchedule.net dub timetable",
   url: `https://animeschedule.net/anime/${route}`,
@@ -48,14 +48,23 @@ const SUMMER_LIST = CR(
 );
 
 export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
-  weekStart: "2026-11-16",
+  weekStart: "2026-11-23",
   checked: CHECKED,
   slots: [
+    {
+      title: "PSYREN",
+      utcDay: 0,
+      utcTime: "15:30",
+      episode: "Ep 5",
+      note: "Delayed from 16 Nov",
+      sources: [AS("psyren"), CR("announcements/2026/10/18/psyren-anime-english-dub-release-date-cast-crew")],
+      checked: CHECKED,
+    },
     {
       title: "The Laid-Off Cheat-Granting Mage Enjoys a Second Lease on Life",
       utcDay: 1,
       utcTime: "15:30",
-      episode: "Ep 7",
+      episode: "Ep 8",
       subTitle: "The Laid-Off Cheat-Granting Mage Enjoys a Second Lease on Life",
       episodesBehindSub: 0,
       sources: [
@@ -70,7 +79,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
       title: "One Piece",
       utcDay: 1,
       utcTime: "17:00",
-      episode: "Ep 1160",
+      episode: "Ep 1161",
       watchSlug: "one-piece",
       sources: [
         AS("one-piece"),
@@ -81,8 +90,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "The World's Strongest Witch",
       utcDay: 2,
-      utcTime: "14:00",
-      episode: "Ep 5",
+      utcTime: "13:01",
+      episode: "Ep 6",
       subTitle: "The World's Strongest Witch",
       episodesBehindSub: 2,
       sources: [AS("sekai-saikyou-no-majo-hajimemashita"), FALL_LIST],
@@ -91,8 +100,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "Sasaki and Peeps Season 2",
       utcDay: 2,
-      utcTime: "14:00",
-      episode: "Ep 5",
+      utcTime: "13:01",
+      episode: "Ep 6",
       subTitle: "Sasaki and Peeps Season 2",
       episodesBehindSub: 2,
       sources: [AS("sasaki-to-pii-chan-2nd-season"), FALL_LIST],
@@ -101,8 +110,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "The Detective Is Already Dead Season 2",
       utcDay: 2,
-      utcTime: "14:30",
-      episode: "Ep 5",
+      utcTime: "13:30",
+      episode: "Ep 6",
       subTitle: "The Detective Is Already Dead Season 2",
       episodesBehindSub: 2,
       sources: [
@@ -115,7 +124,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
       title: "Saga of Tanya the Evil Season 2",
       utcDay: 2,
       utcTime: "14:30",
-      episode: "Ep 11",
+      episode: "Ep 12",
+      note: "Season finale",
       sources: [
         AS("youjo-senki-ii"),
         CR("announcements/2026/9/9/saga-of-tanya-the-evil-season-2-anime-english-dub-release-date-cast-crew"),
@@ -125,8 +135,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "Magic Knight Rayearth (2026)",
       utcDay: 2,
-      utcTime: "16:30",
-      episode: "Ep 5",
+      utcTime: "15:15",
+      episode: "Ep 6",
       subTitle: "Magic Knight Rayearth (2026)",
       episodesBehindSub: 2,
       sources: [AS("magic-knight-rayearth-shin-anime"), FALL_LIST],
@@ -135,8 +145,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "The Prince of Tennis II: U-17 World Cup",
       utcDay: 2,
-      utcTime: "17:00",
-      episode: "Ep 6",
+      utcTime: "16:00",
+      episode: "Ep 7",
       subTitle: "The Prince of Tennis II: U-17 World Cup",
       episodesBehindSub: 2,
       sources: [AS("shin-tennis-no-oujisama-u-17-world-cup-kesshou-member-ketteisen"), FALL_LIST],
@@ -158,7 +168,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
       title: "FX Fighter Kurumi-chan",
       utcDay: 3,
       utcTime: "12:31",
-      episode: "Ep 8",
+      episode: "Ep 9",
       subTitle: "FX Fighter Kurumi-chan",
       episodesBehindSub: 0,
       sources: [
@@ -171,7 +181,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
       title: "Dragon Ball Super: Beerus",
       utcDay: 3,
       utcTime: "16:00",
-      episode: "Ep 2",
+      episode: "Ep 3",
       watchSlug: "dragon-ball-super",
       subTitle: "Dragon Ball Super: Beerus",
       episodesBehindSub: 5,
@@ -184,8 +194,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "The Exiled Heavy Knight Knows How to Game the System",
       utcDay: 3,
-      utcTime: "17:00",
-      episode: "Ep 19",
+      utcTime: "16:00",
+      episode: "Ep 20",
       subTitle: "The Exiled Heavy Knight Knows How to Game the System",
       episodesBehindSub: 2,
       sources: [AS("tsuihou-sareta-tensei-juukishi-wa-game-chishiki-de-musou-suru"), SUMMER_LIST, FALL_LIST],
@@ -194,8 +204,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "The Iceblade Sorcerer Shall Rule the World II",
       utcDay: 3,
-      utcTime: "18:00",
-      episode: "Ep 5",
+      utcTime: "17:00",
+      episode: "Ep 6",
       subTitle: "The Iceblade Sorcerer Shall Rule the World II",
       episodesBehindSub: 2,
       sources: [AS("hyouken-no-majutsushi-ga-sekai-wo-suberu-ii"), FALL_LIST],
@@ -204,7 +214,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "The Apothecary Diaries Season 3",
       utcDay: 4,
-      utcTime: "16:00",
+      utcTime: "15:30",
       watchSlug: "the-apothecary-diaries",
       subTitle: "The Apothecary Diaries Season 3",
       episodesBehindSub: 2,
@@ -217,8 +227,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "Firefly Wedding",
       utcDay: 4,
-      utcTime: "17:00",
-      episode: "Ep 5",
+      utcTime: "16:00",
+      episode: "Ep 6",
       subTitle: "Firefly Wedding",
       episodesBehindSub: 2,
       sources: [AS("hotaru-no-yomeiri"), FALL_LIST],
@@ -228,7 +238,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
       title: "#I'm Looking For a Zombie",
       utcDay: 5,
       utcTime: "15:00",
-      episode: "Ep 7",
+      episode: "Ep 8",
       subTitle: "#I'm Looking For a Zombie",
       episodesBehindSub: 0,
       sources: [
@@ -240,7 +250,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "Black Clover Season 2",
       utcDay: 5,
-      utcTime: "16:00",
+      utcTime: "15:00",
       watchSlug: "black-clover",
       subTitle: "Black Clover Season 2",
       episodesBehindSub: 2,
@@ -254,7 +264,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
       title: "Magical Explorer",
       utcDay: 5,
       utcTime: "16:30",
-      episode: "Ep 9",
+      episode: "Ep 10",
       subTitle: "Magical Explorer",
       episodesBehindSub: 0,
       sources: [
@@ -266,8 +276,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "Horror Collector",
       utcDay: 5,
-      utcTime: "18:15",
-      episode: "Ep 5",
+      utcTime: "17:15",
+      episode: "Ep 6",
       subTitle: "Horror Collector",
       episodesBehindSub: 2,
       sources: [AS("kyoufu-collector"), FALL_LIST],
@@ -276,8 +286,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "Aoashi Season 2",
       utcDay: 6,
-      utcTime: "10:00",
-      episode: "Ep 6",
+      utcTime: "09:00",
+      episode: "Ep 7",
       subTitle: "Aoashi Season 2",
       episodesBehindSub: 2,
       sources: [
@@ -290,7 +300,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
       title: "Reborn as a Space Mercenary",
       utcDay: 6,
       utcTime: "14:00",
-      episode: "Ep 8",
+      episode: "Ep 9",
       subTitle: "Reborn as a Space Mercenary",
       episodesBehindSub: 0,
       sources: [
@@ -303,7 +313,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
       title: "Overgeared",
       utcDay: 6,
       utcTime: "14:31",
-      episode: "Ep 9",
+      episode: "Ep 10",
       subTitle: "Overgeared",
       episodesBehindSub: 0,
       sources: [AS("overgeared"), CR("announcements/2026/9/25/overgeared-anime-english-dub-release-date-cast-and-crew")],
@@ -312,8 +322,8 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "Full Clearing Another World under a Goddess with Zero Believers",
       utcDay: 6,
-      utcTime: "15:30",
-      episode: "Ep 5",
+      utcTime: "14:31",
+      episode: "Ep 6",
       subTitle: "Full Clearing Another World under a Goddess with Zero Believers",
       episodesBehindSub: 2,
       sources: [AS("shinja-zero-no-megami-sama-to-hajimeru-isekai-kouryaku"), FALL_LIST],
@@ -322,7 +332,7 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
     {
       title: "As a Reincarnated Aristocrat, I'll Use My Appraisal Skill to Rise in the World Season 3",
       utcDay: 6,
-      utcTime: "16:00",
+      utcTime: "15:01",
       subTitle: "As a Reincarnated Aristocrat, I'll Use My Appraisal Skill to Rise in the World Season 3",
       episodesBehindSub: 2,
       sources: [
@@ -337,10 +347,16 @@ export const CRUNCHYROLL_DUB_WEEK: DubWeek = {
 };
 
 /*
- * Week of 16 Nov 2026: PSYREN's dub (Ep 5) is delayed to Mon 23 Nov on AnimeSchedule, so it has
- * no row this week. Link Click Season 3 ended on 13 Nov. Rilakkuma's English dub shows on
- * Crunchyroll's release calendar but has no Crunchyroll News post, so it stays out (rule 2).
- * Episode numbers are omitted where AnimeSchedule and Crunchyroll count differently.
+ * Week of 23 Nov 2026: Crunchyroll's release calendar for 16-22 Nov shows the English dubs
+ * dropping with the sub (not an hour later), and AnimeSchedule's week 48 timetable agrees, so
+ * the trailing dubs now share the sub slot. Where the two differ, Crunchyroll's own drop time
+ * wins: Aoashi 09:00 (AnimeSchedule 10:00) and The Apothecary Diaries 15:30 (16:00).
+ * PSYREN's dub Ep 5 lands on Mon 23 Nov after a week's delay; its sub Ep 7 moves to 30 Nov.
+ * Saga of Tanya the Evil Season 2 ends with Ep 12. The Classroom of a Black Cat and a Witch
+ * (dub Ep 2, Tue 16:00) and Hands Off: Sawaranaide Kotesashi-kun (dub Ep 1, Sat 02:00) are on
+ * AnimeSchedule and Crunchyroll's calendar but have no Crunchyroll News post, so they stay out
+ * (rule 2), like Rilakkuma. Episode numbers are omitted where AnimeSchedule and Crunchyroll
+ * count differently.
  */
 
 /** Announced in Crunchyroll's Fall 2026 dub list, but not on the weekly timetable as of CHECKED. */
@@ -351,10 +367,10 @@ export const FALL_DUB_LIST_SOURCE = FALL_LIST;
 /** One Piece English dub, from Crunchyroll's 24 Aug 2026 announcement. Update weekly. */
 export const ONE_PIECE_DUB = {
   /** Dub episode released this week, and its release date (Tuesday). */
-  thisWeekEpisode: 1160,
-  thisWeekDate: "Tuesday, November 17",
-  nextEpisode: 1161,
-  nextDate: "Tuesday, November 24",
+  thisWeekEpisode: 1161,
+  thisWeekDate: "Tuesday, November 24",
+  nextEpisode: 1162,
+  nextDate: "Tuesday, December 1",
   releaseTime: "9:00 a.m. PT",
   /** Last episode aired in Japan before the broadcast break. */
   japanLatestEpisode: 1180,

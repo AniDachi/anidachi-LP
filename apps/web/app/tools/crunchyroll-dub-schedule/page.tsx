@@ -143,7 +143,7 @@ export default function CrunchyrollDubSchedulePage() {
         description={`English dub episodes on Crunchyroll for ${weekLabel}, converted to your time zone.`}
         url={url}
         datePublished="2026-10-20"
-        dateModified="2026-11-15"
+        dateModified="2026-11-22"
         faq={faq}
         headings={headings}
         itemList={itemList}
