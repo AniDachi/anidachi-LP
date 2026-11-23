@@ -115,7 +115,7 @@ describe("privileged overlay wiring", () => {
 		const send = vi.mocked(chrome.runtime.sendMessage);
 		const original = send.getMockImplementation()!;
 		const admission = deferred<unknown>();
-		send.mockImplementation(async (...args: any[]) => args[0]?.command === "connect-room" ? admission.promise : original(...args));
+		send.mockImplementation(async (...args: any[]) => args[0]?.command === "connect-room" ? admission.promise : Reflect.apply(original, chrome.runtime, args));
 		const runtime = startContentLifecycle({ detect: () => ({ status: "none" }), lookupPrimeRoom: async () => null,
 			ensureStyles() {}, installKeyboardGuard: () => () => {}, startProviderStudy: () => null });
 		try {
