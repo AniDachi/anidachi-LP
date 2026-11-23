@@ -122,8 +122,8 @@ const startHereItemList = [
     position: 3,
   },
   {
-    name: "Best Teleparty alternatives for YouTube",
-    url: "/guides/best-teleparty-alternatives-for-youtube",
+    name: "Best Teleparty alternatives",
+    url: "/guides/best-teleparty-alternatives-for-anime#youtube",
     position: 4,
   },
   {

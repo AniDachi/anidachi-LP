@@ -123,7 +123,7 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         It does not offer async catch-up or durable episode-style progress for
         staggered schedules. AniDachi live rooms also require a shared time. For planning across time zones, see{" "}
         <Link
-          href="/guides/best-teleparty-alternatives-for-youtube"
+          href="/guides/best-teleparty-alternatives-for-anime#youtube"
         >
           best Teleparty alternatives for YouTube
         </Link>

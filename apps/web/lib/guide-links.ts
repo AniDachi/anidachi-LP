@@ -349,13 +349,16 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/guides/best-teleparty-alternatives-for-anime",
-		label: "Best Teleparty Alternatives for Anime",
+		label: "Best Teleparty Alternatives",
 		tags: [
 			"template-c",
 			"crunchyroll",
+			"youtube",
+			"compare",
 			"watch-party",
 			"listicle",
 			"pillar-watch-crunchyroll",
+			"pillar-watch-youtube",
 		],
 	},
 	{
@@ -614,17 +617,6 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: [
 			"template-c",
 			"how-to-core",
-			"youtube",
-			"watch-party",
-			"pillar-watch-youtube",
-		],
-	},
-	{
-		href: "/guides/best-teleparty-alternatives-for-youtube",
-		label: "Best Teleparty Alternatives for YouTube",
-		tags: [
-			"template-c",
-			"listicle",
 			"youtube",
 			"watch-party",
 			"pillar-watch-youtube",

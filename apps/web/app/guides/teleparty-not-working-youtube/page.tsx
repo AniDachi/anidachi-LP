@@ -212,7 +212,7 @@ export default function TelepartyNotWorkingYoutubePage() {
           Stay on Teleparty if live multi-service nights already work. Choose AniDachi for live YouTube rooms and personal history, or when you also host Crunchyroll
           anime nights in one extension. Ranked options:{" "}
           <Link
-            href="/guides/best-teleparty-alternatives-for-youtube"
+            href="/guides/best-teleparty-alternatives-for-anime#youtube"
             className="text-brand-orange hover:underline"
           >
             best Teleparty alternatives for YouTube
