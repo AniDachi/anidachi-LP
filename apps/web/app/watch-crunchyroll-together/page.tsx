@@ -205,8 +205,8 @@ export default function WatchCrunchyrollTogetherPage() {
 									Yes for live sync, with compatibility that can slip after
 									player updates. AniDachi is the Crunchyroll-first Teleparty alternative
 									(and also covers YouTube and Netflix). Full compare:{" "}
-									<Link href="/compare/anidachi-vs-teleparty">
-										AniDachi vs Teleparty
+									<Link href="/guides/best-teleparty-alternatives-for-anime">
+										Best Teleparty alternatives
 									</Link>
 									.
 								</>

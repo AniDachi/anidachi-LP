@@ -43,6 +43,9 @@ export const RECRAWL_REDIRECT_PATHS: readonly string[] = [
   // Folded into the Discord hub on 2026-11-22. Indexed (last crawled 26 Jul 2026), so a
   // recrawl leads Google to the hub, which it had never fetched.
   "/guides/youtube-watch-party-with-discord",
+  // Folded into the Teleparty alternatives page on 2026-11-23 (ANI-76). Both indexed.
+  "/guides/best-teleparty-alternatives-for-youtube",
+  "/compare/anidachi-vs-teleparty",
 ];
 
 export const RECRAWL_SITEMAP_PATH = "/sitemap-redirects.xml";

@@ -337,7 +337,7 @@ export default function PrimeVideoWatchPartyPage() {
             href: "/guides/how-to-stream-prime-video-on-discord",
             label: "How to stream Prime Video on Discord",
           },
-          { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+          { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives" },
           { href: "/netflix-watch-party", label: "Netflix watch party" },
           { href: "/virtual-movie-night", label: "Virtual movie night" },
           { href: "/guides/is-teleparty-free", label: "Is Teleparty free?" },

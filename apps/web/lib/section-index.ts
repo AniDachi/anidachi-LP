@@ -11,7 +11,6 @@ export type SectionEntry = { href: string; label: string; description?: string }
 export type SectionGroup = { id: string; heading: string; entries: SectionEntry[] };
 
 export const COMPARE_ENTRIES: SectionEntry[] = [
-  { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty", description: "A Teleparty alternative for Crunchyroll, YouTube and Netflix nights." },
   { href: "/compare/anidachi-vs-rave", label: "AniDachi vs Rave", description: "Crunchyroll and YouTube rooms against Rave's multi-platform sync." },
   { href: "/compare/anidachi-vs-watch2gether", label: "AniDachi vs Watch2Gether", description: "YouTube watch parties and Crunchyroll anime groups compared." },
   { href: "/compare/anidachi-vs-kosmi", label: "AniDachi vs Kosmi", description: "Each viewer's own player vs Kosmi's free browser rooms." },

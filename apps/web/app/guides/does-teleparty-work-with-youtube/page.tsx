@@ -179,10 +179,10 @@ export default function DoesTelepartyWorkWithYoutubePage() {
         Choose AniDachi for live YouTube rooms and personal history, or when you also host
         Crunchyroll anime nights in one extension. Compare:{" "}
         <Link
-          href="/compare/anidachi-vs-teleparty"
+          href="/guides/best-teleparty-alternatives-for-anime"
           className="text-brand-orange hover:underline"
         >
-          AniDachi vs Teleparty
+          Best Teleparty alternatives
         </Link>
         . Pricing:{" "}
         <Link href="/pricing" className="text-brand-orange hover:underline">

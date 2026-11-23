@@ -170,7 +170,7 @@ export default function AnidachiVsDiscordScreenSharePage() {
                     { href: "/guides/can-you-screen-share-crunchyroll-on-discord", label: "Can you screen share Crunchyroll on Discord?" },
                     { href: "/guides/switch-from-discord-screen-share", label: "Switch from Discord screen share" },
                     { href: "/guides/how-to-watch-anime-with-friends-on-discord", label: "How to watch anime with friends on Discord" },
-                    { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+                    { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives" },
                     { href: "/guides/how-to-watch-crunchyroll-with-friends", label: "How to watch Crunchyroll with friends" }
         ]}
       />

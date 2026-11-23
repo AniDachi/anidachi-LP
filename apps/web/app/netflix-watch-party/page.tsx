@@ -449,8 +449,8 @@ export default function NetflixWatchPartyPage() {
           want to see and hear each other while you watch without everyone paying for
           voice, and if your group also watches anime on Crunchyroll or videos on
           YouTube. Full breakdown:{" "}
-          <Link href="/compare/anidachi-vs-teleparty" className="text-brand-orange hover:underline">
-            AniDachi vs Teleparty
+          <Link href="/guides/best-teleparty-alternatives-for-anime" className="text-brand-orange hover:underline">
+            Best Teleparty alternatives
           </Link>
           . For Teleparty&apos;s tiers on their own, read{" "}
           <Link href="/guides/is-teleparty-free" className="text-brand-orange hover:underline">
@@ -534,7 +534,7 @@ export default function NetflixWatchPartyPage() {
         <SeoGuideRelated
           links={[
             { href: "/virtual-movie-night", label: "Virtual movie night" },
-            { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+            { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives" },
             { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
             { href: "/watch-youtube-together", label: "YouTube watch party" },
             { href: "/prime-video-watch-party", label: "Prime Video watch party" },

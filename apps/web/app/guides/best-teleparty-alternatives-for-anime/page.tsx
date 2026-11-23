@@ -245,8 +245,7 @@ export default function BestTelepartyAlternativesPage() {
                 video calls included. Friends join free. A Free host gets 20
                 minutes a day for up to 4 people; Plus rooms hold {PLUS_ROOM} and
                 Pro rooms {PRO_ROOM}, with no daily limit. The limits: desktop
-                Chrome only, and three services today. Side by side:{" "}
-                <Link href="/compare/anidachi-vs-teleparty">AniDachi vs Teleparty</Link>.
+                Chrome only, and three services today.
               </>
             ),
             highlight: true,
@@ -381,7 +380,6 @@ export default function BestTelepartyAlternativesPage() {
       </h2>
       <SeoGuideRelated
         links={[
-          { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
           { href: "/guides/is-teleparty-free", label: "Is Teleparty free?" },
           { href: "/guides/is-teleparty-safe", label: "Is Teleparty safe?" },
           { href: "/guides/best-watch-party-apps-for-anime", label: "Best watch party apps for anime" },

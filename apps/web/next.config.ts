@@ -161,12 +161,16 @@ const nextConfig: NextConfig = {
       },
       // 2026-11-23 (owner-approved, ANI-44): one Teleparty alternatives page for every
       // platform. The anime URL holds the rankings; its YouTube twin competed for the same
-      // searches (positions 6.8-10.2) and folds in.
-      {
-        source: "/guides/best-teleparty-alternatives-for-youtube",
+      // searches (positions 6.8-10.2) and folds in. "anidachi vs teleparty" gets no searches,
+      // so the compare page folds in too (ANI-76).
+      ...[
+        "/guides/best-teleparty-alternatives-for-youtube",
+        "/compare/anidachi-vs-teleparty",
+      ].map((source) => ({
+        source,
         destination: "/guides/best-teleparty-alternatives-for-anime",
         permanent: true,
-      },
+      })),
       // 2026-11-22 (owner-approved): two Discord guides fold into the Discord hub, which
       // Google had never fetched. The Watch Together guide (never crawled) targeted the
       // same searches; the YouTube guide is indexed, so its redirect leads Google to the hub.

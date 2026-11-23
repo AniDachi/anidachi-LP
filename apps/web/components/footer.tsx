@@ -246,10 +246,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/compare/anidachi-vs-teleparty"
+                  href="/guides/best-teleparty-alternatives-for-anime"
                   className="hover:text-ani-text transition-colors"
                 >
-                  AniDachi vs Teleparty
+                  Best Teleparty alternatives
                 </Link>
               </li>
               <li>

@@ -371,11 +371,9 @@ export default function IsTelepartyFreePage() {
       <p className="mb-8 leading-relaxed text-ani-muted">
         For Crunchyroll, YouTube and Netflix with voice,{" "}
         <InstallLink href="/extension">try AniDachi; friends join free</InstallLink>
-        . The full side-by-side is in{" "}
-        <Link href="/compare/anidachi-vs-teleparty">AniDachi vs Teleparty</Link>,
-        and other options are in{" "}
+        . Other options, side by side, are in{" "}
         <Link href="/guides/best-teleparty-alternatives-for-anime">
-          the best Teleparty alternatives for anime
+          the best Teleparty alternatives
         </Link>
         .
       </p>
@@ -412,7 +410,7 @@ export default function IsTelepartyFreePage() {
       <SeoGuideRelated
         links={[
           { href: "/guides/is-teleparty-safe", label: "Is Teleparty safe?" },
-          { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+          { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives" },
           { href: "/watch-crunchyroll-together",
             label: "Crunchyroll watch party" },
           {

@@ -357,7 +357,7 @@ export default function IsTelepartySafePage() {
           YouTube or Netflix in desktop Chrome and want voice chat in the room,{" "}
           <InstallLink href="/extension">try AniDachi; friends join free</InstallLink>
           . The full feature comparison is in{" "}
-          <Link href="/compare/anidachi-vs-teleparty">AniDachi vs Teleparty</Link>.
+          <Link href="/guides/best-teleparty-alternatives-for-anime">Best Teleparty alternatives</Link>.
         </p>
 
         <h2 id="sources" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
@@ -389,11 +389,7 @@ export default function IsTelepartySafePage() {
         <SeoGuideRelated
           links={[
             { href: "/guides/is-teleparty-free", label: "Is Teleparty free?" },
-            { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
-            {
-              href: "/guides/best-teleparty-alternatives-for-anime",
-              label: "Best Teleparty alternatives for anime",
-            },
+            { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives" },
             { href: "/netflix-watch-party", label: "Netflix watch party" },
             { href: "/security", label: "AniDachi security and permissions" },
           ]}

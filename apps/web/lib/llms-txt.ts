@@ -29,7 +29,7 @@ export function buildLlmsTxt(origin: string): string {
     "## Guides and comparisons",
     "",
     `- [Discord watch party](${url("/discord-watch-party")}): why screen sharing often shows a black screen, and what works instead.`,
-    `- [AniDachi vs Teleparty](${url("/compare/anidachi-vs-teleparty")}): side-by-side comparison.`,
+    `- [Best Teleparty alternatives](${url("/guides/best-teleparty-alternatives-for-anime")}): five apps like Teleparty compared.`,
     `- [Is Teleparty free?](${url("/guides/is-teleparty-free")}): Teleparty's free and Premium tiers.`,
     `- [Is Teleparty safe?](${url("/guides/is-teleparty-safe")}): Teleparty's permissions, data collection and privacy policy.`,
     `- [Does Netflix have a watch party?](${url("/guides/does-netflix-have-a-watch-party")}): Netflix's own features.`,
