@@ -105,28 +105,18 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/compare/anidachi-vs-metastream",
-		label: "AniDachi vs Metastream",
+		label: "Metastream Alternatives",
 		tags: ["compare", "crunchyroll", "watch-party", "pillar-watch-crunchyroll"],
 	},
 	{
 		href: "/compare/anidachi-vs-hyperbeam",
-		label: "AniDachi vs Hyperbeam",
+		label: "Hyperbeam Alternatives",
 		tags: ["compare", "online", "watch-party", "pillar-watch-crunchyroll"],
 	},
 	{
 		href: "/compare/anidachi-vs-kosmi",
-		label: "AniDachi vs Kosmi",
+		label: "Kosmi Alternatives",
 		tags: ["compare", "online"],
-	},
-	{
-		href: "/compare/anidachi-vs-syncup",
-		label: "AniDachi vs SyncUp",
-		tags: ["compare", "online"],
-	},
-	{
-		href: "/compare/anidachi-vs-twoseven",
-		label: "AniDachi vs TwoSeven",
-		tags: ["compare", "long-distance", "crunchyroll", "pillar-watch-anime"],
 	},
 	{
 		href: "/anime-watch-party-toolkit",
@@ -339,36 +329,27 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/guides/is-teleparty-free",
-		label: "Is Teleparty Free?",
-		tags: ["template-c", "watch-party", "compare", "online"],
-	},
-	{
-		href: "/guides/is-teleparty-safe",
-		label: "Is Teleparty Safe?",
+		label: "Is Teleparty Free and Safe?",
 		tags: ["template-c", "watch-party", "compare", "online"],
 	},
 	{
 		href: "/guides/best-teleparty-alternatives-for-anime",
-		label: "Best Teleparty Alternatives for Anime",
+		label: "Best Teleparty Alternatives",
 		tags: [
 			"template-c",
 			"crunchyroll",
+			"youtube",
+			"compare",
 			"watch-party",
 			"listicle",
 			"pillar-watch-crunchyroll",
+			"pillar-watch-youtube",
 		],
 	},
 	{
 		href: "/guides/watch2gether-alternatives-for-anime",
-		label: "Watch2Gether Alternatives for Anime",
-		tags: [
-			"template-c",
-			"crunchyroll",
-			"watch-party",
-			"listicle",
-			"compare",
-			"pillar-watch-crunchyroll",
-		],
+		label: "Watch2Gether Alternatives",
+		tags: ["template-c", "crunchyroll", "watch-party", "listicle", "compare", "pillar-watch-crunchyroll", "youtube", "pillar-watch-youtube"],
 	},
 	{
 		href: "/guides/crunchyroll-watch-party-with-discord",
@@ -383,17 +364,9 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/guides/kast-alternatives-for-anime",
-		label: "Kast Alternatives for Anime",
-		tags: [
-			"template-c",
-			"watch-party",
-			"crunchyroll",
-			"online",
-			"listicle",
-			"compare",
-			"pillar-watch-anime",
-		],
+		href: "/guides/kast-alternatives-for-youtube",
+		label: "Kast Alternatives",
+		tags: ["template-c", "watch-party", "crunchyroll", "online", "listicle", "compare", "pillar-watch-anime", "youtube", "pillar-watch-youtube"],
 	},
 	{
 		href: "/guides/how-to-watch-crunchyroll-with-friends-without-account-sharing",
@@ -418,17 +391,6 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/guides/switch-from-discord-screen-share",
-		label: "Switch From Discord Screen Share",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"discord",
-			"watch-party",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
 		href: "/guides/best-way-to-watch-crunchyroll-with-friends",
 		label: "Best Way to Watch Crunchyroll With Friends",
 		tags: [
@@ -439,26 +401,9 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/guides/best-watch-party-apps-for-anime",
-		label: "Best Watch Party Apps for Anime",
-		tags: [
-			"template-c",
-			"watch-party",
-			"crunchyroll",
-			"listicle",
-			"pillar-watch-anime",
-		],
-	},
-	{
-		href: "/guides/rave-alternatives-for-anime",
-		label: "Rave Alternatives for Anime",
-		tags: [
-			"template-c",
-			"watch-party",
-			"crunchyroll",
-			"online",
-			"pillar-watch-anime",
-		],
+		href: "/guides/rave-alternatives-for-youtube",
+		label: "Rave Alternatives",
+		tags: ["template-c", "watch-party", "crunchyroll", "online", "pillar-watch-anime", "youtube", "pillar-watch-youtube"],
 	},
 	{
 		href: "/guides/how-to-watch-anime-for-free-with-friends",
@@ -540,18 +485,8 @@ export const guideLinks: GuideLinkItem[] = [
 		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{
-		href: "/guides/does-teleparty-work-with-youtube",
-		label: "Does Teleparty Work With YouTube?",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
 		href: "/guides/youtube-watch-party-chrome-extension",
 		label: "YouTube Watch Party Chrome Extension",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
-		href: "/guides/watch2gether-alternatives-for-youtube",
-		label: "Watch2Gether Alternatives for YouTube",
 		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{
@@ -580,11 +515,6 @@ export const guideLinks: GuideLinkItem[] = [
 			"pillar-watch-youtube",
 			"discord",
 		],
-	},
-	{
-		href: "/guides/rave-alternatives-for-youtube",
-		label: "Rave Alternatives for YouTube",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{
 		href: "/guides/youtube-group-watch",
@@ -620,17 +550,6 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/guides/best-teleparty-alternatives-for-youtube",
-		label: "Best Teleparty Alternatives for YouTube",
-		tags: [
-			"template-c",
-			"listicle",
-			"youtube",
-			"watch-party",
-			"pillar-watch-youtube",
-		],
-	},
-	{
 		href: "/guides/how-to-watch-youtube-together-without-screen-share",
 		label: "Watch YouTube Together Without Screen Share",
 		tags: [
@@ -642,19 +561,9 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/guides/kast-alternatives-for-youtube",
-		label: "Kast Alternatives for YouTube",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
 		href: "/guides/youtube-watch-party-free",
 		label: "YouTube Watch Party Free Options",
 		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
-		href: "/compare/anidachi-vs-watch2gether",
-		label: "AniDachi vs Watch2Gether",
-		tags: ["compare", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{
 		href: "/watch-movies-together-long-distance",
@@ -685,11 +594,6 @@ export const guideLinks: GuideLinkItem[] = [
 	{
 		href: "/guides/teleparty-not-working-youtube",
 		label: "Teleparty Not Working on YouTube",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
-		href: "/guides/does-rave-work-with-youtube",
-		label: "Does Rave Work With YouTube?",
 		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{

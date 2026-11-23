@@ -352,18 +352,18 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
           </Link>
         </li>
         <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty — detailed comparison
+          <Link href="/guides/best-teleparty-alternatives-for-anime" className="hover:underline">
+            Best Teleparty alternatives
           </Link>
         </li>
         <li>
-          <Link href="/compare/anidachi-vs-rave" className="hover:underline">
-            AniDachi vs Rave — detailed comparison
+          <Link href="/guides/rave-alternatives-for-youtube" className="hover:underline">
+            Rave alternatives
           </Link>
         </li>
         <li>
-          <Link href="/compare/anidachi-vs-twoseven" className="hover:underline">
-            AniDachi vs TwoSeven for long-distance couples
+          <Link href="/compare" className="hover:underline">
+            Best watch party apps
           </Link>
         </li>
         <li>

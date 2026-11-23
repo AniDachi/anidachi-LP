@@ -4,59 +4,94 @@ import {
   SeoGuideAnswer,
   SeoGuideOptions,
   SeoGuideRelated,
-  SeoGuideSteps,
-  SeoGuideBulletList,
-  SeoGuideNote,
   SeoGuideTitle,
 } from "@/components/seo-guide-blocks";
 import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
 import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
-import { getGuideLinks } from "@/lib/guide-links";
+import { getPlanPolicy } from "@anidachi/protocol";
+import { PRICING_COMPARE_OVERVIEW, PRICING_FREE_TIER_TABLE } from "@/lib/pricing-copy";
 import { getSeoSiteOrigin } from "@/lib/site-url";
-import {
-  PRICING_FREE_TIER_TABLE,
-  PRICING_COMPARE_OVERVIEW,
-} from "@/lib/pricing-copy";
 
+/**
+ * One Teleparty alternatives page for every platform (ANI-44, owner-approved 23 Nov 2026).
+ * The URL keeps "-for-anime" because it holds the rankings; the YouTube twin 308s here.
+ * Keyword Planner, 23 Nov 2026 (worldwide / US per month): "teleparty alternative" 880 / 260,
+ * "apps like teleparty" 320 / 110, "alternatives to teleparty" 170 / 50,
+ * "netflix party alternative" 140 / 50. Platform-specific variants ("teleparty alternative
+ * youtube", "... for crunchyroll") get 0.
+ */
+const PAGE_PATH = "/guides/best-teleparty-alternatives-for-anime";
+const PAGE_TITLE = "Best Teleparty Alternatives: 5 Apps Like Teleparty";
 const SITE_URL = getSeoSiteOrigin();
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
+const PLUS_ROOM = getPlanPolicy("plus").maxParticipants;
+const PRO_ROOM = getPlanPolicy("pro").maxParticipants;
+
+/** Competitor facts, each from the competitor's own page. Teleparty: checked 19 Nov 2026 (see /guides/is-teleparty-free). Others: 23 Nov 2026. */
+const SOURCES = [
+  { href: "https://www.teleparty.com/support", label: "Teleparty support FAQ (19 Nov)" },
+  { href: "https://www.teleparty.com/premium", label: "Teleparty Premium page (19 Nov)" },
+  { href: "https://kosmi.io/teleparty-alternative/", label: "Kosmi Teleparty alternative page" },
+  { href: "https://rave.io/faq", label: "Rave FAQ" },
+  { href: "https://rave.io/", label: "Rave home page (App Store notice)" },
+  { href: "https://w2g.tv/en/", label: "Watch2Gether home page" },
+  {
+    href: "https://support-apps.discord.com/hc/en-us/articles/26502500234519-Watch-Together-FAQ",
+    label: "Discord Watch Together FAQ",
+  },
+];
 
 export const metadata: Metadata = {
-  title: "Best Teleparty Alternatives for Anime, Ranked",
+  title: { absolute: PAGE_TITLE },
   description:
-    "Ranked Teleparty alternatives for anime: AniDachi for Crunchyroll live rooms, then Crunchyroll Party, Discord, and Syncplay. When to pick each.",
-  alternates: { canonical: "/guides/best-teleparty-alternatives-for-anime" },
+    "Teleparty alternatives compared: AniDachi, Kosmi, Rave, Watch2Gether and Discord. Which works on phones, Crunchyroll and Netflix, and which has free video chat.",
+  alternates: { canonical: PAGE_PATH },
   openGraph: {
-    title: "Best Teleparty Alternatives for Anime — 2026",
+    title: PAGE_TITLE,
     description:
-      "Not a 1:1 Teleparty clone list — ranked by anime and Crunchyroll fit, with when-to-pick guidance.",
-    url: "/guides/best-teleparty-alternatives-for-anime",
+      "Apps like Teleparty for Netflix, Crunchyroll and YouTube, with what each one does better and where Teleparty still wins.",
+    url: PAGE_PATH,
     images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Teleparty Alternatives for Anime",
-    description: "AniDachi, Crunchyroll Party, Discord, Syncplay — ranked for anime nights.",
+    title: PAGE_TITLE,
+    description: "AniDachi, Kosmi, Rave, Watch2Gether and Discord compared with Teleparty.",
     images: [BRAND_OG_PATH],
   },
 };
 
 const faq = [
   {
-    question: "What is the best Teleparty alternative for anime?",
+    question: "What is the best Teleparty alternative?",
     answer:
-      "AniDachi ranks first for Crunchyroll-first anime groups that need live sync, anime detection, chat, cameras, and microphones. Teleparty remains fine if you only need multi-platform live sync.",
+      "It depends on what's missing for you. For anime on Crunchyroll, or free voice and video calls next to Netflix or YouTube in desktop Chrome, AniDachi. For friends on phones, Kosmi, or Rave on Android. For no install at all, Kosmi or Watch2Gether. If Teleparty's free tier already covers your service and text chat is enough, staying on Teleparty is fine.",
   },
   {
-    question: "Is Crunchyroll Party a good Teleparty alternative?",
+    question: "What is the best free Teleparty alternative?",
     answer:
-      "Crunchyroll Party is a free live-sync option for Crunchyroll only. It is an option when everyone can watch at the same time. Compare its current features and room limits with AniDachi’s live rooms and calling.",
+      "Kosmi and Rave are free, and Kosmi includes video chat at no cost. Watch2Gether is free and needs no account. AniDachi's friends join free, and a Free host gets 20 minutes a day for up to 4 people; Plus and Pro remove the daily limit.",
   },
   {
-    question: "Can Discord replace Teleparty for anime?",
+    question: "Is there a Teleparty alternative that works on phones?",
     answer:
-      "Discord replaces the voice and chat layer well, but Go Live / screen share is a poor video path for Crunchyroll — one streamer, lower quality, and everyone does not get their own player controls. Pair Discord voice with AniDachi for playback instead.",
+      "Yes. Kosmi rooms open in a phone browser, and Rave has an Android app. Rave's site says Apple removed Rave from the App Store (checked 23 Nov 2026), so iPhone users can't download it there. Teleparty's own mobile apps support fewer services than its browser extension. AniDachi is desktop Chrome only.",
+  },
+  {
+    question: "What is the best Teleparty alternative for Crunchyroll?",
+    answer:
+      "AniDachi. Teleparty lists Crunchyroll as a premium service, so the host needs Teleparty Premium. AniDachi syncs Crunchyroll episodes on each person's own account, with chat and calls, and friends join free.",
+  },
+  {
+    question: "What is the best Teleparty alternative for YouTube?",
+    answer:
+      "Watch2Gether for quick playlists with no install and no account. AniDachi for full youtube.com watch pages on everyone's own signed-in account, with calls on the player.",
+  },
+  {
+    question: "Is Netflix Party the same as Teleparty?",
+    answer:
+      "Yes. Netflix Party renamed itself Teleparty when it added other streaming services. It was never made by Netflix.",
   },
   {
     question: "How does AniDachi pricing compare for Teleparty switchers?",
@@ -66,201 +101,278 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
-  { id: "ranked", label: "Ranked alternatives", level: 2 },
-  { id: "comparison", label: "Comparison table", level: 2 },
-  { id: "when-to-pick", label: "When to pick each", level: 2 },
-  { id: "related", label: "Related guides", level: 2 },
+  { id: "compared", label: "Compared side by side", level: 2 },
+  { id: "picks", label: "The alternatives", level: 2 },
+  { id: "by-platform", label: "By platform", level: 2 },
+  { id: "stay", label: "When to stay on Teleparty", level: 2 },
+  { id: "sources", label: "Sources", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
 
-export default function BestTelepartyAlternativesForAnimePage() {
-  const relatedGuideLinks = getGuideLinks({
-    includeTags: ["pillar-watch-crunchyroll"],
-    excludeHref: "/guides/best-teleparty-alternatives-for-anime",
-    limit: 4,
-  });
-
+export default function BestTelepartyAlternativesPage() {
   return (
     <SeoPageLayout
       breadcrumbs={[
         { name: "Home", url: "/" },
-        { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
-        {
-          name: "Best Teleparty alternatives for anime",
-          url: "/guides/best-teleparty-alternatives-for-anime",
-        },
+        { name: "Compare", url: "/compare" },
+        { name: "Best Teleparty alternatives", url: PAGE_PATH },
       ]}
-      title="Best Teleparty alternatives for anime"
-      description="Ranked Teleparty alternatives for Crunchyroll anime nights — not a 1:1 clone of the AniDachi vs Teleparty page."
-      url="/guides/best-teleparty-alternatives-for-anime"
+      title="Best Teleparty alternatives"
+      description="Apps like Teleparty compared: AniDachi, Kosmi, Rave, Watch2Gether and Discord, with what each does better and where Teleparty still wins."
+      url={PAGE_PATH}
       datePublished="2026-07-19"
-      dateModified="2026-10-01"
+      dateModified="2026-11-23"
       faq={faq}
       headings={tocHeadings}
       articleImage={articleImageAbsolute}
-      aboveFoldCta={true}
+      aboveFoldCta
       aboveFoldStyle="hero"
-      watchroom="anime"
     >
-      <SeoGuideTitle>Best Teleparty Alternatives for Anime (2026)</SeoGuideTitle>
+      <SeoGuideTitle>Best Teleparty Alternatives (2026)</SeoGuideTitle>
 
       <h2 id="answer" className="scroll-mt-24">
-        Short Answer
+        Short answer
       </h2>
       <SeoGuideAnswer>
-
-        <strong>
-          The best Teleparty alternative for anime is AniDachi — Crunchyroll-first
-          watchrooms with live sync, chat, cameras, and microphones.
-        </strong>{" "}
-        Next: Crunchyroll Party for free live-only nights, Discord for voice (not
-        video), and Syncplay for power users who want local-file sync. This page
-        ranks options by anime fit; for a side-by-side with Teleparty alone, see{" "}
-        <Link
-          href="/compare/anidachi-vs-teleparty"
-        >
-          AniDachi vs Teleparty
-        </Link>
-        . Wondering{" "}
-        <Link href="/netflix-watch-party#netflix-party">what happened to Netflix Party</Link>? It
-        was renamed Teleparty. For Netflix itself, see{" "}
-        <Link href="/netflix-watch-party">Netflix watch party</Link>. Checking
-        what Teleparty costs first? See{" "}
-        <Link href="/guides/is-teleparty-free">is Teleparty free</Link>.
-      
+        <p>
+          <strong>
+            The best Teleparty alternative depends on what Teleparty doesn&apos;t
+            do for you. For Crunchyroll anime, or free voice and video calls on
+            Netflix and YouTube in desktop Chrome, use AniDachi. For friends on
+            phones, use Kosmi, or Rave on Android. For no install at all, use
+            Kosmi or Watch2Gether.
+          </strong>{" "}
+          Teleparty (formerly Netflix Party) is free on Netflix, YouTube,
+          Disney+, Hulu, HBO Max and Prime Video with text chat, but Crunchyroll
+          and video chat need Teleparty Premium. Prices, the trial and its permissions are on{" "}
+          <Link href="/guides/is-teleparty-free">is Teleparty free and safe</Link>.
+        </p>
       </SeoGuideAnswer>
 
-      <h2
-        id="ranked"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        Ranked alternatives
+      <h2 id="compared" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        Teleparty alternatives compared
       </h2>
-      <ol className="list-decimal pl-6 space-y-4 text-foreground/80 mb-8">
-        <li>
-          <strong>AniDachi (Crunchyroll and YouTube live rooms)</strong> — Auto
-          anime detection, live sync, chat, cameras, and microphones. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends can join on Free accounts. See{" "}
-          <Link href="/pricing" className="text-brand-orange hover:underline">
-            pricing
-          </Link>
-          .
-        </li>
-        <li>
-          <strong>Crunchyroll Party</strong> — Free live sync on Crunchyroll.
-          Enough for same-time groups; weaker when schedules drift. Upgrade path:{" "}
-          <Link
-            href="/watch-crunchyroll-together"
-            className="text-brand-orange hover:underline"
-          >
-            Crunchyroll Party alternative
-          </Link>
-          .
-        </li>
-        <li>
-          <strong>Discord (voice only)</strong> — Keep Go Live for memes; do not
-          rely on screen share for full episodes. Pair voice with AniDachi
-          playback.
-        </li>
-        <li>
-          <strong>Syncplay</strong> — Excellent for local video files and media
-          servers; not a Crunchyroll browser workflow. Use when your club rips or
-          owns files, not for official streams.
-        </li>
-      </ol>
-
-
-      <h2
-        id="comparison"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        Comparison table
-      </h2>
+      <p className="mb-4 leading-relaxed text-ani-muted">
+        Every tool here keeps video in sync, and with every one of them each
+        viewer still needs their own access to the streaming service. The
+        differences are where it runs, which services it covers, and what the
+        calls cost.
+      </p>
       <ResponsiveCompareTable
         columns={[
           { id: "anidachi", label: "AniDachi", highlight: true },
-          { id: "crparty", label: "CR Party" },
-          { id: "discord", label: "Discord" },
-          { id: "syncplay", label: "Syncplay" },
+          { id: "teleparty", label: "Teleparty" },
+          { id: "kosmi", label: "Kosmi" },
+          { id: "rave", label: "Rave" },
+          { id: "w2g", label: "Watch2Gether" },
         ]}
         rows={[
           {
-            feature: "Crunchyroll in-browser",
+            feature: "How it runs",
             values: {
-              anidachi: "yes",
-              crparty: "yes",
-              discord: "Screen share only",
-              syncplay: "no",
+              anidachi: "Chrome extension, each person's own player",
+              teleparty: "Browser extension; mobile apps",
+              kosmi: "Web page with a shared browser",
+              rave: "App for phone and computer",
+              w2g: "Website; browser extension for some services",
             },
           },
           {
-            feature: "Async catch-up",
-            values: {
-              anidachi: "Coming soon",
-              crparty: "no",
-              discord: "no",
-              syncplay: "partial",
-            },
-          },
-          {
-            feature: "Anime detection",
-            values: {
-              anidachi: "yes",
-              crparty: "no",
-              discord: "no",
-              syncplay: "no",
-            },
-          },
-          {
-            feature: "Built-in voice",
+            feature: "Phones",
             values: {
               anidachi: "no",
-              crparty: "no",
-              discord: "yes",
-              syncplay: "no",
+              teleparty: "Apps with fewer services",
+              kosmi: "yes",
+              rave: "Android; removed from Apple's App Store",
+              w2g: "yes",
             },
           },
           {
-            feature: "Free tier",
+            feature: "Netflix",
+            values: {
+              anidachi: "yes",
+              teleparty: "yes",
+              kosmi: "yes",
+              rave: "yes",
+              w2g: "Listed as supported",
+            },
+          },
+          {
+            feature: "Crunchyroll",
+            values: {
+              anidachi: "yes",
+              teleparty: "Premium only",
+              kosmi: "Not named",
+              rave: "yes",
+              w2g: "Not named",
+            },
+          },
+          {
+            feature: "Voice and video chat",
+            values: {
+              anidachi: "Included, on the player",
+              teleparty: "Premium only",
+              kosmi: "Free",
+              rave: "Talk and text",
+              w2g: "Text chat, webcams",
+            },
+          },
+          {
+            feature: "Price",
             values: {
               anidachi: PRICING_FREE_TIER_TABLE,
-              crparty: "yes",
-              discord: "yes",
-              syncplay: "yes",
+              teleparty: "Free tier; Premium $6.59/month or $47.88/year",
+              kosmi: "Free; optional Premium",
+              rave: "Free with ads; Premium removes ads",
+              w2g: "Free, no account needed",
             },
           },
         ]}
       />
 
-      <h2
-        id="when-to-pick"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        When to pick each
+      <h2 id="picks" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        The alternatives, and who each one suits
       </h2>
-      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-4">
-        <li>
-          <strong>Pick AniDachi</strong> when Crunchyroll is home base and at
-          least one person always watches late.
-        </li>
-        <li>
-          <strong>Pick Crunchyroll Party</strong> for a free live-only test night.
-        </li>
-        <li>
-          <strong>Pick Discord</strong> for voice and community; not as the video
-          pipe.
-        </li>
-        <li>
-          <strong>Pick Syncplay</strong> for offline files and LAN clubs.
-        </li>
-      </ul>
-      <p className="text-foreground/80 leading-relaxed mb-8">
-        Still unsure if Teleparty even works on your setup? Read{" "}
-        <Link
-          href="/watch-crunchyroll-together"
-          className="text-brand-orange hover:underline"
-        >
-          Does Teleparty work with Crunchyroll?
+      <SeoGuideOptions
+        options={[
+          {
+            title: "AniDachi: anime nights and calls on the player",
+            body: (
+              <>
+                A Chrome extension that syncs each person&apos;s own Crunchyroll,
+                Netflix or YouTube player, with chat, reactions and voice and
+                video calls included. Friends join free. A Free host gets 20
+                minutes a day for up to 4 people; Plus rooms hold {PLUS_ROOM} and
+                Pro rooms {PRO_ROOM}, with no daily limit. The limits: desktop
+                Chrome only, and three services today.
+              </>
+            ),
+            highlight: true,
+          },
+          {
+            title: "Kosmi: no extension, phones welcome",
+            body: (
+              <>
+                A room that opens from a link, on computers, phones and tablets.
+                Kosmi says its shared browser opens Netflix, YouTube, Disney+,
+                HBO Max, Hulu and Prime Video, and that video chat and its games
+                are free, with Premium for extras such as 1080p screen sharing.
+                More:{" "}
+                <Link href="/compare/anidachi-vs-kosmi">Kosmi alternatives</Link>.
+              </>
+            ),
+          },
+          {
+            title: "Rave: an app for Android and computers",
+            body: (
+              <>
+                Apps for Android, Windows, Mac, Linux and Chromebook. Its FAQ
+                still lists iPhone and iPad, but a notice on rave.io says Apple
+                removed Rave from the App Store (checked 23 Nov 2026). Rave&apos;s FAQ lists YouTube, Netflix, Prime Video,
+                Disney+, HBO Max, Crunchyroll and more, no limit on group size, and
+                a free app with ads (Premium removes them). You sign in to your
+                streaming account inside Rave, and rented or bought YouTube and
+                Amazon titles aren&apos;t supported. More:{" "}
+                <Link href="/guides/rave-alternatives-for-youtube">Rave alternatives</Link>.
+              </>
+            ),
+          },
+          {
+            title: "Watch2Gether: free rooms for YouTube playlists",
+            body: (
+              <>
+                Make a room without an account, share the link and build a
+                playlist from YouTube, Vimeo, Dailymotion or SoundCloud, with
+                text chat and webcams. Watch2Gether says Netflix, Amazon and
+                Disney+ are also supported, through its browser extension. More:{" "}
+                <Link href="/guides/watch2gether-alternatives-for-anime">
+                  Watch2Gether alternatives
+                </Link>
+                .
+              </>
+            ),
+          },
+          {
+            title: "Discord: voice for the group, not the video",
+            body: (
+              <>
+                Discord&apos;s Watch Together activity plays YouTube only, and a
+                Go Live share of Netflix or Crunchyroll usually shows a black
+                screen. Keep the call in Discord and sync the video with a tool
+                above. Setup:{" "}
+                <Link href="/discord-watch-party">Discord watch party</Link>.
+              </>
+            ),
+          },
+        ]}
+      />
+
+      <h2 id="by-platform" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        Teleparty alternatives by platform
+      </h2>
+      <h3 id="crunchyroll" className="mt-6 scroll-mt-24 text-xl font-semibold text-ani-text">
+        Crunchyroll and anime
+      </h3>
+      <p className="mb-4 leading-relaxed text-ani-muted">
+        Teleparty lists Crunchyroll as a premium service, so the host needs
+        Teleparty Premium before anyone can watch. With AniDachi, the host
+        creates a room from the Crunchyroll player and friends join free,
+        each on their own Crunchyroll account. Rave also lists Crunchyroll and
+        runs on Android phones. Setup:{" "}
+        <Link href="/watch-crunchyroll-together">Crunchyroll watch party</Link>.
+      </p>
+      <h3 id="netflix" className="mt-6 scroll-mt-24 text-xl font-semibold text-ani-text">
+        Netflix
+      </h3>
+      <p className="mb-4 leading-relaxed text-ani-muted">
+        Teleparty is free on Netflix, so switch only for something it
+        doesn&apos;t give you: free voice and video calls (AniDachi or Kosmi) or
+        phones (Kosmi, or Rave on Android). Everyone still needs their own Netflix access to
+        the same title. Setup:{" "}
+        <Link href="/netflix-watch-party">Netflix watch party</Link>.
+      </p>
+      <h3 id="youtube" className="mt-6 scroll-mt-24 text-xl font-semibold text-ani-text">
+        YouTube
+      </h3>
+      <p className="mb-4 leading-relaxed text-ani-muted">
+        For a quick playlist of short videos, Watch2Gether needs no install and
+        no account. For full youtube.com watch pages, AniDachi keeps everyone on
+        their own signed-in account (Premium included) at their own quality,
+        with calls on the player; it doesn&apos;t cover Shorts, embeds or the
+        phone app. Does Teleparty work there at all? See{" "}
+        <Link href="/guides/teleparty-not-working-youtube">
+          does Teleparty work with YouTube
         </Link>
+        . Setup:{" "}
+        <Link href="/watch-youtube-together">YouTube watch party</Link>.
+      </p>
+
+      <h2 id="stay" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        When to stay on Teleparty
+      </h2>
+      <p className="mb-8 leading-relaxed text-ani-muted">
+        If your group watches Netflix, Disney+, Hulu, HBO Max, Prime Video or
+        YouTube, sits at computers, and is happy with text chat, Teleparty&apos;s
+        free tier already covers you. It also covers more services than AniDachi
+        does today. Switch when you need Crunchyroll without paying for Premium,
+        free calls, or friends on phones.
+      </p>
+
+      <h2 id="sources" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+        Sources
+      </h2>
+      <p className="mb-8 leading-relaxed text-ani-muted">
+        Competitor details come from each company&apos;s own pages, checked 23 Nov
+        2026 unless a date is shown:{" "}
+        {SOURCES.map((source, index) => (
+          <span key={source.href}>
+            {index > 0 ? ", " : null}
+            <a href={source.href} target="_blank" rel="noopener noreferrer">
+              {source.label}
+            </a>
+          </span>
+        ))}
+        . AniDachi is not affiliated with any of them.
       </p>
 
       <h2 id="related" className="scroll-mt-24">
@@ -268,11 +380,12 @@ export default function BestTelepartyAlternativesForAnimePage() {
       </h2>
       <SeoGuideRelated
         links={[
+          { href: "/guides/is-teleparty-free", label: "Is Teleparty free and safe?" },
+          { href: "/guides/teleparty-not-working-youtube", label: "Teleparty not working?" },
+          { href: "/compare", label: "Best watch party apps" },
+          { href: "/netflix-watch-party", label: "Netflix watch party" },
           { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
-                    { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
-                    { href: "/guides/best-watch-party-apps-for-anime", label: "Best watch party apps for anime" },
-                    { href: "/pricing", label: "AniDachi pricing" },
-                    ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
+          { href: "/watch-youtube-together", label: "YouTube watch party" },
         ]}
       />
     </SeoPageLayout>

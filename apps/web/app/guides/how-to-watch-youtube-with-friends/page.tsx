@@ -206,7 +206,7 @@ export default function HowToWatchYoutubeWithFriendsPage() {
           <li>
             <strong>Teleparty</strong> — Chrome extension; live sync only (
             <Link
-              href="/guides/does-teleparty-work-with-youtube"
+              href="/guides/teleparty-not-working-youtube"
               className="text-brand-orange hover:underline"
             >
               details

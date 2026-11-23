@@ -176,7 +176,7 @@ export default function HowToWatchAnimeTogetherWithoutScreenSharePage() {
           </Link>{" "}
           and migrate with{" "}
           <Link
-            href="/guides/switch-from-discord-screen-share"
+            href="/discord-watch-party"
             className="text-brand-orange hover:underline"
           >
             switch from Discord screen share
@@ -219,10 +219,10 @@ export default function HowToWatchAnimeTogetherWithoutScreenSharePage() {
           </li>
           <li>
             <Link
-              href="/guides/switch-from-discord-screen-share"
+              href="/discord-watch-party"
               className="hover:underline"
             >
-              Switch from Discord screen share
+              Discord watch party
             </Link>
           </li>
           <li>

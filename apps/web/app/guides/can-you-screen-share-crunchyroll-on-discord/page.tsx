@@ -288,19 +288,12 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         >
           watching anime with friends without screen share
         </Link>
-        . Migration checklist:{" "}
+        . Keeping the call in Discord while the video syncs:{" "}
         <Link
-          href="/guides/switch-from-discord-screen-share"
+          href="/discord-watch-party"
           className="text-brand-orange hover:underline"
         >
-          switch from Discord screen share
-        </Link>
-        . Feature tradeoffs:{" "}
-        <Link
-          href="/compare/anidachi-vs-discord-screen-share"
-          className="text-brand-orange hover:underline"
-        >
-          AniDachi vs Discord screen share
+          Discord watch party
         </Link>
         .
       </p>
@@ -319,8 +312,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         links={[
           { href: "/watch-crunchyroll-together", label: "Crunchyroll watch party" },
                     { href: "/guides/how-to-watch-anime-together-without-screen-share", label: "Anime without screen share" },
-                    { href: "/guides/switch-from-discord-screen-share", label: "Switch from Discord screen share" },
-                    { href: "/compare/anidachi-vs-discord-screen-share", label: "AniDachi vs Discord screen share" },
+                    { href: "/discord-watch-party", label: "Discord watch party" },
                     { href: "/pricing", label: "AniDachi pricing" },
                     ...relatedGuideLinks.map((g) => ({ href: g.href, label: g.label }))
         ]}

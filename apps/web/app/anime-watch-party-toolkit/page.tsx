@@ -295,24 +295,16 @@ export default function AnimeWatchPartyToolkitPage() {
           </Link>
         </li>
         <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty
+          <Link href="/guides/best-teleparty-alternatives-for-anime" className="hover:underline">
+            Best Teleparty alternatives
           </Link>
         </li>
         <li>
           <Link
-            href="/compare/anidachi-vs-discord-screen-share"
+            href="/discord-watch-party"
             className="hover:underline"
           >
-            AniDachi vs Discord screen share
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/watch-crunchyroll-together"
-            className="hover:underline"
-          >
-            Is Crunchyroll Party worth it?
+            Discord watch party
           </Link>
         </li>
         <li>
@@ -320,38 +312,25 @@ export default function AnimeWatchPartyToolkitPage() {
             href="/compare/anidachi-vs-metastream"
             className="hover:underline"
           >
-            AniDachi vs Metastream
+            Metastream alternatives
           </Link>
         </li>
         <li>
           <Link
-            href="/guides/kast-alternatives-for-anime"
+            href="/guides/kast-alternatives-for-youtube"
             className="hover:underline"
           >
-            Kast alternatives for anime
+            Kast alternatives
           </Link>
         </li>
         <li>
-          <Link href="/compare/anidachi-vs-watch2gether" className="hover:underline">
-            AniDachi vs Watch2Gether
+          <Link href="/guides/watch2gether-alternatives-for-anime" className="hover:underline">
+            Watch2Gether alternatives
           </Link>
         </li>
         <li>
-          <Link href="/compare/anidachi-vs-roll-together" className="hover:underline">
-            AniDachi vs Roll Together
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-syncplay" className="hover:underline">
-            AniDachi vs Syncplay
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/compare/anidachi-vs-anime-watch-parties-extension"
-            className="hover:underline"
-          >
-            AniDachi vs Anime Watch Parties extension
+          <Link href="/compare" className="hover:underline">
+            Best watch party apps
           </Link>
         </li>
         <li>
@@ -359,17 +338,7 @@ export default function AnimeWatchPartyToolkitPage() {
             Netflix watch party
           </Link>
         </li>
-        <li>
-          <Link href="/compare/anidachi-vs-kast" className="hover:underline">
-            AniDachi vs Kast
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-scener" className="hover:underline">
-            AniDachi vs Scener
-          </Link>
-        </li>
-      </ul>
+        </ul>
 
       <h2
         id="glossary"

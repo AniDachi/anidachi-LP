@@ -153,7 +153,7 @@ export default function DoesYoutubeHaveWatchPartyPage() {
         <li>
           <strong>Teleparty:</strong> Live sync on YouTube — see{" "}
           <Link
-            href="/guides/does-teleparty-work-with-youtube"
+            href="/guides/teleparty-not-working-youtube"
             className="text-brand-orange hover:underline"
           >
             Does Teleparty work with YouTube?
@@ -163,10 +163,10 @@ export default function DoesYoutubeHaveWatchPartyPage() {
         <li>
           <strong>Watch2Gether:</strong> Free browser rooms — compare via{" "}
           <Link
-            href="/guides/watch2gether-alternatives-for-youtube"
+            href="/guides/watch2gether-alternatives-for-anime"
             className="text-brand-orange hover:underline"
           >
-            Watch2Gether alternatives for YouTube
+            Watch2Gether alternatives
           </Link>
           .
         </li>

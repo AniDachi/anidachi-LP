@@ -1,241 +1,107 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SeoPageLayout, type TocHeading } from "@/components/seo-page-layout";
-import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
-import { getGuideLinks } from "@/lib/guide-links";
-import { getSeoSiteOrigin } from "@/lib/site-url";
-import {
-  PRICING_COMPARE_OVERVIEW,
-  PRICING_FREE_TIER_TABLE,
-} from "@/lib/pricing-copy";
+import { AlternativesGuide } from "@/components/alternatives-guide";
 
-const SITE_URL = getSeoSiteOrigin();
-const BRAND_OG_PATH = "/opengraph-image.png";
-const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
+/**
+ * Metastream alternatives (ANI-44 step 4 / ANI-79, owner-approved 23 Nov 2026). Was
+ * "AniDachi vs Metastream"; "anidachi vs metastream" gets no searches, while this URL
+ * already ranked for "metastream alternative" (position 5.8). The URL is kept. Keyword
+ * Planner, 23 Nov 2026: "metastream alternative" 210 / 140 worldwide / US per month.
+ */
+const PAGE_PATH = "/compare/anidachi-vs-metastream";
+const PAGE_TITLE = "Best Metastream Alternatives for Watching Together";
+const PAGE_DESCRIPTION =
+  "Metastream alternatives compared: which work with Netflix, YouTube and Crunchyroll, which run on phones, and which have free voice and video chat.";
 
 export const metadata: Metadata = {
-  title: { absolute: "AniDachi vs Metastream: Metastream Alternative for Anime" },
-  description:
-    "AniDachi vs Metastream for Crunchyroll anime nights: per-user sync, live room features, personal history, and when to pick each tool.",
-  alternates: { canonical: "/compare/anidachi-vs-metastream" },
+  title: { absolute: PAGE_TITLE },
+  description: PAGE_DESCRIPTION,
+  alternates: { canonical: PAGE_PATH },
   openGraph: {
-    title: "AniDachi vs Metastream for Anime Watch Parties",
-    description:
-      "Compare Metastream's browser tab streaming with AniDachi's Crunchyroll-first watchrooms.",
-    url: "/compare/anidachi-vs-metastream",
-    images: [{ url: BRAND_OG_PATH, alt: "AniDachi" }],
+    title: PAGE_TITLE,
+    description: "Apps like Metastream, compared from each company's own pages.",
+    url: PAGE_PATH,
+    images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AniDachi vs Metastream — Anime Comparison",
-    description: "Metastream alternative for Crunchyroll anime groups.",
-    images: [BRAND_OG_PATH],
+    title: PAGE_TITLE,
+    description: "Watch2Gether, SyncUp, Kosmi, AniDachi, Teleparty and Discord compared with Metastream.",
+    images: ["/opengraph-image.png"],
   },
 };
 
 const faq = [
   {
-    question: "Is Metastream good for Crunchyroll anime?",
+    question: "What is the best Metastream alternative?",
     answer:
-      "Metastream syncs browser tabs for live co-watching across many sites, including Crunchyroll. AniDachi offers Crunchyroll and YouTube live rooms with anime detection, chat, reactions, and voice/video.",
+      "For a shared queue of web videos, Watch2Gether or SyncUp, both free with no account. For a free room with video chat on any device, Kosmi. For Netflix, YouTube or Crunchyroll on each person's own account with calls on the player, AniDachi in desktop Chrome.",
   },
   {
-    question: "What is the best Metastream alternative for anime?",
+    question: "Is Metastream still working?",
     answer:
-      "AniDachi is an alternative for Crunchyroll-first anime groups that want live room features beside each viewer's player. Async catch-up is coming soon, so current rooms still need a shared start time.",
+      "Its site was online on 23 Nov 2026, but it shows no release date, version or price, and says popular websites are supported without naming them. Test it with your group before a planned night.",
   },
   {
-    question: "Does Metastream require everyone to watch live?",
+    question: "Which Metastream alternative works with Netflix?",
     answer:
-      "Yes. Metastream is built for live synchronized tab playback. There is no async mode where members catch up on different days inside the same spoiler-safe room.",
-  },
-  {
-    question: "How does AniDachi pricing compare?",
-    answer: PRICING_COMPARE_OVERVIEW,
+      "AniDachi, Teleparty and SyncUp's extension sync Netflix on each person's own account, and Watch2Gether lists Netflix through its extension. Everyone needs their own Netflix access.",
   },
 ];
 
-const headings: TocHeading[] = [
-  { id: "answer", label: "Short answer", level: 2 },
-  { id: "tldr", label: "At a glance", level: 2 },
-  { id: "feature-comparison", label: "Feature comparison", level: 2 },
-  { id: "when-metastream", label: "When Metastream wins", level: 2 },
-  { id: "when-anidachi", label: "When AniDachi wins", level: 2 },
-  { id: "related", label: "Related", level: 2 },
-  { id: "faq", label: "FAQ", level: 2 },
-];
-
-export default function AniDachiVsMetastreamPage() {
-  const relatedGuideLinks = getGuideLinks({
-    includeTags: ["crunchyroll", "watch-party", "compare"],
-    limit: 3,
-  });
-
+export default function MetastreamAlternativesPage() {
   return (
-    <SeoPageLayout
-      breadcrumbs={[
-        { name: "Home", url: "/" },
-        { name: "Compare", url: "/compare" },
-        { name: "AniDachi vs Metastream", url: "/compare/anidachi-vs-metastream" },
-      ]}
-      title="AniDachi vs Metastream"
-      description="Side-by-side comparison for Crunchyroll anime watch parties."
-      url="/compare/anidachi-vs-metastream"
-      datePublished="2026-07-22"
-      dateModified="2026-10-01"
+    <AlternativesGuide
+      path={PAGE_PATH}
+      subject="metastream"
+      alternatives={["watch2gether", "syncup", "kosmi", "anidachi", "teleparty", "discord"]}
+      breadcrumbName="Metastream alternatives"
+      layoutTitle="Best Metastream alternatives"
+      description={PAGE_DESCRIPTION}
+      h1="Best Metastream Alternatives (2026)"
+      datePublished="2026-07-19"
       faq={faq}
-      headings={headings}
-      articleImage={articleImageAbsolute}
-    >
-      <h1 className="text-4xl font-bold text-foreground mb-6">
-        AniDachi vs Metastream for Anime Watch Parties
-      </h1>
-
-      <h2
-        id="answer"
-        className="text-2xl font-bold text-foreground mt-8 mb-4 scroll-mt-24"
-      >
-        Short Answer
-      </h2>
-      <p className="text-xl text-foreground/80 leading-relaxed mb-6">
-        <strong>
-          Metastream is a flexible live tab-sync tool for casual co-watching.
-          AniDachi is built for Crunchyroll anime groups who want live
-          rooms, chat, reactions, and voice/video — and
-          also supports YouTube watchrooms.
-        </strong>
-      </p>
-
-      <h2 id="tldr" className="text-2xl font-bold text-foreground mt-8 mb-3 scroll-mt-24">
-        At a glance
-      </h2>
-      <p className="text-foreground/80 mb-6">
-        <strong>TL;DR:</strong> Choose Metastream for quick live hangs across
-        random sites. Choose AniDachi when Crunchyroll is home base and your club
-        wants social features beside each person’s own player.
-      </p>
-
-      <h2
-        id="feature-comparison"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        Feature comparison
-      </h2>
-      <ResponsiveCompareTable
-        columns={[
-          { id: "anidachi", label: "AniDachi", highlight: true },
-          { id: "metastream", label: "Metastream" },
-        ]}
-        rows={[
-          {
-            feature: "Crunchyroll in-browser",
-            values: { anidachi: "yes", metastream: "yes (tab sync)" },
-          },
-          {
-            feature: "Async catch-up",
-            values: { anidachi: "Coming soon", metastream: "no" },
-          },
-          {
-            feature: "Auto anime detection",
-            values: { anidachi: "yes", metastream: "no" },
-          },
-          {
-            feature: "Per-user Crunchyroll stream",
-            values: { anidachi: "yes", metastream: "yes" },
-          },
-          {
-            feature: "Per-episode spoiler controls",
-            values: { anidachi: "No — agree a boundary in chat", metastream: "no" },
-          },
-          {
-            feature: "Multi-site live sync",
-            values: { anidachi: "Crunchyroll, YouTube, Netflix", metastream: "Many sites" },
-          },
-          {
-            feature: "Free tier",
-            values: {
-              anidachi: PRICING_FREE_TIER_TABLE,
-              metastream: "Yes (open source)",
-            },
-          },
-        ]}
-      />
-
-      <h2
-        id="when-metastream"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        When Metastream wins
-      </h2>
-      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-6">
-        <li>You want a free, open-source live sync layer for many websites.</li>
-        <li>Everyone can watch at the same time every session.</li>
-        <li>You do not need anime-specific progress or async pacing.</li>
-      </ul>
-
-      <h2
-        id="when-anidachi"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        When AniDachi wins
-      </h2>
-      <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
-        <li>Your group lives on Crunchyroll for seasonal simulcasts.</li>
-        <li>You want personal history with your own Plus/Pro access and recording permission.</li>
-        <li>You want auto anime detection instead of manual room setup.</li>
-      </ul>
-      <p className="text-foreground/80 leading-relaxed mb-8">
-        Review{" "}
-        <Link href="/pricing" className="text-brand-orange font-medium hover:underline">
-          AniDachi pricing
-        </Link>{" "}
-        when you are ready to host. For extension options, see{" "}
-        <Link
-          href="/watch-crunchyroll-together"
-          className="text-brand-orange hover:underline"
-        >
-          best Crunchyroll watch party Chrome extensions
-        </Link>{" "}
-        and compare{" "}
-        <Link
-          href="/compare/anidachi-vs-teleparty"
-          className="text-brand-orange hover:underline"
-        >
-          AniDachi vs Teleparty
-        </Link>
-        .
-      </p>
-
-      <h2 id="related" className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24">
-        Related
-      </h2>
-      <ul className="space-y-2 text-brand-orange mb-8">
-        <li>
-          <Link
-            href="/watch-crunchyroll-together"
-            className="hover:underline"
-          >
-            Best Crunchyroll watch party Chrome extensions
-          </Link>
-        </li>
-        <li>
-          <Link href="/compare/anidachi-vs-teleparty" className="hover:underline">
-            AniDachi vs Teleparty
-          </Link>
-        </li>
-        <li>
-          <Link href="/watch-crunchyroll-together" className="hover:underline">
-            Watch Crunchyroll together
-          </Link>
-        </li>
-        {relatedGuideLinks.map((guide) => (
-          <li key={guide.href}>
-            <Link href={guide.href} className="hover:underline">
-              {guide.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </SeoPageLayout>
+      answer={
+        <p>
+          <strong>
+            For a shared queue of web videos like Metastream&apos;s, use
+            Watch2Gether or SyncUp, both free with no account. For free video chat
+            on any device, use Kosmi. For Netflix, YouTube or Crunchyroll on
+            everyone&apos;s own account with calls on the player, use AniDachi.
+          </strong>{" "}
+          Every competitor detail here comes from that company&apos;s own site,
+          checked on 23 Nov 2026.
+        </p>
+      }
+      sections={[
+        {
+          id: "queue",
+          label: "Queue-style rooms or synced players?",
+          content: (
+            <p className="mb-8 leading-relaxed text-ani-muted">
+              Metastream, Watch2Gether and SyncUp&apos;s web rooms are built around
+              a shared queue of videos from around the web, which suits YouTube
+              nights and music. Paid services such as Netflix and Crunchyroll need
+              each viewer signed in to their own account, which is what synced
+              players such as AniDachi, Teleparty and SyncUp&apos;s extension do.
+              Setup: <Link href="/watch-youtube-together">YouTube watch party</Link>{" "}
+              and <Link href="/netflix-watch-party">Netflix watch party</Link>.
+            </p>
+          ),
+        },
+      ]}
+      stay={
+        <p>
+          If Metastream still plays the sites your group uses and a shared queue
+          with chat is all you need, there&apos;s no reason to move.
+        </p>
+      }
+      related={[
+        { href: "/guides/watch2gether-alternatives-for-anime", label: "Watch2Gether alternatives" },
+        { href: "/compare/anidachi-vs-kosmi", label: "Kosmi alternatives" },
+        { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives" },
+        { href: "/watch-youtube-together", label: "YouTube watch party" },
+      ]}
+    />
   );
 }

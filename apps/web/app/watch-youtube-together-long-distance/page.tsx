@@ -232,7 +232,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
           the Chrome extension, one starts a session on a YouTube video, and the
           other joins via link. Like Watch2Gether, it is live-only — see{" "}
           <Link
-            href="/guides/does-teleparty-work-with-youtube"
+            href="/guides/teleparty-not-working-youtube"
             className="text-brand-orange hover:underline"
           >
             does Teleparty work with YouTube
