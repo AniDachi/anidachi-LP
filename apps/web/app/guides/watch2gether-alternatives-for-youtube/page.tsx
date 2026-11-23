@@ -169,10 +169,10 @@ export default function Watch2getherAlternativesForYoutubePage() {
           <strong>Discord + sync tool</strong> — voice on Discord, video sync
           elsewhere (
           <Link
-            href="/guides/youtube-watch-party-with-discord"
+            href="/discord-watch-party"
             className="text-brand-orange hover:underline"
           >
-            hybrid guide
+            Discord watch party guide
           </Link>
           ).
         </li>

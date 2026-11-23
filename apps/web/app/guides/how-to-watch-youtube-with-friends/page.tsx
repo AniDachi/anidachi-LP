@@ -217,10 +217,10 @@ export default function HowToWatchYoutubeWithFriendsPage() {
             <strong>Discord</strong> — voice + AniDachi sync beats Go Live quality
             (
             <Link
-              href="/guides/youtube-watch-party-with-discord"
+              href="/discord-watch-party"
               className="text-brand-orange hover:underline"
             >
-              hybrid guide
+              Discord watch party guide
             </Link>
             ).
           </li>

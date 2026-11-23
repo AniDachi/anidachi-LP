@@ -163,10 +163,10 @@ export default function HowToWatchYoutubeTogetherWithoutScreenSharePage() {
           </Link>{" "}
           and{" "}
           <Link
-            href="/guides/youtube-watch-party-with-discord"
+            href="/discord-watch-party"
             className="text-brand-orange hover:underline"
           >
-            YouTube watch party with Discord
+            Discord watch party
           </Link>
           .
         </p>

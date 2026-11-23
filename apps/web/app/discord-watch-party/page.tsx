@@ -66,23 +66,51 @@ const SOURCES = [
 	},
 ];
 
+/** Steps for Discord's own Watch Together activity, from Discord's Watch Together FAQ and How to Use Apps. */
+const watchTogetherSteps = [
+	{
+		name: "Join a voice call",
+		text: "Join a voice channel in your server, or start a call in a DM or group DM. On desktop, turn on Hardware Acceleration in User Settings > Advanced first; Discord needs it for every Activity.",
+	},
+	{
+		name: "Open the App Launcher",
+		text: "Press the App Launcher button at the bottom of the call and choose Watch Together. The first time, Discord asks you to authorize it.",
+	},
+	{
+		name: "Add videos to the playlist",
+		text: "Search YouTube from the Activity's search bar, or paste a YouTube link, and press + to add it. Videos play in playlist order.",
+	},
+	{
+		name: "Bring your friends in",
+		text: "Friends in the same call join the Activity you started and authorize it the first time.",
+	},
+];
+
+/**
+ * Title targets, Keyword Planner 22 Nov 2026 (worldwide / US, monthly): "discord watch together" 1,600 / 720,
+ * "how to stream movies on discord" 1,900 / 1,300, "discord watch party" 1,000 / 480,
+ * "how to watch movies on discord" 720 / 480, "watch together discord" 720 / 140, "watch party discord" 480 / 210.
+ */
+const PAGE_TITLE = "Discord Watch Party: Watch Together & Stream Movies";
+// Absolute (no " | AniDachi" suffix) so the rendered title stays under 60 characters.
+
 export const metadata: Metadata = {
-	title: "Discord Watch Party: 3 Ways to Watch Together",
+	title: { absolute: PAGE_TITLE },
 	description:
-		"Three ways to run a Discord watch party: the Watch Together activity, Go Live screen share, or Discord voice plus synced Crunchyroll, YouTube or Netflix.",
+		"Host a Discord watch party: Watch Together for YouTube, Go Live screen share, or Discord voice plus synced Netflix, Crunchyroll and YouTube movies and episodes.",
 	alternates: { canonical: PAGE_PATH },
 	openGraph: {
-		title: "Discord Watch Party: 3 Ways to Watch Together",
+		title: PAGE_TITLE,
 		description:
-			"Watch Together activity vs screen share vs synced players, with setups for Crunchyroll, YouTube and Netflix.",
+			"Watch Together, screen share or synced players: how to watch movies and episodes together on Discord.",
 		url: PAGE_PATH,
 		images: [{ url: "/opengraph-image.png", alt: "AniDachi" }],
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "Discord Watch Party: 3 Ways to Watch Together",
+		title: PAGE_TITLE,
 		description:
-			"Which Discord watch party method fits YouTube, Crunchyroll and Netflix.",
+			"Watch Together, Go Live or synced players: which Discord watch party method fits your movie night.",
 		images: ["/opengraph-image.png"],
 	},
 };
@@ -92,6 +120,21 @@ const faq = [
 		question: "How do you have a watch party on Discord?",
 		answer:
 			"Pick one of three methods. For YouTube, start Discord's Watch Together activity in a voice call. For anything on your screen, use Go Live. For Crunchyroll or Netflix, stay in the Discord call for voice and sync each person's own player with AniDachi in desktop Chrome.",
+	},
+	{
+		question: "How do you watch movies together on Discord?",
+		answer:
+			"Stay in a Discord voice call and have everyone play the same movie on their own streaming account in desktop Chrome, with AniDachi keeping the players in sync. That works for Netflix, Crunchyroll and YouTube. Go Live of a Netflix or Crunchyroll movie usually shows a black screen, and Watch Together only plays YouTube.",
+	},
+	{
+		question: "What is Discord Watch Together?",
+		answer:
+			"It's Discord's built-in Activity for watching YouTube with others in a voice call, DM or group DM. Everyone can add videos to a shared playlist, and Discord keeps playback in sync.",
+	},
+	{
+		question: "How do you start Watch Together on Discord?",
+		answer:
+			"Join a voice call, press the App Launcher button at the bottom of the call, choose Watch Together and authorize it. Then search YouTube or paste a link to add videos. Friends in the same call join the Activity.",
 	},
 	{
 		question: "How do you watch anime with friends on Discord?",
@@ -107,6 +150,16 @@ const faq = [
 		question: "Is Discord Watch Together free?",
 		answer:
 			"Discord's Watch Together FAQ doesn't mention a fee. It plays YouTube through the embedded player, limits playback to 180 minutes per person in a group before a 10-minute cool-down, and doesn't let you sign in to YouTube, so Premium members still see ads.",
+	},
+	{
+		question: "Why does Discord Watch Together stop playing?",
+		answer:
+			"Discord limits playback to 180 minutes per person when watching with a group, or 30 minutes alone, then starts a 10-minute cool-down. A session also pauses after 30 minutes without any interaction with the Activity.",
+	},
+	{
+		question: "Why can't I hear the video in Watch Together?",
+		answer:
+			"Watch Together plays sound through your operating system's audio output, which can differ from the device Discord uses for voice. Change the system output from the speaker icon in the Windows taskbar or in the Mac's system settings.",
 	},
 	{
 		question: "How many people can join a Discord watch party?",
@@ -129,6 +182,8 @@ const tocHeadings: TocHeading[] = [
 	{ id: "how-it-works", label: "How it works", level: 2 },
 	{ id: "three-ways", label: "Three ways compared", level: 2 },
 	{ id: "which", label: "Which one to use", level: 2 },
+	{ id: "watch-together", label: "Discord Watch Together", level: 2 },
+	{ id: "movies", label: "Movies on Discord", level: 2 },
 	{ id: "checklist", label: "What everyone needs", level: 2 },
 	{ id: "setup", label: "Setup by platform", level: 2 },
 	{ id: "server-events", label: "Server event tips", level: 2 },
@@ -158,40 +213,35 @@ export default function DiscordWatchPartyPage() {
 			description="Discord's Watch Together activity, Go Live screen share, and Discord voice with synced Crunchyroll, YouTube or Netflix."
 			url={PAGE_PATH}
 			datePublished="2026-09-26"
-			dateModified="2026-11-07"
+			dateModified="2026-11-22"
 			faq={faq}
 			headings={tocHeadings}
 			articleImage={articleImage}
 			itemList={[
 				{
-					name: "Discord Watch Together",
-					url: "/guides/discord-watch-together",
-					position: 1,
-				},
-				{
 					name: "Can you screen share Crunchyroll on Discord?",
 					url: "/guides/can-you-screen-share-crunchyroll-on-discord",
-					position: 2,
+					position: 1,
 				},
 				{
 					name: "How to stream Netflix on Discord",
 					url: "/guides/how-to-screen-share-netflix-on-discord",
-					position: 3,
+					position: 2,
 				},
 				{
 					name: "Can you screen share YouTube on Discord?",
 					url: "/guides/can-you-screen-share-youtube-on-discord",
-					position: 4,
+					position: 3,
 				},
 				{
 					name: "How to watch anime with friends on Discord",
 					url: "/guides/how-to-watch-anime-with-friends-on-discord",
-					position: 5,
+					position: 4,
 				},
 				{
 					name: "Discord screen share black screen",
 					url: "/guides/discord-screen-share-black-screen",
-					position: 6,
+					position: 5,
 				},
 			]}
 			h1="Discord Watch Party"
@@ -318,8 +368,8 @@ export default function DiscordWatchPartyPage() {
 								It is built into Discord, runs on phones as well as computers,
 								and anyone can add videos to a shared playlist. It can&apos;t
 								open other sites, and long sessions hit Discord&apos;s 180-minute
-								limit. Details and setup are in{" "}
-								<Link href="/guides/discord-watch-together">Discord Watch Together</Link>.
+								limit. Setup and fixes are{" "}
+								<a href="#watch-together">below</a>.
 							</>
 						),
 					},
@@ -358,6 +408,85 @@ export default function DiscordWatchPartyPage() {
 				feature-by-feature version, see{" "}
 				<Link href="/compare/anidachi-vs-discord-screen-share">
 					AniDachi vs Discord screen share
+				</Link>
+				.
+			</p>
+
+			<h2 id="watch-together" className="scroll-mt-24">
+				Discord Watch Together: how the activity works
+			</h2>
+			<p>
+				Watch Together is one of Discord&apos;s Activities, small apps that
+				open inside a call. Discord describes it as a collaborative way to
+				watch YouTube videos with others: everyone builds one playlist, and
+				Discord keeps play and pause in step, on desktop and mobile. To start
+				it:
+			</p>
+			<ol className="list-decimal space-y-2 pl-6">
+				{watchTogetherSteps.map((step) => (
+					<li key={step.name}>
+						<strong>{step.name}.</strong> {step.text}
+					</li>
+				))}
+			</ol>
+			<p>
+				<strong>Hosting or Sharing.</strong> Whoever starts Watch Together is
+				the host and controls play, pause, scrubbing, skipping and the
+				playlist order; everyone else can still add videos. In Sharing mode
+				everyone controls the playlist and the video, and one person&apos;s
+				action applies to all. Discord recommends Hosting for big groups and
+				Sharing for small ones. On mobile, the host switches modes with the
+				lock button in the Playlist tab.
+			</p>
+			<HubFeatureGrid
+				items={[
+					{
+						title: "It stops after a while",
+						body: "Playback is limited to 180 minutes per person in a group, or 30 minutes alone, then a 10-minute cool-down. The timer follows you across servers and calls. If the host runs out, Discord hands host to someone with time left, and the original host doesn't get it back. A session also pauses after 30 minutes without any interaction.",
+					},
+					{
+						title: "Ads despite YouTube Premium",
+						body: "Watch Together uses YouTube's embedded player and doesn't support signing in to your YouTube account, so Premium benefits don't apply inside the Activity.",
+					},
+					{
+						title: "You hear friends but not the video",
+						body: "The Activity plays through your operating system's audio output. If Discord voice uses a different device, change the system output, not Discord's.",
+					},
+					{
+						title: "The button is missing",
+						body: "A server admin may have turned off the Use Activities permission for your role, the channel or its category. On desktop, Discord also needs Hardware Acceleration turned on before any Activity starts.",
+					},
+				]}
+			/>
+			<p>
+				Keep Watch Together for a playlist of short YouTube videos. For a full
+				youtube.com watch page on everyone&apos;s own signed-in account, with
+				no 180-minute cap, use Discord for voice and an AniDachi room for the
+				video (not Shorts, embeds or the mobile app). The YouTube side is on{" "}
+				<Link href="/watch-youtube-together">YouTube watch party</Link>.
+			</p>
+
+			<h2 id="movies" className="scroll-mt-24">
+				How to watch movies together on Discord
+			</h2>
+			<p>
+				Movie night is where Discord&apos;s built-in options run out. Watch
+				Together only plays YouTube, and Go Live of a streaming service
+				usually shows your friends a black screen, because Netflix and
+				Crunchyroll protect their video with DRM. Go Live still works for a
+				video file on your own computer or a page that isn&apos;t
+				DRM-protected, at the streamer&apos;s upload quality.
+			</p>
+			<p>
+				For a movie on a streaming service, the setup that works is the same
+				split as for episodes: everyone stays in the Discord call for voice,
+				each person plays the same movie on their own account in desktop
+				Chrome, and AniDachi keeps the players in sync. It works on Netflix,
+				Crunchyroll and full youtube.com watch pages. Everyone needs
+				their own access to the movie, and it has to be available in their
+				country. Black screen problems and fixes:{" "}
+				<Link href="/guides/discord-screen-share-black-screen">
+					Discord screen share black screen
 				</Link>
 				.
 			</p>
@@ -455,10 +584,6 @@ export default function DiscordWatchPartyPage() {
 								to AniDachi for full youtube.com watch pages: your own signed-in
 								account, your own quality and no 180-minute cap (not Shorts,
 								embeds or the mobile app). More:{" "}
-								<Link href="/guides/youtube-watch-party-with-discord">
-									YouTube watch party with Discord
-								</Link>{" "}
-								and{" "}
 								<Link href="/guides/can-you-screen-share-youtube-on-discord">
 									screen sharing YouTube on Discord
 								</Link>
@@ -547,7 +672,8 @@ export default function DiscordWatchPartyPage() {
 				Sources
 			</h2>
 			<p>
-				Discord details checked 7 Nov 2026:{" "}
+				Discord details checked 7 Nov 2026, and the Watch Together FAQ again on
+				22 Nov 2026:{" "}
 				{SOURCES.map((source, index) => (
 					<span key={source.href}>
 						{index > 0 ? ", " : null}
