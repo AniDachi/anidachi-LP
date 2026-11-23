@@ -105,6 +105,20 @@ it("returns every unplayed season through the actual MAIN/client bridge using ty
 		}
 });
 
+it("keeps the playable edition when Prime lists an unavailable cut at the same number", async () => {
+	const f = setup();
+	const btf = state(f, 0);
+	const [unavailable, entitled] = f.pages[0]!.members;
+	object(object(btf.self)[entitled!.full]).sequenceNumber = 1;
+	object(object(object(btf.detail).detail)[entitled!.full]).episodeNumber = 1;
+	object(object(btf.action).btf)[unavailable!.full] = {
+		primaryActions: [{ actionType: "MESSAGE", payload: { payloadType: "Message", message: { message: { string: "Nicht verfügbar" } } } }],
+	};
+	const catalog = (await f.collect())?.catalog;
+	expect(catalog?.completeness).toBe("complete");
+	expect(catalog?.seasons[0]?.episodes.map(ep => ep.providerEpisodeIdentifier)).toEqual([entitled!.compact]);
+});
+
 it.each([
 	"absent",
 	"empty",

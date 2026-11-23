@@ -51,3 +51,14 @@ export function primeVideoHistoryKeys(identity: PrimeVideoHistoryIdentity) {
 		episodeKey: `primevideo:episode:${identity.providerEpisodeIdentifier}`,
 	};
 }
+
+/** Keys admitted by the public-title portrait resolver. */
+export function isPrimeHistoryPosterKey(key: string): boolean {
+	const match = /^primevideo:(?:series|movie):([A-Z0-9]{26})$/.exec(key);
+	return !!match && PrimeVideoProviderIdSchema.safeParse(match[1]).success;
+}
+
+export function isPrimeHistoryPosterUrl(url: unknown): url is string {
+	return typeof url === "string" && url.length <= 2048 &&
+		/^https:\/\/m\.media-amazon\.com\/images\/M\/[A-Za-z0-9@_.%-]+\.jpg$/.test(url);
+}

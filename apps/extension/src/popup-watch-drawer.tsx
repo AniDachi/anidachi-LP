@@ -8,6 +8,7 @@ import { youtubeHistoryArtworkUrl } from "./source-adapters/youtube/artwork";
 import { buildPersonalHistoryResumeUrl } from "@anidachi/protocol";
 import {
 	isHboMaxArtworkUrl,
+	isPrimeHistoryPosterKey,
 	type WatchHistoryBrowseQuery,
 	type WatchHistoryBrowseTitleEpisodesResponse,
 	WatchHistoryBrowseTitleEpisodesResponseSchema,
@@ -1026,7 +1027,8 @@ function PopupWatchArtwork({
 	const [poster, setPoster] = useState<string | null | undefined>(undefined);
 	const hbo = item.provider === "hbomax";
 	const saved = url && hbo && isHboMaxArtworkUrl(url) ? url + "?w=500&f=webp" : url;
-	const needsPoster = hbo && (!saved || savedStatus !== "initial");
+	const canResolve = hbo || (item.provider === "primevideo" && isPrimeHistoryPosterKey(item.titleKey));
+	const needsPoster = canResolve && (!saved || savedStatus !== "initial");
 	useEffect(() => {
 		if (!active || !needsPoster || poster !== undefined) return;
 		let current = true;
@@ -1048,8 +1050,9 @@ function PopupWatchArtwork({
 					src={src}
 					width={44}
 					height={66}
+					style={item.provider === "primevideo" ? { objectFit: "contain" } : undefined}
 					onLoad={({ currentTarget }) => {
-						if (hbo && !poster && currentTarget.naturalWidth > currentTarget.naturalHeight) setSavedStatus("landscape");
+						if (canResolve && !poster && currentTarget.naturalWidth > currentTarget.naturalHeight) setSavedStatus("landscape");
 					}}
 					onError={() => poster ? setPoster(null) : setSavedStatus("failed")}
 				/>
