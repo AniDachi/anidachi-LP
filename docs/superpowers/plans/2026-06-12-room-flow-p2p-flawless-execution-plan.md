@@ -1,5 +1,9 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## HBO Max catalog rooms on staging
+
+The Room tab can create a room in the signed-in HBO Max catalog before a title starts. A copied link or Inbox invitation opens the catalog for the guest. After playback starts, the existing HBO adapter follows the host’s playable video ID. Verify guest return while the host is paused.
+
 ## Prime Video catalog room creation on staging
 
 The Room tab uses the active Prime Video storefront or opens the standalone catalog. Catalog creation records the supported marketplace with room admission. Copied links and Inbox invitations can therefore land in the host's storefront before playback. When the host plays an episode, the existing Prime navigation descriptor supplies the playable edition. The guest's Back to video action uses the live room's current episode, including while the host is paused.

@@ -18,6 +18,7 @@ it("only the popup can request creation, only its destination can claim it, and 
 	};
 	const update = vi.fn(async () => tab);
 	const create = vi.fn();
+	const query = vi.fn(async (_options: chrome.tabs.QueryInfo) => [tab]);
 	vi.stubGlobal("chrome", {
 		runtime: {
 			id: "ext",
@@ -36,7 +37,7 @@ it("only the popup can request creation, only its destination can claim it, and 
 		},
 		windows: { update: vi.fn() },
 		tabs: {
-			query: async () => [tab],
+			query,
 			get: async () => tab,
 			create,
 			update,
@@ -103,4 +104,15 @@ it("only the popup can request creation, only its destination can claim it, and 
 	tab.url = "https://www.disneyplus.com/home";
 	await send("open", popup, "netflix");
 	expect(create).toHaveBeenLastCalledWith({ url: "https://www.netflix.com/browse", active: false });
+	tab.url = "https://play.max.com/br/pt/home";
+	expect((await send("state", popup)).here).toBe("hbomax");
+	const activeElsewhere = { ...tab, id: 42, url: "https://example.test/" };
+	query.mockImplementation(async options => options.active ? [activeElsewhere] : [tab]);
+	await send("open", popup, "hbomax");
+	expect(query).toHaveBeenCalledWith({ currentWindow: true, url: expect.arrayContaining(["https://play.max.com/*", "https://www.hbomax.com/*"]) });
+	expect(update).toHaveBeenLastCalledWith(tab.id, { active: true });
+	expect(await send("claim", { ...content, url: tab.url })).toMatchObject({ owner: "owner", provider: "hbomax" });
+	tab.url = activeElsewhere.url;
+	await send("open", popup, "hbomax");
+	expect(create).toHaveBeenLastCalledWith({ url: "https://www.hbomax.com/home", active: false });
 });

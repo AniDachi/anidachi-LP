@@ -1,16 +1,17 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(15);
+select plan(16);
 
 insert into public.users(id, email, display_name) values
   ('cc7a1000-0000-4000-8000-000000000001', 'catalog-test-1@example.test', 'Catalog host'),
   ('cc7a1000-0000-4000-8000-000000000002', 'catalog-test-2@example.test', 'Second catalog host'),
-  ('cc7a1000-0000-4000-8000-000000000003', 'catalog-test-3@example.test', 'Prime catalog host');
+  ('cc7a1000-0000-4000-8000-000000000003', 'catalog-test-3@example.test', 'Prime catalog host'),
+  ('cc7a1000-0000-4000-8000-000000000004', 'catalog-test-4@example.test', 'HBO catalog host');
 insert into public.subscriptions(user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id,
                                  plan_code, status, current_period_end, cancel_at_period_end)
 select id, 'cus_catalog_' || id, 'sub_catalog_' || id, 'price_catalog', 'plus', 'active', now()+interval '1 day', true
-from public.users where id in ('cc7a1000-0000-4000-8000-000000000001', 'cc7a1000-0000-4000-8000-000000000002', 'cc7a1000-0000-4000-8000-000000000003');
+from public.users where id in ('cc7a1000-0000-4000-8000-000000000001', 'cc7a1000-0000-4000-8000-000000000002', 'cc7a1000-0000-4000-8000-000000000003','cc7a1000-0000-4000-8000-000000000004');
 
 create function pg_temp.catalog(host_id uuid, request_id text, abuse boolean, provider text default 'disneyplus')
 returns table(outcome text, room_record jsonb, active_room jsonb) language sql as $$
@@ -53,5 +54,8 @@ select is((select room_record->>'lobby_marketplace' from public.create_catalog_r
   6,4,true,true,3,1,true,null,null)), 'amazon.de', 'retry preserves the initial storefront');
 select ok(not has_function_privilege('authenticated', 'public.create_catalog_room_v2(text,text,uuid,text,text,text,text,integer,integer,boolean,boolean,integer,integer,boolean,text,text)', 'execute'),
   'only the server can admit to Prime lobbies');
+select is((select room_record->>'lobby_provider' from pg_temp.catalog(
+  'cc7a1000-0000-4000-8000-000000000004', 'hbo-first', true, 'hbomax')),
+  'hbomax', 'HBO catalog admission preserves the provider for invitations before playback');
 select * from finish();
 rollback;
