@@ -1,5 +1,5 @@
 import { ROOMS_PILOT, ROOM_LAUNCH_MESSAGE, popupRoomProvider, hasCatalogNavigation, lobbyRoomFromUrl, netflixProfileGate, netflixProfileReturn, setPopupCreate } from "../src/popup-room-launch";
-import { HBO_MAX_BROWSER_HOSTS, isHboMaxOrigin } from "@anidachi/protocol";
+import { hasPrimeBrowserHost, HBO_MAX_BROWSER_HOSTS, isHboMaxOrigin } from "@anidachi/protocol";
 import { HboMaxVideoAdapter } from "../src/source-adapters/hbomax/adapter";
 import { startHboMaxCatalogCapture } from "../src/source-adapters/hbomax/metadata";
 import { suppressedPrimeLaunch } from "../src/prime-launch-capture";
@@ -202,7 +202,7 @@ function startContentLifecycleSession(
   let checkingLiveRoom = false;
   let startupRoom: LivePrimeRoomSession | null = null;
   let catalogAdapter: VideoAdapter | null = null;
-  const pilotEnabled = ROOMS_PILOT && window.top === window && (isDisneyPlusOrigin(location.href) || location.origin === "https://www.netflix.com") &&
+  const pilotEnabled = ROOMS_PILOT && window.top === window && (hasPrimeBrowserHost(location.href) || isDisneyPlusOrigin(location.href) || location.origin === "https://www.netflix.com") &&
     typeof chrome !== "undefined" && Boolean(chrome.runtime?.onMessage);
   let needsPilotClaim = pilotEnabled;
   let pilotLobby = ROOMS_PILOT && !restoredFromCache && Boolean(lobbyRoomFromUrl(location.href));
@@ -374,6 +374,10 @@ function startContentLifecycleSession(
     }
     const catalogRoute = catalogRoomProvider(location.href);
     const launchProvider = pilotEnabled ? popupRoomProvider(location.href) : null;
+    // Prime renders its catalog and full player at the same detail URL.
+    const hasOpenPlayer = detection.status === "ready" && detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) !== "closed";
+    const catalogLaunchPage = !!launchProvider && catalogRoute === launchProvider &&
+      (launchProvider === "primevideo" || !catalogPlayerProvider(location.href));
     if (netflixEntry && launchProvider === "netflix" && location.pathname === "/browse" && !startupRoom && !mounted) {
       if (!savedProfileInvite && lobbyRoomFromUrl(entryHref) && netflixProfileGate(document)) {
         pendingProfileReturn = true;
@@ -399,7 +403,10 @@ function startContentLifecycleSession(
     }
     if (pilotLobby && (mounted?.hasPrimeRoom?.() || !launchProvider)) pilotLobby = false;
     if (pilotEnabled && !startupRoom && !mounted?.hasPrimeRoom?.() && (needsPilotClaim || pilotLobby) && launchProvider) {
-      const ready = catalogPlayerProvider(location.href) === launchProvider
+      const ready = launchProvider === "primevideo"
+        ? (hasOpenPlayer && detection.adapter.provider === launchProvider && !!detection.adapter.getSourceDescriptor()) ||
+          hasCatalogNavigation(document, launchProvider)
+        : catalogPlayerProvider(location.href) === launchProvider
         ? detection.status === "ready" && detection.adapter.provider === launchProvider
         : hasCatalogNavigation(document, launchProvider);
       if (ready && needsPilotClaim) {
@@ -418,9 +425,8 @@ function startContentLifecycleSession(
         verifiedPrimePlayerPath = path;
     }
     const allowed = catalogRoute || Boolean(mounted?.hasPrimeRoom?.() && route && verifiedPrimePlayerPath === path);
-    if (pilotLobby && launchProvider && catalogRoute === launchProvider && manager.current === catalogAdapter && catalogAdapter && detection.status !== "ready") return "idle";
-    if ((startupRoom || (pilotLobby && launchProvider && catalogRoute === launchProvider && !catalogPlayerProvider(location.href))) && allowed && (detection.status !== "ready" ||
-        detection.adapter.container.getAttribute(PRIME_PLAYER_STATE) === "closed")) {
+    if (pilotLobby && catalogLaunchPage && manager.current === catalogAdapter && catalogAdapter && !hasOpenPlayer) return "idle";
+    if ((startupRoom || (pilotLobby && catalogLaunchPage)) && allowed && !hasOpenPlayer) {
       // No page video is needed for room UI. This unbound adapter never receives
       // player listeners, history, or playback control and cannot select a preview.
       const Adapter = { youtube: YouTubeVideoAdapter, netflix: NetflixVideoAdapter, crunchyroll: CrunchyrollVideoAdapter, primevideo: PrimeVideoAdapter, disneyplus: DisneyPlusVideoAdapter, hbomax: HboMaxVideoAdapter }[catalogRoute ?? "primevideo"];

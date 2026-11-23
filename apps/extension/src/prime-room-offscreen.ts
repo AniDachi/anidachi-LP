@@ -265,7 +265,7 @@ export function registerPrimeRoomOffscreen() {
 						? owner.projection.reserveFollow(
 								owner.identity.ownerUserId,
 								message.contentId,
-								message.visit,
+								message.visit, message.manualReturn === true,
 							)
 						: null,
 				);

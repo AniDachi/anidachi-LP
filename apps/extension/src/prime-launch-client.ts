@@ -71,6 +71,17 @@ export async function followPrimeRoom(source: WatchSourceDescriptor, roomId: str
 	return reply?.status === "ready";
 }
 
+/** The offscreen room rechecks the guest and the host’s exact current source before navigation. */
+export async function returnToPrimePlayer(roomId: string, sourceUrl: string) {
+	const canonical = canonicalizeRoomSourceUrl(sourceUrl, "primevideo");
+	if (!canonical.ok) return false;
+	const reply = await chrome.runtime.sendMessage({
+		type: "ANIDACHI_PRIME_LAUNCH", action: "return-to-prime", roomId,
+		contentId: catalogContentId(canonical.source.sourceUrl),
+	});
+	return reply?.status === "ready";
+}
+
 /** Keep an occupied tab in its live room. An older launch must not replay after Leave. */
 export function discardConflictingRoomLaunch(activeRoomId: string, href: string) {
 	const url = new URL(href);

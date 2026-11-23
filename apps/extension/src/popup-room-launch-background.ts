@@ -1,5 +1,5 @@
 import { catalogPlayerProvider } from "./catalog-room-routes";
-import { ROOM_LOBBY_HOME, RoomLobbyProviderSchema, type RoomLobbyProvider } from "@anidachi/protocol";
+import { PRIME_CONTENT_MATCHES, ROOM_LOBBY_HOME, RoomLobbyProviderSchema, type RoomLobbyProvider } from "@anidachi/protocol";
 import { getStoredAuthTokens } from "./auth-tokens";
 import { PRIME_ROOM_INTERNAL } from "./prime-room-contract";
 import {
@@ -56,7 +56,8 @@ export function registerPopupRoomLaunch() {
 		const content =
 			sender.tab?.id !== undefined &&
 			sender.frameId === 0 &&
-			popupRoomProvider(sender.url);
+			sender.url && sender.tab.url && new URL(sender.url).origin === new URL(sender.tab.url).origin &&
+			popupRoomProvider(sender.tab.url);
 		const profileInvite = message.action === "remember-profile-invite" || message.action === "take-profile-invite";
 		if (message.action === "claim" || profileInvite ? !content : !popup) return;
 		const run = async () => {
@@ -82,7 +83,7 @@ export function registerPopupRoomLaunch() {
 			if (message.action === "claim") {
 				if (
 					!pending ||
-					pending.provider !== popupRoomProvider(sender.url) ||
+					pending.provider !== content ||
 					pending.tabId !== sender.tab?.id ||
 					pending.owner !== owner ||
 					pending.expires < Date.now()
@@ -116,7 +117,7 @@ export function registerPopupRoomLaunch() {
 					: (
 							await chrome.tabs.query({
 								currentWindow: true,
-								url: new URL(ROOM_LOBBY_HOME[provider]).origin + "/*",
+								url: provider === "primevideo" ? PRIME_CONTENT_MATCHES : new URL(ROOM_LOBBY_HOME[provider]).origin + "/*",
 							})
 						)
 							.filter(

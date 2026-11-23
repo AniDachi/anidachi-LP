@@ -1,5 +1,5 @@
 import { Free20ContextError } from "./free20-abuse";
-import { type RoomLobbyProvider, RoomLobbyProviderSchema, RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
+import { PrimeMarketplaceSchema, type PrimeMarketplace, type RoomLobbyProvider, RoomLobbyProviderSchema, RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
 import {
 	RoomUpdateRequiredError,
 	roomUpdateRequiredBody,
@@ -9,6 +9,7 @@ import { hostingDeniedResponse } from "./hosting-denial";
 
 export type RoomCreateRequestInput = {
 	lobbyProvider?: RoomLobbyProvider;
+	lobbyMarketplace?: PrimeMarketplace;
 	participantSessionId: string;
 	showId?: string;
 	episodeId?: string;
@@ -149,6 +150,11 @@ function parseRoomCreateRequestBody(
 	const input: RoomCreateRequestInput = {
 		participantSessionId: admission.data.participantSessionId,
 	};
+	if (record.lobbyMarketplace !== undefined) {
+		const market = PrimeMarketplaceSchema.safeParse(record.lobbyMarketplace);
+		if (record.lobbyProvider !== "primevideo" || !market.success) return invalidRequest();
+		input.lobbyMarketplace = market.data;
+	}
 	if (record.lobbyProvider !== undefined) {
 		const provider = RoomLobbyProviderSchema.safeParse(record.lobbyProvider);
 		if (!provider.success ||

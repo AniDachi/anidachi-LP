@@ -3,13 +3,14 @@ import { observeHboMaxRoomSource, clearHboMaxRoomSource } from "./source-adapter
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
 import { readHistoryRecordingEnabled } from "./history-recording-choice";
 import { takePersonalHistoryResume, applyPersonalHistoryResume } from "./watch-history-resume";
+import { canonicalizeRoomSourceUrl, primeDomainFamily } from "@anidachi/protocol";
 import type { PrimeLaunchHandoff } from "./prime-launch-capture";
 import { hasLivePrimeRoomSession, PrimeRoomClient, retireUnattachedPrimeRoom } from "./prime-room-client";
 import type { LivePrimeRoomSession } from "./prime-room-contract";
 import { useSyncExternalStore } from "react";
 import { ROOMS_PILOT, popupRoomProvider, lobbyRoomFromUrl, getPopupCreate, popupRoomInvite, setPopupCreate, subscribePopupCreate } from "./popup-room-launch";
 import { catalogRoomProvider, catalogWatchDestination, renderedHboMaxWatchUrl, catalogWatchSource, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
-import { followPrimeRoom } from "./prime-launch-client";
+import { followPrimeRoom, returnToPrimePlayer } from "./prime-launch-client";
 import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
 import { observeDisneyPlusRoomSource, clearDisneyPlusRoomSource } from "./source-adapters/disneyplus/metadata";
 import { finishDisneyRoomReturn, returnToDisneyPlayer } from "./source-adapters/disneyplus/room-return";
@@ -842,7 +843,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		if (catalogSessionEligible && roomId && roomSnapshotReady && roomSourceProvider === adapter.provider)
 			confirmedPrimeRoom.current = roomId;
 		// A catalog guest can be admitted before the host publishes a playback source.
-		if (catalogSessionEligible && supportsCatalogReturn(adapter.provider) && !roomSourceProvider && roomSnapshotReady) {
+		if (catalogSessionEligible && (supportsCatalogReturn(adapter.provider) || (ROOMS_PILOT && browseMode.current)) && !roomSourceProvider && roomSnapshotReady) {
 			const admitted = storedRoomSession && storedRoomSession.roomId === roomId && participants.some(p =>
 				p.id === storedRoomSession.ownerUserId && p.participantSessionId === storedRoomSession.participantSessionId &&
 				p.connected !== false);
@@ -3715,6 +3716,14 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				source?.provider === "hbomax" && source.videoFingerprint === state.videoFingerprint) {
 				observeHboMaxRoomSource(document, source);
 			}
+			if (roomSourceProviderRef.current === "primevideo" && roomIdRef.current) {
+				const target = canonicalizeRoomSourceUrl(state.sourceUrl ?? source?.sourceUrl ?? "", "primevideo");
+				setCatalogReturnUrl(previous => {
+					if (state.hostSurface !== "player") return null;
+					if (target.ok && target.source.videoFingerprint === state.videoFingerprint) return target.source.sourceUrl;
+					return previous && state.videoFingerprint === "primevideo|detail/" + previous.split("/").at(-1) ? previous : null;
+				});
+			}
 			if (supportsCatalogReturn(roomSourceProviderRef.current) && roomIdRef.current) {
 				const episode = catalogWatchSource(roomSourceProviderRef.current, state.sourceUrl ?? source?.sourceUrl ?? "");
 				const inPlayer = state.hostSurface === "player" && episode && state.videoFingerprint === episode.videoFingerprint;
@@ -4370,7 +4379,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 
 	const connectToExistingWebsiteRoom = useCallback(
 		async (nextRoomId: string, reason: string, invitation?: PrimeLaunchHandoff) => {
-			const sourceReady = () => !requiresPlayableRoomSource(adapter.provider) || !!adapter.getSourceDescriptor();
+			const sourceReady = () => !requiresPlayableRoomSource(adapter.provider) || !!adapter.getSourceDescriptor() ||
+				(ROOMS_PILOT && browseMode.current && lobbyRoomFromUrl(location.href) === nextRoomId);
 			if (!sourceReady()) return;
 			const targetFingerprint = adapter.getFingerprint();
 			const sameInviteSource = () => !invitation || (activePlayer.current !== null && !invitation.hasDifferentRoomSource?.(activePlayer.current));
@@ -4491,6 +4501,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						nextRoomId,
 						activeAccessToken,
 						preparedRoomSession,
+						ROOMS_PILOT && adapter.provider === "primevideo" && browseMode.current &&
+							lobbyRoomFromUrl(location.href) === nextRoomId ? "primevideo" : undefined,
 					);
 				} catch (error) {
 					if (preparedRoomSession) {
@@ -5173,13 +5185,16 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					throw new Error("The page changed. Open Room and choose the platform again.");
 				const source = fromCatalog ? null : adapter.getSourceDescriptor();
         if (reason === "popup" && !fromCatalog && !source) throw new Error("Start the video, or create a room from the catalog.");
-				if (!source && requiresPlayableRoomSource(adapter.provider)) {
+				if (!lobbyProvider && !source && requiresPlayableRoomSource(adapter.provider)) {
 					setPlayerSourcePending(true);
 					const provider = adapter.provider === "hbomax" ? "HBO Max" : "Prime Video";
 					throw new Error(provider + " is loading. Try again in a moment.");
 				}
 				created = await createRoom(activeAccessToken, preparedRoomSession, lobbyProvider ? {
-					lobbyProvider, title: lobbyProvider === "netflix" ? "Netflix watchroom" : "Disney+ watchroom", clientRequestId: createRequestIdRef.current,
+					lobbyProvider,
+					...(lobbyProvider === "primevideo" && { lobbyMarketplace: primeDomainFamily(location.hostname) }),
+					title: { netflix: "Netflix watchroom", disneyplus: "Disney+ watchroom", primevideo: "Prime Video watchroom" }[lobbyProvider],
+					clientRequestId: createRequestIdRef.current,
 				} : {
 					sourceUrl: source?.sourceUrl ?? buildCurrentSourceUrlForInvite(),
      ...(source?.primeNavigation ? {primeNavigation:source.primeNavigation} : {}),
@@ -5365,7 +5380,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		if (
 			playerRoomClosedRef.current ||
 			!identityLoaded ||
-			(requiresPlayableRoomSource(adapter.provider) && !adapter.getSourceDescriptor()) ||
+			(requiresPlayableRoomSource(adapter.provider) && !adapter.getSourceDescriptor() &&
+				!(ROOMS_PILOT && browseMode.current && lobbyRoomFromUrl(location.href))) ||
 			roomSessionLoadedForUserId !== currentUserId ||
 			roomId ||
 			roomIdRef.current
@@ -6891,7 +6907,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	});
 	const isolatePlayerPointer = adapter.provider === "primevideo" || (adapter.provider === "hbomax" && !primeBrowsing) || disneyPlayer;
 	const guardedPanelOpen = panelOpen && isolatePlayerPointer;
-	const guestPlayerUrl = supportsCatalogReturn(adapter.provider) && roomId && roomSnapshotReady && isConnected &&
+	const guestPlayerUrl = supportsCatalogRoom(adapter.provider) && roomId && roomSnapshotReady && isConnected &&
 		currentParticipant?.role === "viewer" && currentParticipant.connected !== false &&
 		storedRoomSession?.participantSessionId && currentParticipant.participantSessionId === storedRoomSession.participantSessionId &&
 		participants.some(p => p.role === "host" && p.connected !== false) ? catalogReturnUrl : null;
@@ -6911,7 +6927,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		return () => { controller.abort(); returnController.current = null; };
 	}, [disneyReturn, disneyPath, adapterActive]);
 	function backToCatalogVideo() {
-		if (!catalogReturnTarget) return;
+		if (!catalogReturnTarget || !roomId) return;
+		if (adapter.provider === "primevideo") {
+			void returnToPrimePlayer(roomId, catalogReturnTarget).catch(() => false);
+			return;
+		}
 		const destination = catalogWatchDestination(catalogReturnTarget, location.href, renderedHboMaxWatchUrl(document, catalogReturnTarget));
 		if (disneyReturn && returnController.current) {
 			void returnToDisneyPlayer(document, destination, disneyReturn, returnController.current.signal);

@@ -7,7 +7,7 @@ import {
 } from "@anidachi/protocol";
 import type { BrowseBaseline } from "./prime-room-contract";
 
-import { catalogContentId, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
+import { catalogContentId, supportsCatalogRoom } from "./catalog-room-routes";
 
 type Snapshot = Extract<ServerEvent, { type: "ROOM_SNAPSHOT" }>;
 type Chat = Extract<ServerEvent, { type: "REACTION" }>;
@@ -24,7 +24,7 @@ export class PrimeRoomProjection {
 		previous: BrowseBaseline | null;
 	} | null = null;
 
-	reserveFollow(ownerUserId: string, contentId: string, visit?: string) {
+	reserveFollow(ownerUserId: string, contentId: string, visit?: string, manualReturn = false) {
 		const snapshot = this.snapshot;
 		const state = snapshot?.hostState;
 		const source = snapshot?.source;
@@ -37,17 +37,21 @@ export class PrimeRoomProjection {
 			!self ||
 			self.role === "host" ||
 			self.connected === false ||
-			!state?.playing ||
+			!state ||
+			(manualReturn
+				? source.provider !== "primevideo" || state.hostSurface !== "player" || !this.baseline || !!this.follow ||
+					!snapshot?.participants.some(p => p.role === "host" && p.connected !== false)
+				: !state.playing) ||
 			source.sourceUrl !== url ||
 			source.videoFingerprint !== fingerprint ||
 			state.videoFingerprint !== fingerprint ||
-			state.primePlayerVisit !== visit ||
-			(this.baseline?.fingerprint === fingerprint &&
+			(!manualReturn && state.primePlayerVisit !== visit) ||
+			(!manualReturn && this.baseline?.fingerprint === fingerprint &&
 				(!visit || this.baseline.visit === visit))
 		)
 			return null;
 		const receipt = crypto.randomUUID();
-		const target = { fingerprint, visit };
+		const target = { fingerprint, visit: state.primePlayerVisit };
 		this.follow = { receipt, target, previous: this.baseline };
 		this.baseline = target;
 		return { source, receipt };
@@ -112,7 +116,7 @@ export class PrimeRoomProjection {
 		if (
 			!snapshot ||
 			!state ||
-			(!state.playing && !(supportsCatalogReturn(source?.provider) && state.hostSurface === "player")) ||
+			(!state.playing && state.hostSurface !== "player") ||
 			!source || !supportsCatalogRoom(source.provider) ||
 			source.videoFingerprint !== state.videoFingerprint ||
 			!snapshot.participants.some(
@@ -126,7 +130,7 @@ export class PrimeRoomProjection {
 			getExpectedHostTime(state, this.detachedAt ?? now),
 		);
 		const paused: PlaybackState = { ...state, hostTime, playing: false, updatedAt: now };
-		if (supportsCatalogReturn(source.provider)) paused.hostSurface = "catalog";
+		paused.hostSurface = "catalog";
 		this.snapshot = { ...snapshot, hostState: paused };
 		return {
 			type: "HOST_STATE",
