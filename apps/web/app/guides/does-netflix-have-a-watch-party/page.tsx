@@ -207,7 +207,7 @@ export default function DoesNetflixHaveAWatchPartyPage() {
       <SeoGuideRelated
         links={[
           { href: "/netflix-watch-party", label: "Netflix watch party hub" },
-          { href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
+          { href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives" },
           {
             href: "/guides/how-to-screen-share-netflix-on-discord",
             label: "How to stream Netflix on Discord",

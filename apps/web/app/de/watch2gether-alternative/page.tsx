@@ -15,7 +15,7 @@ const h2Class = "text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24";
 export const metadata: Metadata = {
   title: PAGE_TITLE,
   description: PAGE_DESCRIPTION,
-  alternates: languageAlternates({ en: "/compare/anidachi-vs-watch2gether", de: PAGE_PATH }, "de"),
+  alternates: languageAlternates({ en: "/guides/watch2gether-alternatives-for-anime", de: PAGE_PATH }, "de"),
   openGraph: {
     title: PAGE_TITLE,
     description: PAGE_DESCRIPTION,

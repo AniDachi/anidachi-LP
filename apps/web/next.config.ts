@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
-import { ANI38_BATCH1_SOURCES, DISCORD_HUB_MERGE_SOURCES } from "./lib/recrawl-redirects";
+import {
+  ANI38_BATCH1_SOURCES,
+  COMPETITOR_PAGE_MERGES,
+  DISCORD_HUB_MERGE_SOURCES,
+} from "./lib/recrawl-redirects";
 
 const nextConfig: NextConfig = {
   // Dynamic routes (e.g. /extension) stream metadata into <body> for unlisted user agents.
@@ -157,6 +161,43 @@ const nextConfig: NextConfig = {
       {
         source: "/netflix-party",
         destination: "/netflix-watch-party",
+        permanent: true,
+      },
+      // 2026-11-23 (owner-approved, ANI-44): one Teleparty alternatives page for every
+      // platform. The anime URL holds the rankings; its YouTube twin competed for the same
+      // searches (positions 6.8-10.2) and folds in. "anidachi vs teleparty" gets no searches,
+      // so the compare page folds in too (ANI-76).
+      ...[
+        "/guides/best-teleparty-alternatives-for-youtube",
+        "/compare/anidachi-vs-teleparty",
+      ].map((source) => ({
+        source,
+        destination: "/guides/best-teleparty-alternatives-for-anime",
+        permanent: true,
+      })),
+      // 2026-11-23 (owner-approved, ANI-79/ANI-80): one alternatives page per competitor
+      // people search for; low-demand "AniDachi vs X" pages fold into the /compare pillar,
+      // and the Discord comparison pages into the Discord hub.
+      ...Object.entries(COMPETITOR_PAGE_MERGES).flatMap(([destination, sources]) =>
+        sources.map((source) => ({ source, destination, permanent: true })),
+      ),
+      // 2026-11-23 (owner-approved, ANI-78): /compare becomes the "best watch party apps"
+      // pillar for every platform, and the anime-only roundup folds into it.
+      {
+        source: "/guides/best-watch-party-apps-for-anime",
+        destination: "/compare",
+        permanent: true,
+      },
+      // 2026-11-23 (owner-approved, ANI-77): Google already ranked one page of each pair
+      // for both questions, so each pair becomes one page.
+      {
+        source: "/guides/is-teleparty-safe",
+        destination: "/guides/is-teleparty-free",
+        permanent: true,
+      },
+      {
+        source: "/guides/does-teleparty-work-with-youtube",
+        destination: "/guides/teleparty-not-working-youtube",
         permanent: true,
       },
       // 2026-11-22 (owner-approved): two Discord guides fold into the Discord hub, which

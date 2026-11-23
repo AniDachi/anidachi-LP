@@ -146,10 +146,10 @@ export default function HowToFixWatchPartyAudioDelayPage() {
           Stable groups eventually move everyone to legal per-user playback plus a
           watchroom Extension. Pair this guide with{" "}
           <Link
-            href="/compare/anidachi-vs-discord-screen-share"
+            href="/discord-watch-party"
             className="text-brand-orange hover:underline"
           >
-            AniDachi vs Discord screen share
+            Discord watch party
           </Link>{" "}
           and{" "}
           <Link href="/guides/how-to-watch-crunchyroll-with-friends" className="text-brand-orange hover:underline">

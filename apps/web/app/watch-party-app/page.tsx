@@ -282,10 +282,9 @@ export default function WatchPartyAppPage() {
 					...SUPPORTED_PLATFORMS.map((p) => ({ href: p.hubPath, label: p.hubLabel })),
 					{ href: "/prime-video-watch-party", label: "Prime Video watch party" },
 					{ href: "/guides/chrome-watch-party", label: "Chrome watch party" },
-					{ href: "/compare/anidachi-vs-teleparty", label: "AniDachi vs Teleparty" },
-					{ href: "/compare/anidachi-vs-kosmi", label: "AniDachi vs Kosmi" },
-					{ href: "/compare/anidachi-vs-syncup", label: "AniDachi vs SyncUp" },
-					{ href: "/guides/best-watch-party-apps-for-anime", label: "Best watch party apps for anime" },
+					{ href: "/guides/best-teleparty-alternatives-for-anime", label: "Best Teleparty alternatives" },
+					{ href: "/compare/anidachi-vs-kosmi", label: "Kosmi alternatives" },
+					{ href: "/compare", label: "Best watch party apps" },
 					{ href: "/guides/watch-movies-together-online", label: "How to watch movies together online" },
 				]}
 			/>

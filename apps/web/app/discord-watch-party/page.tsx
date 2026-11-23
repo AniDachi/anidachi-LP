@@ -406,8 +406,8 @@ export default function DiscordWatchPartyPage() {
 				everyone needs their own access to the title, and Free hosts get 20 host minutes per UTC day for up to 4 people. If your group mixes phones and computers, or watches
 				on Disney+, Hulu or HBO Max, AniDachi won&apos;t cover it. For the
 				feature-by-feature version, see{" "}
-				<Link href="/compare/anidachi-vs-discord-screen-share">
-					AniDachi vs Discord screen share
+				<Link href="/discord-watch-party">
+					Discord watch party
 				</Link>
 				.
 			</p>

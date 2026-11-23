@@ -122,8 +122,8 @@ const startHereItemList = [
     position: 3,
   },
   {
-    name: "Best Teleparty alternatives for YouTube",
-    url: "/guides/best-teleparty-alternatives-for-youtube",
+    name: "Best Teleparty alternatives",
+    url: "/guides/best-teleparty-alternatives-for-anime#youtube",
     position: 4,
   },
   {
@@ -254,7 +254,7 @@ export default function WatchYoutubeTogetherPage() {
           of the player, and the same room also works for Crunchyroll and
           Netflix. Hosting is free for 20 minutes a day, and friends join
           free. The full side-by-side is in{" "}
-          <Link href="/compare/anidachi-vs-watch2gether">AniDachi vs Watch2Gether</Link>.
+          <Link href="/guides/watch2gether-alternatives-for-anime">Watch2Gether alternatives</Link>.
         </p>
 
         <h2 id="compare-methods" className="scroll-mt-24">
@@ -331,8 +331,8 @@ export default function WatchYoutubeTogetherPage() {
             best apps to watch YouTube together
           </Link>{" "}
           and{" "}
-          <Link href="/guides/watch2gether-alternatives-for-youtube">
-            Watch2Gether alternatives for YouTube
+          <Link href="/guides/watch2gether-alternatives-for-anime">
+            Watch2Gether alternatives
           </Link>
           . If your group already meets in Discord, the{" "}
           <Link href="/discord-watch-party">Discord watch party guide</Link>{" "}
@@ -396,9 +396,9 @@ export default function WatchYoutubeTogetherPage() {
           links={[
             { href: "/guides/youtube-watch-party-chrome-extension", label: "YouTube watch party Chrome extension" },
             { href: "/guides/does-youtube-have-watch-party", label: "Does YouTube have a watch party?" },
-            { href: "/guides/does-teleparty-work-with-youtube", label: "Does Teleparty work with YouTube?" },
+            { href: "/guides/teleparty-not-working-youtube", label: "Does Teleparty work with YouTube?" },
             { href: "/guides/youtube-group-watch", label: "YouTube group watch" },
-            { href: "/compare/anidachi-vs-watch2gether", label: "AniDachi vs Watch2Gether" },
+            { href: "/guides/watch2gether-alternatives-for-anime", label: "Watch2Gether alternatives" },
             { href: "/watch-youtube-together-long-distance", label: "Watch YouTube together long distance" },
             { href: "/netflix-watch-party", label: "Netflix watch party" },
             { href: "/prime-video-watch-party", label: "Prime Video watch party" },

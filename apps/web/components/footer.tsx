@@ -230,10 +230,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/compare/anidachi-vs-discord-screen-share"
+                  href="/guides/watch2gether-alternatives-for-anime"
                   className="hover:text-ani-text transition-colors"
                 >
-                  AniDachi vs Discord
+                  Watch2Gether Alternatives
                 </Link>
               </li>
               <li>
@@ -246,10 +246,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/compare/anidachi-vs-teleparty"
+                  href="/guides/best-teleparty-alternatives-for-anime"
                   className="hover:text-ani-text transition-colors"
                 >
-                  AniDachi vs Teleparty
+                  Best Teleparty alternatives
                 </Link>
               </li>
               <li>
