@@ -1,3 +1,4 @@
+import type { RoomLobbyProvider } from "@anidachi/protocol";
 import { type Free20AbuseContext, Free20ContextError } from "./free20-abuse";
 import { buildFree20ContextTransfer, transferFree20RoomContext } from "./free20-abuse-transfer";
 import { RoomUpdateRequiredError } from "./room-update-required";
@@ -116,6 +117,7 @@ export type SubscriptionRow = {
 };
 
 export type RoomRow = {
+  lobby_provider?: RoomLobbyProvider | null;
 	hosting_time_mode?: "daily_free20" | null;
 	free20_abuse_protected?: boolean;
 	media_lease?: unknown;
@@ -677,6 +679,7 @@ export type ActiveRoomClaimResult =
   | { outcome: "conflict"; activeRoom: ActiveRoomSummary };
 
 export async function createRoomWithActiveSession(params: {
+	lobbyProvider?: RoomLobbyProvider;
 	hostUserId: string;
 	participantSessionId: string;
 	capabilities: RoomCapabilities;
@@ -729,7 +732,26 @@ export async function createRoomWithActiveSession(params: {
 				p_can_send_push_invites: params.capabilities.canSendPushInvites,
 			},
 		);
-	let result = await admit();
+	const admitRoom = params.lobbyProvider
+		? () => db().rpc("create_catalog_room_v1", {
+			p_lobby_provider: params.lobbyProvider,
+			p_host_user_id: params.hostUserId,
+			p_participant_session_id: params.participantSessionId,
+			p_title: params.title ?? null,
+			p_client_request_id: params.clientRequestId ?? null,
+			p_host_plan_code: params.capabilities.hostPlanCode,
+			p_max_participants: params.capabilities.maxParticipants,
+			p_max_media_seats: params.capabilities.maxMediaSeats,
+			p_can_name_room: params.capabilities.canNameRoom,
+			p_can_send_push_invites: params.capabilities.canSendPushInvites,
+			p_media_protocol_version: params.mediaProtocolVersion ?? 1,
+			p_free20_client_version: params.free20ClientVersion ?? null,
+			p_abuse_enabled: abuseEnabled,
+			p_free20_browser_hash: params.free20Context?.browser ?? null,
+			p_free20_installation_hash: params.free20Context?.installation ?? null,
+		})
+		: admit;
+	let result = await admitRoom();
 	if (
 		abuseEnabled &&
 		result.error?.message.includes("FREE20_CONTEXT_ATTACH_REQUIRED")
@@ -754,7 +776,7 @@ export async function createRoomWithActiveSession(params: {
 				params.free20Context,
 			),
 		);
-		result = await admit(); // Exactly one admission retry after durable applied receipt.
+		result = await admitRoom(); // Exactly one admission retry after durable applied receipt.
 	}
 	if (result.error) {
 		if (result.error.message.includes("FREE20_CONTEXT_BUSY"))

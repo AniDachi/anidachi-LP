@@ -1,6 +1,8 @@
 import type { Free20Request } from "./free20-abuse-client";
 import {
   ActiveRoomConflictResponseSchema,
+  RoomLobbyProviderSchema,
+  type RoomLobbyProvider,
   ACCOUNT_HOSTING_OWNER_HEADER,
   FREE20_CLIENT_HEADER,
   FREE20_CLIENT_VERSION,
@@ -286,6 +288,7 @@ export interface AdmittedRoom extends CreatedRoom {
 }
 
 export interface CreateRoomInput {
+  lobbyProvider?: RoomLobbyProvider;
   sourceUrl?: string;
   videoFingerprint?: string;
   title?: string | null;
@@ -481,6 +484,7 @@ function isCreateRoomInput(value: unknown): value is CreateRoomInput {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
   const input = value as Record<string, unknown>;
   return (
+    (input.lobbyProvider === undefined || RoomLobbyProviderSchema.safeParse(input.lobbyProvider).success) &&
     (input.sourceUrl === undefined || typeof input.sourceUrl === "string") &&
     (input.videoFingerprint === undefined || typeof input.videoFingerprint === "string") &&
     (input.title === undefined || input.title === null || typeof input.title === "string") &&
