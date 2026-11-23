@@ -16,13 +16,13 @@ import {
 
 export const PRIME_CATALOG_PAGE_BYTES = 8_000_000;
 type SeasonReference = {
-	full: string;
-	compact: string;
+	id: string;
+	compact: string | null;
 	number: number;
 	url: string;
 };
 export type PrimeCatalogPage = {
-	anchor: string;
+	anchor: string | null;
 	hasSeasonRoster: boolean;
 	locale: string;
 	selected: SeasonReference;
@@ -48,8 +48,15 @@ export function primeCatalogLocale(value: unknown): string | null {
 	const [language, region] = value.replace("_", "-").split("-");
 	return `${language!.toLowerCase()}-${region!.toUpperCase()}`;
 }
-export function primeSeasonMapping(page: PrimeCatalogPage): string {
-	return JSON.stringify(page.seasons);
+// Unselected retail seasons may expose only the ASIN in their same-origin link.
+// Once both pages provide canonical IDs, those IDs must agree too.
+export function samePrimeSeason(a: SeasonReference, b: SeasonReference): boolean {
+	return (
+		a.url === b.url &&
+		a.number === b.number &&
+		(a.compact === null || b.compact === null ||
+			(a.id === b.id && a.compact === b.compact))
+	);
 }
 
 /** Parse metadata independently of the playing SDK. Never copy action envelopes. */
@@ -173,43 +180,25 @@ function parseStates(
 					link = primeCatalogLink(row.seasonLink, origin),
 					number = ordinal(row.sequenceNumber);
 				if (
-					!(resolve(row.seasonId) || fullId(row.seasonId)) ||
-					!link ||
-					!number ||
+					!link || !number ||
+					typeof row.seasonId !== "string" ||
 					typeof row.isSelected !== "boolean"
-				)
-					return null;
-				const reference = {
-					full: resolve(row.seasonId) ?? (row.seasonId as string),
-					compact: "",
-					url: link,
-					number,
-				};
-				const record = records.get(reference.full);
+				) return null;
 				const route = parsePrimePageUrl(link)!;
-				reference.compact =
-					record && primeRouteMatches(route.token, record)
-						? record.compact
-						: route.token.length === 26
-							? route.token
-							: "";
-				if (!PrimeVideoProviderIdSchema.safeParse(reference.compact).success)
-					return null;
-				if (
-					record &&
-					(record.compact !== reference.compact ||
-						record.sequence !== number ||
-						record.type !== "season")
-				)
-					return null;
-				if (
-					[...records.values()].some(
-						(other) =>
-							other.compact === reference.compact &&
-							other.id !== reference.full,
-					)
-				)
-					return null;
+				const id = resolve(row.seasonId) ?? row.seasonId;
+				const record = records.get(id);
+				const retailReference =
+					id === route.token && /^[A-Z0-9]{10}$/.test(id) && !aliases.has(id);
+				if (!fullId(id) && !retailReference) return null;
+				const compact = record && primeRouteMatches(route.token, record)
+					? record.compact
+					: PrimeVideoProviderIdSchema.safeParse(route.token).success
+						? route.token
+						: null;
+				if (!compact && (!retailReference || row.isSelected)) return null;
+				if (record && (record.compact !== compact || record.type !== "season" || record.sequence !== number)) return null;
+				if ([...records.values()].some(other => other.compact === compact && other.id !== id)) return null;
+				const reference = { id, compact, number, url: link };
 				mapping.push(reference);
 				if (row.isSelected) {
 					if (chosen) return null;
@@ -218,13 +207,14 @@ function parseStates(
 			}
 			if (
 				!chosen ||
-				chosen.full !== resolve(key) ||
-				resolve(state.pageTitleId) !== chosen.full
+				chosen.id !== resolve(key) ||
+				resolve(state.pageTitleId) !== chosen.id
 			)
 				return null;
 			if (
-				new Set(mapping.map((row) => row.full)).size !== mapping.length ||
-				new Set(mapping.map((row) => row.compact)).size !== mapping.length ||
+				new Set(mapping.map((row) => row.id)).size !== mapping.length ||
+				new Set(mapping.map((row) => row.compact ?? row.id)).size !== mapping.length ||
+				new Set(mapping.map((row) => row.url)).size !== mapping.length ||
 				new Set(mapping.map((row) => row.number)).size !== mapping.length
 			)
 				return null;
@@ -255,7 +245,7 @@ function parseStates(
 			details.get(record.id)?.season === 1
 		) {
 			selected = {
-				full: record.id,
+				id: record.id,
 				compact: record.compact,
 				number: 1,
 				url: record.linkUrl,
@@ -264,10 +254,10 @@ function parseStates(
 		}
 	}
 	if (!seasons || !selected || seasons[0]?.number !== 1) return null;
-	if (states.some((state) => resolve(state.pageTitleId) !== selected!.full))
+	if (states.some((state) => resolve(state.pageTitleId) !== selected!.id))
 		return null;
-	const seasonRecord = records.get(selected.full),
-		seasonDetail = details.get(selected.full);
+	const seasonRecord = records.get(selected.id),
+		seasonDetail = details.get(selected.id);
 	if (
 		!seasonRecord?.launched ||
 		seasonRecord.type !== "season" ||
@@ -379,8 +369,8 @@ function parseStates(
 		range,
 		pageTitleId: states[0]!.pageTitleId as string,
 		season: {
-			seasonKey: `primevideo:season:${selected.compact}`,
-			providerSeasonIdentifier: selected.compact,
+			seasonKey: `primevideo:season:${seasonRecord.compact}`,
+			providerSeasonIdentifier: seasonRecord.compact,
 			title: seasonDetail.title,
 			seasonNumber: selected.number,
 			order: selected.number - 1,
