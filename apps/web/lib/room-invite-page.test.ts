@@ -14,6 +14,7 @@ let alreadyMember = false;
 let authReturnPath = "";
 let memberCountReads = 0;
 const activeRoom = {
+  lobby_provider: null as string | null,
   id: "test-room", host_user_id: "host", status: "live", title: "Watch with friends",
   episode_id: null, show_id: null,
   ...roomSourceCreationColumns({ sourceUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }),
@@ -52,10 +53,10 @@ beforeEach(() => {
   room = { ...activeRoom };
 });
 
-async function renderPage() {
+async function renderPage(lobby?: string) {
   return renderToStaticMarkup(await RoomPage({
     params: Promise.resolve({ roomId: "test-room" }),
-    searchParams: Promise.resolve({}),
+    searchParams: Promise.resolve({lobby}),
   }));
 }
 
@@ -79,6 +80,24 @@ for (const participant of ["member", "host"]) {
     assert.match(html, /action="\/api\/rooms\/test-room\/join" method="POST"/);
   });
 }
+
+test("a Disney catalog invitation keeps sign-in and uses the membership form before launch", async () => {
+  room = {...activeRoom,...roomSourceCreationColumns({})};
+  const html = await renderPage("disneyplus");
+  assert.equal(authReturnPath, "/room/test-room?lobby=disneyplus");
+  assert.match(html, /action="\/api\/rooms\/test-room\/join\?lobby=disneyplus"/);
+  assert.doesNotMatch(html, /href="https:\/\/www\.disneyplus\.com/);
+  assert.doesNotMatch(await renderPage("https://example.com"), /join\?lobby=/);
+});
+
+test("an accepted Inbox invitation opens a catalog room through its normal room URL", async () => {
+  alreadyMember = true;
+  room = {...activeRoom, ...roomSourceCreationColumns({}), lobby_provider: "disneyplus"};
+  const html = await renderPage();
+  assert.match(html, /Open watchroom/);
+  assert.match(html, /action="\/api\/rooms\/test-room\/join"/);
+  assert.doesNotMatch(html, /Waiting for host/);
+});
 
 test("a missing room keeps its terminal state without offering to join", async () => {
   room = null;

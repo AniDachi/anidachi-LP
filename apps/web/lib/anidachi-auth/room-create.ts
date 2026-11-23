@@ -1,5 +1,5 @@
 import { Free20ContextError } from "./free20-abuse";
-import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
+import { type RoomLobbyProvider, RoomLobbyProviderSchema, RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
 import {
 	RoomUpdateRequiredError,
 	roomUpdateRequiredBody,
@@ -8,6 +8,7 @@ import { RoomSourcePersistenceError } from "./room-source";
 import { hostingDeniedResponse } from "./hosting-denial";
 
 export type RoomCreateRequestInput = {
+	lobbyProvider?: RoomLobbyProvider;
 	participantSessionId: string;
 	showId?: string;
 	episodeId?: string;
@@ -147,6 +148,15 @@ function parseRoomCreateRequestBody(
 	const input: RoomCreateRequestInput = {
 		participantSessionId: admission.data.participantSessionId,
 	};
+	if (record.lobbyProvider !== undefined) {
+		const provider = RoomLobbyProviderSchema.safeParse(record.lobbyProvider);
+		if (!provider.success ||
+			typeof record.clientRequestId !== "string" || !record.clientRequestId.trim() ||
+			["sourceProvider", "sourceUrl", "videoFingerprint", "primeNavigation", "showId", "episodeId"].some(key => record[key] != null)) {
+			return invalidRequest();
+		}
+		input.lobbyProvider = provider.data;
+	}
 	assignCleanString(input, "showId", record.showId, 200);
 	assignCleanString(input, "episodeId", record.episodeId, 200);
 	assignCleanString(input, "title", record.title, 300);
