@@ -69,7 +69,9 @@ export async function handleDisneyPlusCatalogHandoff(message: { type?: unknown; 
 				await chrome.storage.session.set({ [key]: { playback, fragment, owner, expires: Date.now() + ttl } });
 				return fragment;
 			}
-			if (disneyPlusPlaybackId(message.payload) !== playback || disneyPlusPlaybackId(sender.url ?? "") !== playback) return null;
+			// On same-document Continue, sender.url still identifies the detail document.
+			const currentHref = (await chrome.tabs.get(tab)).url ?? "";
+			if (disneyPlusPlaybackId(message.payload) !== playback || disneyPlusPlaybackId(currentHref) !== playback) return null;
 			const record = redirectRecord.safeParse((await chrome.storage.session.get(key))[key]);
 			if (!record.success || record.data.playback !== playback) return null;
 			await chrome.storage.session.remove(key);

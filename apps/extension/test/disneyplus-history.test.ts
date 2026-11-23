@@ -190,11 +190,12 @@ describe("Disney+ tab-scoped metadata across documents", () => {
 	it("carries an invitation once across the neutral link's locale redirect, scoped to the title, tab and login", async () => {
 		const store: Record<string, unknown> = {};
 		let tabId = 10;
+		let documentUrl: string | undefined;
 		const neutral = `${origin}/play/${first}`;
 		const localized = `${origin}/pt-br/play/${first}`;
 		const message = vi.fn(async (input: Parameters<typeof handleDisneyPlusCatalogHandoff>[0]) =>
-			handleDisneyPlusCatalogHandoff(input, { id: "extension", frameId: 0, url: location.href, origin, tab: { id: tabId } } as chrome.runtime.MessageSender));
-		vi.stubGlobal("chrome", { runtime: { id: "extension", sendMessage: message }, storage: { session: {
+			handleDisneyPlusCatalogHandoff(input, { id: "extension", frameId: 0, url: documentUrl ?? location.href, origin, tab: { id: tabId } } as chrome.runtime.MessageSender));
+		vi.stubGlobal("chrome", { runtime: { id: "extension", sendMessage: message }, tabs: { get: async () => ({ url: location.href }) }, storage: { session: {
 			get: async () => store, set: async (update: Record<string, unknown>) => Object.assign(store, update),
 			remove: async (key: string) => { delete store[key]; },
 		} } });
@@ -215,12 +216,14 @@ describe("Disney+ tab-scoped metadata across documents", () => {
 		tabId--;
 		const details = `${origin}/pt-br/browse/entity-${first}`;
 		route(`/pt-br/browse/entity-${first}`);
+		documentUrl = details;
 		const continuation = prepareDisneyLaunchRedirect(details, localized);
 		expect(continuation?.claim(details, disneyPlusFingerprint(first))).toBeNull();
 		await discardUnrelatedDisneyLaunch(tabId, details);
 		route(`/pt-br/play/${first}`);
 		expect(continuation?.claim(localized, disneyPlusFingerprint(second))).toBeNull();
 		const fragment = await continuation?.claim(localized, disneyPlusFingerprint(first));
+		documentUrl = undefined;
 		expect(fragment).toBe("anidachiRoom=room-123");
 		expect(await claim(details)).toBeNull();
 		restoreDisneyLaunchFragment(localized, fragment ?? null);
