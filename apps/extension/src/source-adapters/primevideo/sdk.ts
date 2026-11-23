@@ -118,6 +118,7 @@ export function inspectPrimePlayer(
 export function inspectPrimeSdk(
 	documentValue: Document = document,
 	player = inspectPrimePlayer(documentValue),
+	retailAnchor?: Parameters<typeof readPrimePage>[5],
 ): PrimeSdk | null {
 	try {
 		if (!player) return null;
@@ -135,6 +136,7 @@ export function inspectPrimeSdk(
 			object(object(context.playerInfo).info).territory,
 			context.webLocale,
 			object(object(context.nextTitle).nextTitleInfo).titleId,
+			retailAnchor,
 		);
 		if (!page) return null;
 		const timelineInfo = object(callPrime(timeline, "getTimelineInfo"));

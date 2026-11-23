@@ -404,11 +404,16 @@ export function readPrimeCatalogHtml(
 	origin: string,
 ): PrimeCatalogPage | null {
 	const locale = /<html\b[^>]*\blang\s*=\s*(["'])([^"']+)\1/i.exec(html)?.[2];
+	const raw = readPrimeHydrationJson(html);
+	return raw ? parsePage(raw, locale, origin) : null;
+}
+
+export function readPrimeHydrationJson(html: string): string | null {
+	if (html.length > PRIME_CATALOG_PAGE_BYTES) return null;
 	const scripts = [
 		...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi),
 	].filter((match) =>
 		/\bid\s*=\s*(["'])dv-web-page-hydration-data\1/i.test(match[1]!),
 	);
-	if (scripts.length !== 1) return null;
-	return parsePage(scripts[0]![2]!, locale, origin);
+	return scripts.length === 1 ? scripts[0]![2]! : null;
 }
