@@ -88,6 +88,13 @@ test("Disney lobby invites respect membership admission and resolve the latest p
 	const hboHome = "https://www.hbomax.com/home#anidachiRoom=abc&anidachiLobby=hbomax";
 	assert.equal((await join()).headers.get("location"), hboHome);
 	assert.equal((await join("netflix")).headers.get("location"), hboHome);
+	lobbyProvider = "crunchyroll";
+	const crunchyHome = "https://www.crunchyroll.com/discover#anidachiRoom=abc&anidachiLobby=crunchyroll";
+	assert.equal((await join()).headers.get("location"), crunchyHome);
+	assert.equal((await join("crunchyroll")).headers.get("location"), crunchyHome);
+	const episode = "https://www.crunchyroll.com/watch/GABC123";
+	source = roomSourceCreationColumns({ sourceUrl: episode });
+	assert.equal((await join("crunchyroll")).headers.get("location"), episode + "#anidachiRoom=abc");
 	const player =
 		"https://www.netflix.com/watch/80000123";
 	source = roomSourceCreationColumns({ sourceUrl: player });

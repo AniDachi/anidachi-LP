@@ -20,7 +20,7 @@ acceptance step before release.
 
 ## Netflix rooms in the catalog — November 20, 2026
 
-The November 23 staging candidate adds Netflix, Prime Video and HBO Max to the extension's Room tab. Prime catalog rooms retain the host's marketplace for invitations. Hosts can create a room before choosing a title. A guest can join in the catalog through either a copied link or Inbox.
+The November 24 staging candidate adds Netflix, Prime Video, HBO Max and Crunchyroll to the extension's Room tab. Prime catalog rooms retain the host's marketplace for invitations. Hosts can create a room before choosing a title. A guest can join in the catalog through either a copied link or Inbox.
 
 The Netflix staging candidate keeps a confirmed room and its call when a participant
 returns to the catalog. Participants browse independently until the host starts

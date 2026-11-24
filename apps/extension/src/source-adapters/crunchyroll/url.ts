@@ -1,7 +1,9 @@
 const localePrefix = /^\/[a-z]{2}(?:-[a-z]{2})?(?=\/|$)/i;
 
+export const CRUNCHYROLL_CATALOG_ORIGINS = ["https://www.crunchyroll.com", "https://crunchyroll.com"];
+
 export function isCrunchyrollCatalogOrigin(origin: string) {
-	return origin === "https://www.crunchyroll.com" || origin === "https://crunchyroll.com";
+	return CRUNCHYROLL_CATALOG_ORIGINS.includes(origin);
 }
 
 export function crunchyrollCatalogPath(pathname: string) {
