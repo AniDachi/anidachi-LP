@@ -3880,20 +3880,34 @@ ${popupWatchHistoryStyles}
   .popup-tabs:has(> :nth-child(4)) {grid-template-columns:repeat(4,minmax(0,1fr))}
   .rooms-card {margin: 12px 2px; border:1px solid #363438; border-radius:16px; background:linear-gradient(155deg,#242226,#151418 68%); padding:16px; color:#f3eee7}
   .rooms-kicker {font-size:12px; font-weight:600; color:#b8b2af; margin:0 0 10px}
-  .rooms-picker {overflow:hidden;border-radius:17px;background:#17161a;box-shadow:inset 0 0 0 1px #ffffff25}
+  .rooms-composer {padding:0;border:0;background:none}
+  .rooms-picker {position:relative;z-index:1}
   .rooms-picker .rooms-provider {background:transparent;border:none;gap:10px}
-  .rooms-trigger,.rooms-option {min-height:41px}
+  .rooms-picker .rooms-trigger {
+    min-height:46px;padding:8px 15px;border-radius:16px 16px 0 0;
+    background:linear-gradient(120deg,#26252a,#1b1a1f);
+    box-shadow:inset 0 1px #ffffff19,inset 1px 0 #ffffff0a,inset -1px 0 #ffffff0a;
+  }
+  .rooms-picker .rooms-trigger:hover:enabled {background:linear-gradient(120deg,#2d2b31,#211f25)}
   .rooms-chevron {display:block;width:8px;height:8px;flex:0 0 8px;margin:0 4px 3px auto;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:rotate(45deg);transition:transform .22s ease}
   .rooms-trigger[aria-expanded=true] .rooms-chevron,.rooms-history-entry[open] .rooms-chevron {transform:translateY(3px) rotate(225deg)}
-  .rooms-reveal {display:grid;grid-template-rows:0fr;transition:grid-template-rows .27s cubic-bezier(.22,.75,.2,1)}
-  .rooms-picker[data-open=true] .rooms-reveal {grid-template-rows:1fr}
+  .rooms-reveal {
+    position:absolute;inset:100% 0 auto;display:grid;grid-template-rows:0fr;
+    visibility:hidden;opacity:0;pointer-events:none;
+    border-radius:0 0 16px 16px;background:#1b1a1e;box-shadow:0 10px 20px #0005;
+    transition:grid-template-rows 180ms cubic-bezier(.24,.78,.24,1),opacity 140ms ease,visibility 0s 180ms;
+  }
+  .rooms-picker[data-open=true] .rooms-reveal {
+    grid-template-rows:1fr;visibility:visible;opacity:1;pointer-events:auto;
+    transition-duration:220ms,140ms,0s;transition-delay:0s;
+  }
   .rooms-reveal > div {min-height:0;overflow:hidden}
-  #rooms-platforms {margin:0 5px;padding:4px 0 5px;border-top:1px solid #ffffff10}
-  #rooms-platforms .rooms-option {min-height:35px;padding:4px 6px}
-  .rooms-picker button:hover {background:#ffffff07}
+  #rooms-platforms {padding:5px;border:1px solid #ffffff12;border-radius:0 0 16px 16px}
+  #rooms-platforms .rooms-option {min-height:35px;padding:4px 9px}
+  .rooms-picker .rooms-option:hover {background:#ffffff09}
   .rooms-picker .rooms-option[aria-pressed=true] {color:#ffddbf;background:#ffab6010}
   .rooms-picker button:focus-visible,.rooms-history summary:focus-visible {outline:2px solid #ffac68;outline-offset:-2px}
-  @media(prefers-reduced-motion:reduce){.rooms-reveal,.rooms-chevron{transition:none}}
+  @media(prefers-reduced-motion:reduce){.rooms-reveal,.rooms-picker[data-open=true] .rooms-reveal,.rooms-chevron{transition:none}}
   .rooms-provider {display:flex;align-items:center;gap:7px;min-width:0;width:100%;background:#151518;color:inherit;border:1px solid #3d393e;border-radius:10px;padding:11px;text-align:left;cursor:pointer}
   .rooms-provider[aria-pressed=true] {border-color:#716054}
   .rooms-provider:disabled {opacity:1;cursor:default}
@@ -3903,6 +3917,9 @@ ${popupWatchHistoryStyles}
   .rooms-check {margin-left:auto;color:#ff9d53}
   .rooms-primary {width:100%;margin-top:14px;border:0;border-radius:100px;padding:11px;background:linear-gradient(105deg,#ffb45f,#ff841e);color:#251609;font:inherit;font-weight:700;cursor:pointer}
   .rooms-primary:disabled {opacity:.45;cursor:default}
+  .rooms-composer .rooms-primary {display:block;min-height:40px;margin:0;border-radius:0 0 16px 16px}
+  .rooms-composer .rooms-primary:disabled {opacity:1;background:#302f34;color:#a6a2a7}
+  .rooms-composer .rooms-primary:focus-visible {outline:2px solid currentColor;outline-offset:-4px}
   .rooms-history {margin:22px 4px 8px;color:var(--ad-text)}
   .rooms-history header,.rooms-history summary {display:flex;align-items:center}
   .rooms-history header {justify-content:space-between;margin-bottom:6px}

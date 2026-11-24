@@ -60,7 +60,7 @@ export function RoomsCard({
 	}, [open]);
 
 	return (
-		<section className="rooms-card" aria-label="Watch room">
+		<section className={active ? "rooms-card" : "rooms-card rooms-composer"} aria-label="Watch room">
 			{active ? (
 				<>
 					<div className="rooms-kicker">Active room</div>
