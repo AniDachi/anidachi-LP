@@ -29,14 +29,16 @@ test("a desktop guest can install in another tab and return to the original join
     const action = "/api/rooms/example/join?lobby=youtube";
     await act(async () => root.render(createElement(RoomInviteExtensionStep, {extensionId, initialMobile: false},
       createElement("form", {method: "POST", action}, createElement("button", null, "Join room")))));
-    assert.match(container.textContent!, /return to this tab/);
     const install = container.querySelector("a")!;
+    assert.equal(install.textContent, "Install extension");
     assert.equal(install.href, CHROME_WEB_STORE_URL);
     assert.equal(install.target, "_blank");
-    assert.ok(container.querySelector("details:not([open]) form"));
+    assert.equal(install.nextElementSibling?.textContent, "Return here after installation to join the room.");
+    assert.equal(container.querySelectorAll("a,button,summary,input").length, 1);
+    assert.equal(container.querySelector("form"), null);
     enabled = true;
     await act(async () => window.dispatchEvent(new Event("focus")));
-    assert.equal(container.querySelector("[aria-label='Extension setup']"), null);
+    assert.equal(container.querySelector("a"), null);
     assert.equal(container.querySelector("form")?.getAttribute("action"), action);
     assert.equal(dom.location.search, "?lobby=youtube");
     enabled = false;
@@ -57,7 +59,7 @@ test("both channels show the same install prompt and mobile keeps its existing h
     const stagingId = "a".repeat(32);
     await render(stagingId, false);
     assert.equal(container.innerHTML, publicPrompt);
-    assert.equal(container.querySelector("h2")?.textContent, "Install AniDachi to join");
+    assert.equal(container.querySelector("h1,h2,details"), null);
     assert.equal(container.querySelector("a")?.href, CHROME_WEB_STORE_URL);
     await render(stagingId, true);
     assert.equal(container.textContent, "Continue on desktop");

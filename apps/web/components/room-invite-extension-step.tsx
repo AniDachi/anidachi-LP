@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { AuthPageCard, AuthPageShell } from "@/components/auth-page-shell";
 import { requestExtensionPresence } from "@/lib/extension-presence-client";
 import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
 import { isMobileInstallDevice } from "@/lib/mobile-install";
@@ -11,10 +11,14 @@ export function RoomInviteExtensionStep({ extensionId, initialMobile, children }
   initialMobile: boolean;
   children?: ReactNode;
 }) {
-  const [missing, setMissing] = useState(false);
+  const [available, setAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!extensionId || initialMobile || isMobileInstallDevice(navigator)) return;
+    if (!extensionId || initialMobile) return;
+    if (isMobileInstallDevice(navigator)) {
+      setAvailable(true);
+      return;
+    }
     let pending: AbortController | undefined;
     function check() {
       if (document.visibilityState === "hidden") return;
@@ -22,7 +26,7 @@ export function RoomInviteExtensionStep({ extensionId, initialMobile, children }
       const current = new AbortController();
       pending = current;
       void requestExtensionPresence(extensionId, current.signal).then(present => {
-        if (!current.signal.aborted) setMissing(!present);
+        if (!current.signal.aborted) setAvailable(present);
       });
     }
     check();
@@ -37,27 +41,23 @@ export function RoomInviteExtensionStep({ extensionId, initialMobile, children }
     };
   }, [extensionId, initialMobile]);
 
-  if (!missing || !extensionId || initialMobile) return children;
+  if (!extensionId || initialMobile || available) return children;
+  if (available === null) return <noscript>{children}</noscript>;
   return (
-    <section className="mx-auto max-w-sm text-center" aria-label="Extension setup">
-      <h2 className="text-xl font-semibold tracking-tight text-ani-text">
-        Install AniDachi to join
-      </h2>
-      <p className="mt-2 text-sm leading-relaxed text-ani-muted">
-        Add the extension to Chrome, then return to this tab to join the room.
-      </p>
-      <a className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ani-text px-5 font-semibold text-ani-canvas"
-        href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer">
-        Install extension <ArrowUpRight size={16} aria-hidden="true" />
-      </a>
-      <div>
-        <button type="button" className="mt-2 min-h-11 text-sm font-medium text-ani-text underline underline-offset-4"
-          onClick={() => window.location.reload()}>Check again</button>
-      </div>
-      {children && <details className="mt-2 text-sm text-ani-muted">
-        <summary className="cursor-pointer">Already installed?</summary>
-        <div className="mt-3">{children}</div>
-      </details>}
-    </section>
+    <AuthPageShell>
+      <AuthPageCard>
+        <div className="text-center">
+          <a
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-ani-text px-5 font-semibold text-ani-canvas"
+            href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer"
+          >
+            Install extension
+          </a>
+          <p className="mt-3 text-sm leading-relaxed text-ani-muted">
+            Return here after installation to join the room.
+          </p>
+        </div>
+      </AuthPageCard>
+    </AuthPageShell>
   );
 }

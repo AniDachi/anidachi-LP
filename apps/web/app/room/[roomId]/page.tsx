@@ -87,34 +87,37 @@ export default async function RoomPage({ params, searchParams }: Props) {
   // and auto-upgrade to "Open watchroom" once a source URL appears.
   if (isParticipant && !launchUrl) {
     return (
-      <Shell>
+      <>
         <TrackOnView event="invite_viewed" params={{ state: "waiting_for_host", mobile: initialMobile }} />
-        <div className="mb-1 flex items-center gap-2">
-          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-orange" />
-          <span className="text-xs font-medium tracking-[-0.01em] text-ani-muted">
-            Waiting for host
-          </span>
-        </div>
-        <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ani-text">
-          {justJoined ? "You're in!" : roomTitle}
-        </h1>
-        <p className="mt-2 text-sm text-ani-muted">
-          The host hasn&apos;t opened a video yet. Keep this tab open — it updates
-          automatically the moment the watch party starts.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-4 text-sm text-ani-muted">
-          <span>
-            Host:{" "}
-            <span className="font-medium text-ani-text">
-              {host?.display_name ?? "Unknown"}
-            </span>
-          </span>
-        </div>
-        {extensionId ? <RoomInviteExtensionStep extensionId={extensionId} initialMobile={initialMobile} />
-          : <ExtensionCheck initialMobile={initialMobile} />}
-        <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
+        <RoomInviteExtensionStep extensionId={extensionId} initialMobile={initialMobile}>
+          <Shell>
+            <div className="mb-1 flex items-center gap-2">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-orange" />
+              <span className="text-xs font-medium tracking-[-0.01em] text-ani-muted">
+                Waiting for host
+              </span>
+            </div>
+            <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ani-text">
+              {justJoined ? "You're in!" : roomTitle}
+            </h1>
+            <p className="mt-2 text-sm text-ani-muted">
+              The host hasn&apos;t opened a video yet. Keep this tab open — it updates
+              automatically the moment the watch party starts.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-4 text-sm text-ani-muted">
+              <span>
+                Host:{" "}
+                <span className="font-medium text-ani-text">
+                  {host?.display_name ?? "Unknown"}
+                </span>
+              </span>
+            </div>
+            {!extensionId && <ExtensionCheck initialMobile={initialMobile} />}
+            <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
+          </Shell>
+        </RoomInviteExtensionStep>
         <WaitingRefresh roomId={roomId} />
-      </Shell>
+      </>
     );
   }
 

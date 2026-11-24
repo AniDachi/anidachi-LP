@@ -55,25 +55,25 @@ export function RoomInviteView({
 	const ctaLabel =
 		isParticipant && hasLaunchUrl ? "Open watchroom" : "Join room";
 	return (
-		<main id="main-content" className={styles.page}>
-			<div className={styles.content}>
-				<header>
-					<p className={styles.invitation}>
-						Watch together with <strong>{hostName}</strong>
-					</p>
-					<h1 className={styles.title}>{roomTitle}</h1>
-					<div className={styles.metadata}>
-						{platform && <span>{platform}</span>}
-						{roomSubtitle && <span>{roomSubtitle}</span>}
-						<span className={styles.status}>
-							<i aria-hidden="true" />
-							{status === "live" ? "Live room" : "Lobby"}
-						</span>
-					</div>
-				</header>
+		<RoomInviteExtensionStep extensionId={extensionId} initialMobile={initialMobile}>
+			<main id="main-content" className={styles.page}>
+				<div className={styles.content}>
+					<header>
+						<p className={styles.invitation}>
+							Watch together with <strong>{hostName}</strong>
+						</p>
+						<h1 className={styles.title}>{roomTitle}</h1>
+						<div className={styles.metadata}>
+							{platform && <span>{platform}</span>}
+							{roomSubtitle && <span>{roomSubtitle}</span>}
+							<span className={styles.status}>
+								<i aria-hidden="true" />
+								{status === "live" ? "Live room" : "Lobby"}
+							</span>
+						</div>
+					</header>
 
-				<div className={styles.join}>
-					<RoomInviteExtensionStep extensionId={extensionId} initialMobile={initialMobile}>
+					<div className={styles.join}>
 						<form action={joinAction} method="POST">
 							<button
 								type={joinAction ? "submit" : "button"}
@@ -84,15 +84,15 @@ export function RoomInviteView({
 							</button>
 						</form>
 						<p className={styles.nextStep}>Join free. No subscription needed.</p>
-					</RoomInviteExtensionStep>
-				</div>
+					</div>
 
-				<RoomMobileHandoff
-					variant={isParticipant && hasLaunchUrl ? "joined" : "ready"}
-					initialMobile={initialMobile}
-				/>
-				<RoomInviteHelp showInstallLink={!extensionId || initialMobile} hasLaunchUrl={hasLaunchUrl} />
-			</div>
-		</main>
+					<RoomMobileHandoff
+						variant={isParticipant && hasLaunchUrl ? "joined" : "ready"}
+						initialMobile={initialMobile}
+					/>
+					<RoomInviteHelp showInstallLink={!extensionId || initialMobile} hasLaunchUrl={hasLaunchUrl} />
+				</div>
+			</main>
+		</RoomInviteExtensionStep>
 	);
 }
