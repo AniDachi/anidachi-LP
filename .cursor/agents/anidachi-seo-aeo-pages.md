@@ -65,7 +65,10 @@ pnpm --filter @anidachi/web seo:portfolio
 pnpm --filter @anidachi/web seo:links
 pnpm --filter @anidachi/web seo:keywords
 pnpm --filter @anidachi/web google-ads:keywords "<seeds…>"
+pnpm --filter @anidachi/web google-ads:keywords --exact "<keywords…>"
 ```
+
+Use the plain call to find ideas and `--exact` for the volume of each keyword you report or lock. Idea volumes depend on which seeds share the request; `--exact` does not. Add `--worldwide`, or `--geo <ids> --lang <id>` for a market (Germany: `--geo 2276 --lang 1001`). Close variants can still share one volume, so never add their volumes together.
 
 ## Hard boundaries
 
