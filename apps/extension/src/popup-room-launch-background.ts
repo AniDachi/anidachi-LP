@@ -3,6 +3,7 @@ import { getStoredAuthTokens } from "./auth-tokens";
 import { PRIME_ROOM_INTERNAL } from "./prime-room-contract";
 import {
 	popupRoomProvider,
+	popupCreateProvider,
 	lobbyRoomFromUrl,
 	popupRoomInvite,
 	ROOM_LAUNCH_MESSAGE,
@@ -11,12 +12,6 @@ import {
 const pendingKey = "anidachi:rooms:popup-launch";
 type Pending = { provider: RoomLobbyProvider; id: string; owner: string; tabId: number; expires: number };
 type ProfileInvite = { room: string; owner: string; expires: number };
-
-function canCreateAt(href: string | undefined, provider: RoomLobbyProvider) {
-	if (!href || popupRoomProvider(href) !== provider) return false;
-	// Shorts is a browsing surface for an existing room, without a supported room player.
-	return provider !== "youtube" || !/^\/(?:feed\/)?shorts(?:\/|$)/.test(new URL(href).pathname);
-}
 
 async function activeContext(owner: string) {
 	const [active] = await chrome.tabs.query({
@@ -95,7 +90,7 @@ export function registerPopupRoomLaunch() {
 				)
 					return null;
 				const tab = await chrome.tabs.get(pending.tabId);
-				if ((tab.pendingUrl && tab.pendingUrl !== tab.url) || !canCreateAt(tab.url, pending.provider)) return null;
+				if ((tab.pendingUrl && tab.pendingUrl !== tab.url) || popupCreateProvider(tab.url) !== pending.provider) return null;
 				await chrome.storage.session.remove(pendingKey);
 				return { id: pending.id, owner, provider: pending.provider, expires: pending.expires };
 			}
@@ -113,7 +108,7 @@ export function registerPopupRoomLaunch() {
 				const href = active?.pendingUrl ?? active?.url;
 				if (active?.id !== undefined && popupRoomProvider(href) === provider) {
 					tabId = active.id;
-					if (!canCreateAt(href, provider)) navigateTo = ROOM_LOBBY_HOME[provider];
+					if (popupCreateProvider(href) !== provider) navigateTo = ROOM_LOBBY_HOME[provider];
 				} else {
 					const tab = await chrome.tabs.create({
 						url: ROOM_LOBBY_HOME[provider], windowId: active?.windowId, active: false,
@@ -134,7 +129,7 @@ export function registerPopupRoomLaunch() {
 			const target = await chrome.tabs.update(tabId, navigateTo ? { active: true, url: navigateTo } : { active: true });
 			if (target && target.windowId !== active?.windowId)
 				await chrome.windows.update(target.windowId, { focused: true });
-			if (!room)
+			if (!room && !navigateTo)
 				void chrome.tabs
 					.sendMessage(
 						tabId,

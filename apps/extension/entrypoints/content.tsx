@@ -1,4 +1,4 @@
-import { ROOMS_PILOT, ROOM_LAUNCH_MESSAGE, captureHboLobbyInvite, popupRoomProvider, hasCatalogNavigation, lobbyRoomFromUrl, netflixProfileGate, netflixProfileReturn, setPopupCreate } from "../src/popup-room-launch";
+import { ROOMS_PILOT, ROOM_LAUNCH_MESSAGE, captureHboLobbyInvite, popupRoomProvider, popupCreateProvider, hasCatalogNavigation, lobbyRoomFromUrl, netflixProfileGate, netflixProfileReturn, setPopupCreate } from "../src/popup-room-launch";
 import { hasPrimeBrowserHost, HBO_MAX_BROWSER_HOSTS, isHboMaxOrigin } from "@anidachi/protocol";
 import { HboMaxVideoAdapter } from "../src/source-adapters/hbomax/adapter";
 import { startHboMaxCatalogCapture } from "../src/source-adapters/hbomax/metadata";
@@ -419,7 +419,7 @@ function startContentLifecycleSession(
         : catalogPlayerProvider(location.href) === launchProvider
         ? detection.status === "ready" && detection.adapter.provider === launchProvider
         : hasCatalogNavigation(document, launchProvider);
-      if (ready && needsPilotClaim) {
+      if (ready && needsPilotClaim && popupCreateProvider(location.href) === launchProvider) {
         needsPilotClaim = false;
         void claimPilot();
       }
