@@ -275,9 +275,9 @@ Invite flow:
 1. Host copies the web invite link.
 2. Guest opens `/room/:roomId` on the website.
    On desktop, the invitation and its sign-in screen ask the configured AniDachi
-   extension whether it is available. A guest who needs it sees installation
-   instructions and can return to the same tab. Returning checks again. This
-   browser-local hint also offers a manual path for older extensions.
+   extension whether it is available. If it does not respond, the guest sees an
+   install button and a reminder to return. Returning to the same tab checks
+   again and restores the original sign-in or room action when AniDachi responds.
 3. If needed, the website asks the guest to log in.
 4. The website records room membership.
 5. The website redirects to the source video URL with `#anidachiRoom=<roomId>`
