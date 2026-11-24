@@ -3878,12 +3878,12 @@ ${popupPeopleStyles}
 ${popupWatchHistoryStyles}
 
   .popup-tabs:has(> :nth-child(4)) {grid-template-columns:repeat(4,minmax(0,1fr))}
-  .rooms-card {margin: 12px 2px; border:1px solid #363438; border-radius:16px; background:linear-gradient(155deg,#242226,#151418 68%); padding:16px; color:#f3eee7}
-  .rooms-kicker {font-size:12px; font-weight:600; color:#b8b2af; margin:0 0 10px}
-  .rooms-composer {padding:0;border:0;background:none}
+  .rooms-card {margin:12px 2px;color:#f3eee7}
+  .rooms-status {margin-left:auto;color:#b8b2af;font-size:12px;font-weight:500}
   .rooms-picker {position:relative;z-index:1}
-  .rooms-picker .rooms-provider {background:transparent;border:none;gap:10px}
-  .rooms-picker .rooms-trigger {
+  .rooms-provider {display:flex;align-items:center;gap:10px;min-width:0;width:100%;background:transparent;color:inherit;border:0;border-radius:10px;text-align:left}
+  button.rooms-provider {cursor:pointer}
+  .rooms-card .rooms-heading {
     min-height:46px;padding:8px 15px;border-radius:16px 16px 0 0;
     background:linear-gradient(120deg,#26252a,#1b1a1f);
     box-shadow:inset 0 1px #ffffff19,inset 1px 0 #ffffff0a,inset -1px 0 #ffffff0a;
@@ -3908,18 +3908,14 @@ ${popupWatchHistoryStyles}
   .rooms-picker .rooms-option[aria-pressed=true] {color:#ffddbf;background:#ffab6010}
   .rooms-picker button:focus-visible,.rooms-history summary:focus-visible {outline:2px solid #ffac68;outline-offset:-2px}
   @media(prefers-reduced-motion:reduce){.rooms-reveal,.rooms-picker[data-open=true] .rooms-reveal,.rooms-chevron{transition:none}}
-  .rooms-provider {display:flex;align-items:center;gap:7px;min-width:0;width:100%;background:#151518;color:inherit;border:1px solid #3d393e;border-radius:10px;padding:11px;text-align:left;cursor:pointer}
-  .rooms-provider[aria-pressed=true] {border-color:#716054}
   .rooms-provider:disabled {opacity:1;cursor:default}
   .rooms-provider .resource-provider-logo {display:flex;flex:0 0 33px;width:33px;height:28px;align-items:center;justify-content:center}
   .rooms-provider .netflix svg {height:25px;width:15px}
   .rooms-provider img {width:100%;height:100%;object-fit:contain}
   .rooms-check {margin-left:auto;color:#ff9d53}
-  .rooms-primary {width:100%;margin-top:14px;border:0;border-radius:100px;padding:11px;background:linear-gradient(105deg,#ffb45f,#ff841e);color:#251609;font:inherit;font-weight:700;cursor:pointer}
-  .rooms-primary:disabled {opacity:.45;cursor:default}
-  .rooms-composer .rooms-primary {display:block;min-height:40px;margin:0;border-radius:0 0 16px 16px}
-  .rooms-composer .rooms-primary:disabled {opacity:1;background:#302f34;color:#a6a2a7}
-  .rooms-composer .rooms-primary:focus-visible {outline:2px solid currentColor;outline-offset:-4px}
+  .rooms-card .rooms-primary {display:block;width:100%;min-height:40px;margin:0;border:0;border-radius:0 0 16px 16px;padding:11px;background:linear-gradient(105deg,#ffb45f,#ff841e);color:#251609;font:inherit;font-weight:700;cursor:pointer}
+  .rooms-card .rooms-primary:disabled {opacity:1;background:#302f34;color:#a6a2a7;cursor:default}
+  .rooms-card .rooms-primary:focus-visible {outline:2px solid currentColor;outline-offset:-4px}
   .rooms-history {margin:22px 4px 8px;color:var(--ad-text)}
   .rooms-history header,.rooms-history summary {display:flex;align-items:center}
   .rooms-history header {justify-content:space-between;margin-bottom:6px}

@@ -112,6 +112,24 @@ it("opens the selector, selects a platform without creating a room, and restores
 		await act(async () => view.unmount());
 	}
 });
+it("keeps the active platform and room status in the shared heading above the invite action", async () => {
+	vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+	const view = root();
+	const state = { here: null, room: { provider: "crunchyroll", here: true, tabId: 7, invite: "test-invite" } };
+	try {
+		await act(async () => view.render(
+			<RoomsCard state={state} selected={null} onSelect={vi.fn()} onAction={vi.fn()}
+				label="Copy invite" disabled={false} error="" />,
+		));
+		const heading = container.querySelector(".rooms-card > .rooms-heading");
+		expect(heading?.querySelector("strong")?.textContent).toBe("Crunchyroll");
+		expect(heading?.textContent).toContain("Active room");
+		expect(heading?.nextElementSibling?.textContent).toBe("Copy invite");
+		expect(container.querySelector(".rooms-picker")).toBeNull();
+	} finally {
+		await act(async () => view.unmount());
+	}
+});
 it("shows sub-minute rooms and whole hours", () => {
 	expect(roomDuration("2026-11-02T00:00:00Z", "2026-11-02T00:00:45Z")).toBe(
 		"<1 min",
