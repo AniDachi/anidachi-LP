@@ -1,0 +1,61 @@
+import { dom } from "./test-helpers/account-client-dom";
+import { strict as assert } from "node:assert";
+import { afterEach, test } from "node:test";
+import { act, createElement } from "react";
+import { createRoot } from "react-dom/client";
+import { WEBSITE_PRESENCE } from "@anidachi/protocol";
+import { RoomInviteExtensionStep } from "../components/room-invite-extension-step";
+import { CHROME_WEB_STORE_URL } from "./install-cta";
+
+const extensionId = new URL(CHROME_WEB_STORE_URL).pathname.split("/").at(-1)!;
+const originalChrome = Object.getOwnPropertyDescriptor(globalThis, "chrome");
+afterEach(() => {
+  if (originalChrome) Object.defineProperty(globalThis, "chrome", originalChrome);
+  else Reflect.deleteProperty(globalThis, "chrome");
+});
+
+test("a desktop guest can install in another tab and return to the original join action", async () => {
+  let enabled = false;
+  const runtime = { sendMessage(id: string, message: unknown, reply: (result: unknown) => void) {
+    assert.equal(id, extensionId);
+    assert.deepEqual(message, {type: WEBSITE_PRESENCE});
+    reply(enabled ? {type: WEBSITE_PRESENCE, installed: true} : undefined);
+  } };
+  Object.defineProperty(globalThis, "chrome", {configurable: true, value: {runtime}});
+  dom.history.replaceState(null, "", "/room/example?lobby=youtube");
+  const container = document.createElement("div");
+  const root = createRoot(container);
+  try {
+    const action = "/api/rooms/example/join?lobby=youtube";
+    await act(async () => root.render(createElement(RoomInviteExtensionStep, {extensionId, initialMobile: false},
+      createElement("form", {method: "POST", action}, createElement("button", null, "Join room")))));
+    assert.match(container.textContent!, /return to this tab/);
+    const install = container.querySelector("a")!;
+    assert.equal(install.href, CHROME_WEB_STORE_URL);
+    assert.equal(install.target, "_blank");
+    assert.ok(container.querySelector("details:not([open]) form"));
+    enabled = true;
+    await act(async () => window.dispatchEvent(new Event("focus")));
+    assert.equal(container.querySelector("[aria-label='Extension setup']"), null);
+    assert.equal(container.querySelector("form")?.getAttribute("action"), action);
+    assert.equal(dom.location.search, "?lobby=youtube");
+    enabled = false;
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    assert.ok(container.querySelector("a"));
+  } finally { await act(async () => root.unmount()); }
+});
+
+test("staging instructions stay in the correct channel and mobile keeps its existing handoff", async () => {
+  Object.defineProperty(globalThis, "chrome", {configurable: true, value: {}});
+  const container = document.createElement("div");
+  const root = createRoot(container);
+  try {
+    const render = (initialMobile: boolean) => act(async () => root.render(createElement(RoomInviteExtensionStep,
+      {extensionId: "a".repeat(32), initialMobile}, "Continue on desktop")));
+    await render(false);
+    assert.match(container.textContent!, /AniDachi Staging/);
+    assert.equal(container.querySelector("a"), null);
+    await render(true);
+    assert.equal(container.textContent, "Continue on desktop");
+  } finally { await act(async () => root.unmount()); }
+});

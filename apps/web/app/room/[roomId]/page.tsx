@@ -10,6 +10,8 @@ import {
 } from "@/lib/anidachi-auth/db";
 import { RoomInviteShell as Shell, RoomInviteView } from "./room-invite-view";
 import { Button } from "@/components/ui/button";
+import { RoomInviteExtensionStep } from "@/components/room-invite-extension-step";
+import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
 import { ExtensionCheck } from "./extension-check";
 import { RoomMobileHandoff } from "./room-mobile-handoff";
 import { WaitingRefresh } from "./waiting-refresh";
@@ -80,6 +82,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
     ? buildRoomSourceLaunchUrl(source.source, roomId)
     : roomLobbyDestination(roomId, room.lobby_provider ?? lobby, room.lobby_marketplace);
   const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
+  const extensionId = readApprovedExtensionClientId();
   const justJoined = joined === "1";
 
   // Joined, but the host has not opened a video yet: keep the guest informed
@@ -109,7 +112,8 @@ export default async function RoomPage({ params, searchParams }: Props) {
             </span>
           </span>
         </div>
-        <ExtensionCheck initialMobile={initialMobile} />
+        {extensionId ? <RoomInviteExtensionStep extensionId={extensionId} initialMobile={initialMobile} />
+          : <ExtensionCheck initialMobile={initialMobile} />}
         <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
         <WaitingRefresh roomId={roomId} />
       </Shell>
@@ -132,6 +136,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
         roomTitle={roomTitle}
         roomSubtitle={roomSubtitle}
         hostName={host?.display_name ?? "Unknown"}
+        extensionId={extensionId}
         sourceProvider={source?.source.provider}
         joinAction={`/api/rooms/${roomId}/join${lobbyQuery}`}
         isParticipant={isParticipant}
