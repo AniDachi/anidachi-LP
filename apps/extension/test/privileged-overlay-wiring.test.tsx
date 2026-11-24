@@ -104,12 +104,12 @@ vi.mock("../src/social-client", async (importOriginal) => ({
 
 describe("privileged overlay wiring", () => {
 	it.each([
-		["hbomax", "before"], ["hbomax", "after"], ["crunchyroll", "preserved"],
+		["hbomax", "before"], ["hbomax", "after"], ["crunchyroll", "preserved"], ["youtube", "preserved"],
 	] as const)("admits the %s catalog guest with a %s startup fragment", async (provider, timing) => {
 		vi.spyOn(popupRoomLaunch, "ROOMS_PILOT", "get").mockReturnValue(true);
 		installActiveHostRoomRuntime();
 		Object.assign(chrome.runtime, {onMessage: {addListener: vi.fn(), removeListener: vi.fn()}});
-		const home = new URL(provider === "hbomax" ? "https://www.hbomax.com/home" : "https://www.crunchyroll.com/ru/discover");
+		const home = new URL({ hbomax: "https://www.hbomax.com/home", crunchyroll: "https://www.crunchyroll.com/ru/discover", youtube: "https://www.youtube.com/" }[provider]);
 		home.hash = "anidachiRoom=room-a&anidachiLobby=" + provider;
 		const navigation = {name: home.href, type: "navigate"};
 		vi.stubGlobal("performance", { now: performance.now.bind(performance), getEntriesByType: () => [navigation] });
@@ -123,7 +123,7 @@ describe("privileged overlay wiring", () => {
 			ensureStyles() {}, installKeyboardGuard: () => () => {}, startProviderStudy: () => null });
 		try {
 			if (timing !== "preserved") home.hash = "";
-			document.body.innerHTML = provider === "crunchyroll" ? '<header><div aria-controls="user-menu-authenticated"></div></header>' :
+			document.body.innerHTML = provider === "youtube" ? '<ytd-masthead><a href="/">YouTube</a></ytd-masthead>' : provider === "crunchyroll" ? '<header><div aria-controls="user-menu-authenticated"></div></header>' :
 				'<nav><div data-testid="navigationMenu"><a data-testid="my-stuff_button"></a><button data-testid="profile_button"></button></div></nav>';
 			await act(async () => { runtime.reconcile(); });
 			await flushRoomActionWork();

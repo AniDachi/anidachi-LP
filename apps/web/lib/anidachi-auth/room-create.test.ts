@@ -202,7 +202,7 @@ test("catalog creation requires a supported platform, an idempotency key and an 
   const request = (body: Record<string, unknown>) => handleRoomCreateRequestBody({
     readBody: async () => JSON.stringify(body), create: async input => input,
   });
-  for (const lobbyProvider of ["netflix", "disneyplus", "primevideo"]) {
+  for (const lobbyProvider of ["netflix", "disneyplus", "primevideo", "youtube"]) {
     const input = { ...base, lobbyProvider };
     assert.deepEqual(await request(input), { ok: true, value: input });
   }

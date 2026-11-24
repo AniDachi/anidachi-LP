@@ -1,18 +1,19 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(17);
+select plan(18);
 
 insert into public.users(id, email, display_name) values
   ('cc7a1000-0000-4000-8000-000000000001', 'catalog-test-1@example.test', 'Catalog host'),
   ('cc7a1000-0000-4000-8000-000000000002', 'catalog-test-2@example.test', 'Second catalog host'),
   ('cc7a1000-0000-4000-8000-000000000003', 'catalog-test-3@example.test', 'Prime catalog host'),
   ('cc7a1000-0000-4000-8000-000000000004', 'catalog-test-4@example.test', 'HBO catalog host'),
-  ('cc7a1000-0000-4000-8000-000000000005', 'catalog-test-5@example.test', 'Crunchyroll catalog host');
+  ('cc7a1000-0000-4000-8000-000000000005', 'catalog-test-5@example.test', 'Crunchyroll catalog host'),
+  ('cc7a1000-0000-4000-8000-000000000006', 'catalog-test-6@example.test', 'YouTube catalog host');
 insert into public.subscriptions(user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id,
                                  plan_code, status, current_period_end, cancel_at_period_end)
 select id, 'cus_catalog_' || id, 'sub_catalog_' || id, 'price_catalog', 'plus', 'active', now()+interval '1 day', true
-from public.users where id in ('cc7a1000-0000-4000-8000-000000000001', 'cc7a1000-0000-4000-8000-000000000002', 'cc7a1000-0000-4000-8000-000000000003','cc7a1000-0000-4000-8000-000000000004','cc7a1000-0000-4000-8000-000000000005');
+from public.users where id in ('cc7a1000-0000-4000-8000-000000000001', 'cc7a1000-0000-4000-8000-000000000002', 'cc7a1000-0000-4000-8000-000000000003','cc7a1000-0000-4000-8000-000000000004','cc7a1000-0000-4000-8000-000000000005','cc7a1000-0000-4000-8000-000000000006');
 
 create function pg_temp.catalog(host_id uuid, request_id text, abuse boolean, provider text default 'disneyplus')
 returns table(outcome text, room_record jsonb, active_room jsonb) language sql as $$
@@ -61,5 +62,8 @@ select is((select room_record->>'lobby_provider' from pg_temp.catalog(
 select ok((select outcome = 'claimed' and room_record->>'lobby_provider' = 'crunchyroll' and room_record->>'source_url' is null
   from pg_temp.catalog('cc7a1000-0000-4000-8000-000000000005', 'crunchy-first', true, 'crunchyroll')),
   'Crunchyroll admission persists the catalog before an episode is playing');
+select ok((select outcome = 'claimed' and room_record->>'lobby_provider' = 'youtube' and room_record->>'source_url' is null
+  from pg_temp.catalog('cc7a1000-0000-4000-8000-000000000006', 'youtube-first', true, 'youtube')),
+  'YouTube admission persists the catalog before a video is selected');
 select * from finish();
 rollback;

@@ -38,12 +38,13 @@ describe("popup room before playback", () => {
 		expect(captureHboLobbyInvite(home, { type: "navigate", name: link.replace("play.max.com", "www.hbomax.com") })).toBeNull();
 		expect(captureHboLobbyInvite(link.replace("Lobby=hbomax", "Lobby=netflix"))).toBeNull();
 	});
-	it.each([["disneyplus", false], ["disneyplus", true], ["netflix", false], ["netflix", true], ["primevideo", false], ["primevideo", true], ["hbomax", false], ["hbomax", true], ["crunchyroll", false], ["crunchyroll", true]] as const)("waits for the signed-in %s catalog (invite %s)", async (provider, invited) => {
+	it.each([["disneyplus", false], ["disneyplus", true], ["netflix", false], ["netflix", true], ["primevideo", false], ["primevideo", true], ["hbomax", false], ["hbomax", true], ["crunchyroll", false], ["crunchyroll", true], ["youtube", false], ["youtube", true]] as const)("waits for the rendered %s catalog (invite %s)", async (provider, invited) => {
 		const hash = "anidachiRoom=abc&anidachiLobby=" + provider;
 		const home = {
 			disneyplus: "https://www.disneyplus.com/home",
 			netflix: "https://www.netflix.com/browse",
 			primevideo: "https://www.amazon.de/-/en/gp/video/detail/B0HL3NHK3N",
+			youtube: "https://www.youtube.com/?hl=uk",
 			crunchyroll: "https://www.crunchyroll.com/ru/discover",
 			hbomax: "https://play.max.com/br/pt/home",
 		}[provider];
@@ -69,6 +70,7 @@ describe("popup room before playback", () => {
 				primevideo: '<div id="dv-web-page-hydration-root"><a href="/gp/video/storefront">Startseite</a></div>',
 				netflix: '<div class="main-header"><a href="/browse/genre/83">TV Shows</a></div>',
 				disneyplus: '<nav><a href="/pt-br/browse/watchlist">Minha lista</a></nav><main></main>',
+				youtube: '<ytd-masthead><a href="/">YouTube</a></ytd-masthead>',
 				crunchyroll: '<header><div role="button" aria-controls="user-menu-authenticated"></div></header>',
 				hbomax: '<nav><div data-testid="navigationMenu"><a data-testid="my-stuff_button" href="/br/pt/my-stuff">Minha lista</a><button data-testid="profile_button">Perfil</button></div></nav>',
 			}[provider];
@@ -108,6 +110,8 @@ describe("popup room before playback", () => {
 		expect(popupRoomProvider("https://hbo.com/home")).toBeNull();
 		expect(popupRoomProvider("https://www.crunchyroll.com/pt-br/discover")).toBe("crunchyroll");
 		for (const url of ["https://www.crunchyroll.com/login", "https://static.crunchyroll.com/discover", "https://www.crunchyroll.com/account"]) expect(popupRoomProvider(url)).toBeNull();
+		expect(popupRoomProvider("https://m.youtube.com/feed/subscriptions")).toBe("youtube");
+		for (const url of ["https://studio.youtube.com/", "https://www.youtube.com/account", "https://www.youtube.com/embed/dQw4w9WgXcQ"]) expect(popupRoomProvider(url)).toBeNull();
 		const netflix = "https://www.netflix.com/browse#";
 		expect(lobbyRoomFromUrl(netflix + "anidachiRoom=abc&anidachiLobby=netflix")).toBe("abc");
 		expect(lobbyRoomFromUrl(netflix + "anidachiRoom=abc&anidachiLobby=disneyplus")).toBeNull();
