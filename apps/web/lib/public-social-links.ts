@@ -11,11 +11,11 @@ export const PUBLIC_SOCIAL_LINKS = [
   },
   {
     label: "TikTok",
-    href: "https://www.tiktok.com/@anidachiapp?lang=en",
+    href: "https://www.tiktok.com/@anidachitok?lang=en",
   },
   {
     label: "Instagram",
-    href: "https://www.instagram.com/anidachiapp/",
+    href: "https://www.instagram.com/_anidachi_/",
   },
   {
     label: "YouTube",
