@@ -3915,14 +3915,61 @@ ${popupWatchHistoryStyles}
   .rooms-history-title small,.rooms-duration,.rooms-history dt,.rooms-with {color:#aaa6ab;font-size:12px}
   .rooms-duration,.rooms-history dd {font-variant-numeric:tabular-nums}
   .rooms-history-entry .rooms-chevron {margin-left:0}
-  .rooms-history-detail {margin:0 0 12px 47px;font-size:12px}
+  .rooms-history-entry[open] {
+    background: linear-gradient(110deg, transparent, #ffffff04 50%, transparent);
+  }
+  .rooms-history-detail {
+    padding: 0 2px 16px;
+    font-size: 12px;
+  }
   .rooms-companions,.rooms-companion {display:flex;align-items:center;gap:6px}
-  .rooms-companions {flex-wrap:wrap;gap:6px 12px;margin-block:2px 9px}
+  .rooms-companions {
+    flex-wrap: wrap;
+    gap: 5px 12px;
+    margin: 2px 0 14px 45px;
+  }
+  .rooms-with {width:100%}
   .rooms-companion {max-width:100%;overflow-wrap:anywhere}
-  .rooms-avatar {position:relative;display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;overflow:hidden;background:#58473f;color:#fff;font-size:10px}
+  .rooms-avatar {position:relative;display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;overflow:hidden;background:#66493c;color:#fff;font-size:11px}
   .rooms-avatar img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .rooms-history dl {display:flex;gap:26px;margin:0}
-  .rooms-history dd {margin:2px 0 0}
+  .rooms-timeline {
+    display: grid;
+    grid-template-columns: auto minmax(18px, 1fr) auto;
+    margin: 0;
+  }
+  .rooms-timeline > div {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .rooms-timeline > div:first-child {grid-column:1; padding-inline-end:12px}
+  .rooms-timeline > div:last-child {grid-column:3; padding-inline-start:12px; text-align:end}
+  .rooms-timeline dd {order:-1; margin:0; font-size:16px; font-weight:650; line-height:20px}
+  .rooms-timeline::before {
+    content: "";
+    grid-area: 1 / 2;
+    margin-top: 10px;
+    height: 1px;
+    background: #555257;
+  }
+  .rooms-timeline > div::after {
+    content: "";
+    position: absolute;
+    top: 7px;
+    width: 7px;
+    height: 7px;
+    box-sizing: border-box;
+    border-radius: 50%;
+  }
+  .rooms-timeline > div:first-child::after {
+    inset-inline-end: -1px;
+    border: 1px solid #c4bfbb;
+  }
+  .rooms-timeline > div:last-child::after {
+    inset-inline-start: -1px;
+    background: #ffaf68;
+  }
   .rooms-history p {font-size:12px;color:#bbb}
   .rooms-card p {font-size:12px;margin:10px 0 0;color:#ffc79f}
 `;
