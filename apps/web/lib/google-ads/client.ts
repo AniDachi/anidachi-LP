@@ -20,6 +20,27 @@ export type GenerateKeywordIdeasInput = {
   customerId?: string;
 };
 
+export type KeywordVolumeResult = {
+  text: string;
+  /** Other spellings Google merged into this keyword (same volume). */
+  closeVariants: string[];
+  avgMonthlySearches?: number;
+  competition?: string;
+  competitionIndex?: number;
+  lowTopOfPageBidMicros?: number;
+  highTopOfPageBidMicros?: number;
+  /** Last 12 months, oldest first. */
+  monthlySearches: Array<{ year: number; month: string; searches: number }>;
+};
+
+export type GetKeywordVolumesInput = {
+  keywords: string[];
+  languageId?: number;
+  /** Empty array means worldwide. Defaults to the United States. */
+  locationIds?: number[];
+  customerId?: string;
+};
+
 function getDeveloperToken(): string {
   const token = process.env.GOOGLE_ADS_DEVELOPER_TOKEN?.trim();
   if (!token) {
@@ -77,18 +98,12 @@ function buildSeed(keywords: string[], url?: string) {
   return { keywordSeed: { keywords } };
 }
 
-export async function generateKeywordIdeas(
-  input: GenerateKeywordIdeasInput
-): Promise<KeywordIdeaResult[]> {
-  const keywords = input.keywords.map((k) => k.trim()).filter(Boolean);
-  const url = input.url?.trim();
-  if (keywords.length === 0 && !url) {
-    throw new Error("Provide at least one keyword or a URL seed");
-  }
-
-  const customerId = getCustomerId(input.customerId);
-  const languageId = input.languageId ?? 1000;
-  const locationIds = input.locationIds ?? [2840];
+async function postKeywordPlanner(
+  method: "generateKeywordIdeas" | "generateKeywordHistoricalMetrics",
+  customerIdOverride: string | undefined,
+  body: Record<string, unknown>
+): Promise<string> {
+  const customerId = getCustomerId(customerIdOverride);
   const accessToken = await getAccessToken();
   const developerToken = getDeveloperToken();
 
@@ -103,15 +118,7 @@ export async function generateKeywordIdeas(
     headers["login-customer-id"] = normalizeCustomerId(loginCustomerId);
   }
 
-  const body = {
-    language: `languageConstants/${languageId}`,
-    geoTargetConstants: locationIds.map((id) => `geoTargetConstants/${id}`),
-    includeAdultKeywords: false,
-    keywordPlanNetwork: "GOOGLE_SEARCH",
-    ...buildSeed(keywords, url),
-  };
-
-  const endpoint = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${customerId}:generateKeywordIdeas`;
+  const endpoint = `https://googleads.googleapis.com/${GOOGLE_ADS_API_VERSION}/customers/${customerId}:${method}`;
   const res = await fetch(endpoint, {
     method: "POST",
     headers,
@@ -158,8 +165,33 @@ export async function generateKeywordIdeas(
         `${detail} Run pnpm --filter @anidachi/web google-ads:diagnose to list accessible customer IDs, update GOOGLE_ADS_CUSTOMER_ID, or reconnect OAuth with the Google account that owns the Ads account.`
       );
     }
-    throw new Error(`Google Ads generateKeywordIdeas failed (${res.status}): ${detail}`);
+    throw new Error(`Google Ads ${method} failed (${res.status}): ${detail}`);
   }
+  return text;
+}
+
+function toNumber(value: string | number | undefined): number | undefined {
+  return value != null && value !== "" ? Number(value) : undefined;
+}
+
+export async function generateKeywordIdeas(
+  input: GenerateKeywordIdeasInput
+): Promise<KeywordIdeaResult[]> {
+  const keywords = input.keywords.map((k) => k.trim()).filter(Boolean);
+  const url = input.url?.trim();
+  if (keywords.length === 0 && !url) {
+    throw new Error("Provide at least one keyword or a URL seed");
+  }
+
+  const languageId = input.languageId ?? 1000;
+  const locationIds = input.locationIds ?? [2840];
+  const text = await postKeywordPlanner("generateKeywordIdeas", input.customerId, {
+    language: `languageConstants/${languageId}`,
+    geoTargetConstants: locationIds.map((id) => `geoTargetConstants/${id}`),
+    includeAdultKeywords: false,
+    keywordPlanNetwork: "GOOGLE_SEARCH",
+    ...buildSeed(keywords, url),
+  });
 
   const data = JSON.parse(text) as {
     results?: Array<{
@@ -176,16 +208,79 @@ export async function generateKeywordIdeas(
 
   return (data.results ?? []).map((row) => ({
     text: row.text ?? "",
-    avgMonthlySearches: row.keywordIdeaMetrics?.avgMonthlySearches
-      ? Number(row.keywordIdeaMetrics.avgMonthlySearches)
-      : undefined,
+    avgMonthlySearches: toNumber(row.keywordIdeaMetrics?.avgMonthlySearches),
     competition: row.keywordIdeaMetrics?.competition,
     competitionIndex: row.keywordIdeaMetrics?.competitionIndex,
-    lowTopOfPageBidMicros: row.keywordIdeaMetrics?.lowTopOfPageBidMicros
-      ? Number(row.keywordIdeaMetrics.lowTopOfPageBidMicros)
-      : undefined,
-    highTopOfPageBidMicros: row.keywordIdeaMetrics?.highTopOfPageBidMicros
-      ? Number(row.keywordIdeaMetrics.highTopOfPageBidMicros)
-      : undefined,
+    lowTopOfPageBidMicros: toNumber(row.keywordIdeaMetrics?.lowTopOfPageBidMicros),
+    highTopOfPageBidMicros: toNumber(row.keywordIdeaMetrics?.highTopOfPageBidMicros),
   }));
+}
+
+/**
+ * Exact search volumes for the keywords you pass (Keyword Planner "historical
+ * metrics"). Unlike generateKeywordIdeas, the result does not depend on which
+ * other keywords share the request. Google merges close variants into one row
+ * and lists the others in closeVariants.
+ */
+export async function getKeywordVolumes(
+  input: GetKeywordVolumesInput
+): Promise<KeywordVolumeResult[]> {
+  const keywords = [...new Set(input.keywords.map((k) => k.trim()).filter(Boolean))];
+  if (keywords.length === 0) {
+    throw new Error("Provide at least one keyword");
+  }
+  if (keywords.length > 10000) {
+    throw new Error("Keyword Planner accepts at most 10,000 keywords per request");
+  }
+
+  const languageId = input.languageId ?? 1000;
+  const locationIds = input.locationIds ?? [2840];
+  const text = await postKeywordPlanner(
+    "generateKeywordHistoricalMetrics",
+    input.customerId,
+    {
+      keywords,
+      language: `languageConstants/${languageId}`,
+      geoTargetConstants: locationIds.map((id) => `geoTargetConstants/${id}`),
+      includeAdultKeywords: false,
+      keywordPlanNetwork: "GOOGLE_SEARCH",
+    }
+  );
+
+  const data = JSON.parse(text) as {
+    results?: Array<{
+      text?: string;
+      closeVariants?: string[];
+      keywordMetrics?: {
+        avgMonthlySearches?: string;
+        competition?: string;
+        competitionIndex?: string | number;
+        lowTopOfPageBidMicros?: string;
+        highTopOfPageBidMicros?: string;
+        monthlySearchVolumes?: Array<{
+          year?: string | number;
+          month?: string;
+          monthlySearches?: string;
+        }>;
+      };
+    }>;
+  };
+
+  return (data.results ?? []).map((row) => {
+    const metrics = row.keywordMetrics;
+    return {
+      text: row.text ?? "",
+      closeVariants: row.closeVariants ?? [],
+      avgMonthlySearches: toNumber(metrics?.avgMonthlySearches),
+      competition: metrics?.competition,
+      competitionIndex: toNumber(metrics?.competitionIndex),
+      lowTopOfPageBidMicros: toNumber(metrics?.lowTopOfPageBidMicros),
+      highTopOfPageBidMicros: toNumber(metrics?.highTopOfPageBidMicros),
+      monthlySearches: (metrics?.monthlySearchVolumes ?? []).map((m) => ({
+        year: Number(m.year ?? 0),
+        month: m.month ?? "",
+        searches: Number(m.monthlySearches ?? 0),
+      })),
+    };
+  });
 }
