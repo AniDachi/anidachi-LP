@@ -103,7 +103,6 @@ function inferSitemapMeta(urlPath: string): {
     urlPath === "/watch-crunchyroll-together" ||
     urlPath === "/watch-youtube-together" ||
     urlPath === "/anime-watch-party-toolkit" ||
-    urlPath === "/anime-watch-party" ||
     urlPath === "/anime-tracker" ||
     urlPath === "/discord-watch-party" ||
     urlPath === "/sub-vs-dub" ||

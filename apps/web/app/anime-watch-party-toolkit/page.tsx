@@ -133,11 +133,6 @@ export default function AnimeWatchPartyToolkitPage() {
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
-          <Link href="/anime-watch-party" className="hover:underline">
-            Anime watch party — quick start
-          </Link>
-        </li>
-        <li>
           <Link href="/watch-anime-together" className="hover:underline">
             Watch Anime Together — complete online guide
           </Link>
@@ -288,10 +283,10 @@ export default function AnimeWatchPartyToolkitPage() {
       <ul className="space-y-2 text-brand-orange mb-8">
         <li>
           <Link
-            href="/watch-crunchyroll-together"
+            href="/watch-crunchyroll-together#crunchyroll-party"
             className="hover:underline"
           >
-            AniDachi vs Crunchyroll Party
+            What happened to Crunchyroll Party
           </Link>
         </li>
         <li>

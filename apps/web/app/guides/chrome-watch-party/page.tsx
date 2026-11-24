@@ -117,7 +117,7 @@ export default function ChromeWatchPartyPage() {
 				</Link>{" "}
 				and{" "}
 				<Link
-					href="/guides/youtube-watch-party-chrome-extension"
+					href="/watch-youtube-together#extension"
 					className="text-brand-orange hover:underline"
 				>
 					YouTube watch party Chrome extensions

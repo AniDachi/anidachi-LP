@@ -12,6 +12,7 @@ import { getGuideLinks } from "@/lib/guide-links";
 import {
 	PRICING_CR_PRICING_SNIPPET,
 	PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION,
+	PRICING_FREE20_SUMMARY,
 } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
@@ -40,7 +41,7 @@ const faq = [
 	{
 		question: "Does Crunchyroll have a watch party feature in 2026?",
 		answer:
-			"No. As of 2026, Crunchyroll still does not have a built-in watch party or group watch feature. You need a third-party tool — AniDachi, Crunchyroll Party, or Discord screen sharing. Full hub: /watch-crunchyroll-together.",
+			"No. As of 2026, Crunchyroll still does not have a built-in watch party or group watch feature. You need a third-party tool: AniDachi, Teleparty with Premium, or Discord screen sharing. Full hub: /watch-crunchyroll-together.",
 	},
 	{
 		question: "How do I watch Crunchyroll with friends online?",
@@ -50,7 +51,7 @@ const faq = [
 	{
 		question: "How do two people watch Crunchyroll at the same time?",
 		answer:
-			"Both open the same episode on their own Crunchyroll accounts, then join one AniDachi (or Crunchyroll Party) watchroom so play/pause stays aligned. Keep Discord or FaceTime for voice if you want to talk — video stays on each person's Crunchyroll tab, not a shared screen.",
+			"Both open the same episode on their own Crunchyroll accounts, then join one AniDachi watchroom so play/pause stays aligned. Keep Discord or FaceTime for voice if you want to talk — video stays on each person's Crunchyroll tab, not a shared screen.",
 	},
 	{
 		question: "Can you watch Crunchyroll with friends on Discord?",
@@ -64,7 +65,7 @@ const faq = [
 	},
 	{
 		question: "Does Crunchyroll have a group watch or watch together option?",
-		answer: `Crunchyroll does not have a native group watch feature. Third-party Chrome extensions fill this gap: ${PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION}, Crunchyroll Party (sync + basic chat, free), and Teleparty (cross-platform sync, freemium).`,
+		answer: `Crunchyroll does not have a native group watch feature. Third-party Chrome extensions fill this gap: ${PRICING_CRUNCHYROLL_GUIDE_PAID_MENTION}, and Teleparty (cross-platform sync; Crunchyroll needs Teleparty Premium). The best-known Crunchyroll Party extension was removed from the Chrome Web Store in March 2025.`,
 	},
 	{
 		question: "Is AniDachi free for Crunchyroll watch parties?",
@@ -149,8 +150,7 @@ export default function HowToWatchWithFriendsPage() {
 				watchroom="crunchyroll"
 			>
 				<SeoGuideTitle>
-					How to Watch Crunchyroll with Friends — Crunchyroll Watch Party Guide
-					(2026)
+					How to Watch Crunchyroll with Friends (2026)
 				</SeoGuideTitle>
 
 				<h2 id="answer" className="scroll-mt-24">
@@ -255,13 +255,21 @@ export default function HowToWatchWithFriendsPage() {
 					id="method-cr-party"
 					className="text-2xl font-bold text-foreground mt-12 mb-4 scroll-mt-24"
 				>
-					Crunchyroll Party (free, live sync only)
+					Crunchyroll Party (removed from the Chrome Web Store)
 				</h2>
 				<p className="text-foreground/80 leading-relaxed mb-4">
-					Crunchyroll Party syncs live playback on each person&apos;s account
-					with basic chat. AniDachi also supports live sync, plus cameras,
-					microphones, and personal history on Plus or Pro. Async catch-up is
-					planned. A show stuck on Crunchyroll’s own homepage row is a
+					The best-known Crunchyroll Party extension was removed from the
+					Chrome Web Store on March 29, 2025, and Chrome-Stats lists the reason
+					as malware. Smaller extensions with similar names are still listed;
+					check who publishes one before installing it. The full story is in{" "}
+					<Link
+						href="/watch-crunchyroll-together#crunchyroll-party"
+						className="text-brand-orange hover:underline"
+					>
+						what happened to Crunchyroll Party
+					</Link>
+					. AniDachi does the same job, with live sync, cameras, microphones,
+					and personal history on Plus or Pro. A show stuck on Crunchyroll’s own homepage row is a
 					Crunchyroll history control:{" "}
 					<Link
 						href="/guides/how-to-remove-shows-from-continue-watching-on-crunchyroll"
@@ -287,7 +295,7 @@ export default function HowToWatchWithFriendsPage() {
 						sync tool (not Go Live as the video pipe)
 					</li>
 					<li>
-						<strong>For free live sync:</strong> Crunchyroll Party
+						<strong>For free live sync:</strong> AniDachi. {PRICING_FREE20_SUMMARY}
 					</li>
 				</ul>
 

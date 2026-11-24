@@ -301,7 +301,7 @@ export default function CompareIndexPage() {
         </Link>
         ), Disney+ removed GroupWatch in 2023, and Prime Video removed Watch
         Party in 2024. YouTube&apos;s options are covered in{" "}
-        <Link href="/guides/does-youtube-have-watch-party">
+        <Link href="/watch-youtube-together#no-native">
           does YouTube have a watch party
         </Link>
         . That&apos;s why every option above is a separate app.

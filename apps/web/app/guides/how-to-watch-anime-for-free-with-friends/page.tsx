@@ -354,7 +354,7 @@ export default function HowToWatchAnimeForFreeWithFriendsPage() {
         />
         <SeoGuideNote>
           Want the YouTube side in more depth? See{" "}
-          <Link href="/guides/youtube-watch-party-free">YouTube watch party free</Link>{" "}
+          <Link href="/watch-youtube-together">YouTube watch party</Link>{" "}
           for what costs nothing when syncing YouTube.
         </SeoGuideNote>
 

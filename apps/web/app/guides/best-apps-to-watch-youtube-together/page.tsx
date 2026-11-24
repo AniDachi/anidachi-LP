@@ -240,18 +240,10 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
       <ul className="space-y-2 text-brand-orange">
         <li>
           <Link
-            href="/guides/best-way-to-watch-youtube-with-friends"
+            href="/watch-youtube-together#with-friends"
             className="hover:underline"
           >
-            Best way to watch YouTube with friends
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/guides/how-to-watch-youtube-with-friends"
-            className="hover:underline"
-          >
-            How to watch YouTube with friends
+            How to watch YouTube with friends online
           </Link>
         </li>
         <li>

@@ -97,8 +97,7 @@ export default function AsyncVsLivePage() {
       <p className="text-foreground/80 leading-relaxed mb-6">
         A live watch party means everyone starts watching at the same time with
         synchronized playback. You pause, play, and seek together. Chat happens
-        in real-time. This is how most tools (Teleparty, Crunchyroll Party,
-        Discord) work. The downside: scheduling is hard, especially across time
+        in real-time. This is how most tools (Teleparty, Discord) work. The downside: scheduling is hard, especially across time
         zones.
       </p>
 
@@ -169,7 +168,7 @@ export default function AsyncVsLivePage() {
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li><strong>Independent watching:</strong> Use your streaming service, personal notes, and a separate group chat for later discussion.</li>
-        <li><strong>Live:</strong> <Link href="/" className="text-brand-orange hover:underline">AniDachi</Link>, Teleparty, Crunchyroll Party, or Discord screen sharing.</li>
+        <li><strong>Live:</strong> <Link href="/" className="text-brand-orange hover:underline">AniDachi</Link>, Teleparty, or Discord screen sharing.</li>
         <li><strong>Coming soon:</strong> AniDachi Async catch-up is planned; current rooms need everyone online together.</li>
       </ul>
 

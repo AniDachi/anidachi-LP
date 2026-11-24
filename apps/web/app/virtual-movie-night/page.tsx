@@ -141,7 +141,14 @@ export default function VirtualMovieNightPage() {
 					the install page
 				</Link>
 				. {PRICING_FREE20_SUMMARY} Friends join on Free
-				with their own access to the film. Crunchyroll setup is on{" "}
+				with their own access to the film. Netflix setup is on{" "}
+				<Link
+					href="/netflix-watch-party"
+					className="text-brand-orange hover:underline"
+				>
+					Netflix watch party
+				</Link>
+				. Crunchyroll setup is on{" "}
 				<Link
 					href="/watch-crunchyroll-together"
 					className="text-brand-orange hover:underline"

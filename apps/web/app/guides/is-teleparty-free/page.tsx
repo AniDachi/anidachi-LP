@@ -233,6 +233,9 @@ export default function IsTelepartyFreePage() {
         Premium unlocks a second list of &quot;premium services&quot; and the
         call features. Its Chrome Web Store listing describes this as 9
         services for free and 23 extra streaming services for Premium.
+        Planning a{" "}
+        <Link href="/netflix-watch-party">Netflix watch party</Link>? That
+        page compares Teleparty with the other ways to watch Netflix together.
       </p>
       <ResponsiveCompareTable
         columns={[
