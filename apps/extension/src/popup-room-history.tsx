@@ -63,7 +63,7 @@ export function RoomHistoryEntry({ room }: { room: CompletedRoom }) {
 			<div className="rooms-history-detail">
 				{room.companions.length > 0 && (
 					<div className="rooms-companions">
-						<span className="rooms-with">With</span>
+						<span className="rooms-with">Watched with</span>
 						{room.companions.map((person) => (
 							<span className="rooms-companion" key={person.id}>
 								<span className="rooms-avatar" aria-hidden="true">
@@ -85,18 +85,14 @@ export function RoomHistoryEntry({ room }: { room: CompletedRoom }) {
 						))}
 					</div>
 				)}
-				<dl>
+				<dl className="rooms-timeline">
 					<div>
 						<dt>Created</dt>
-						<dd>{clock.format(start)}</dd>
+						<dd><time dateTime={room.createdAt}>{clock.format(start)}</time></dd>
 					</div>
 					<div>
-						<dt>Ended</dt>
-						<dd>
-							{end.toDateString() !== start.toDateString() &&
-								dayLabel(end) + " · "}
-							{clock.format(end)}
-						</dd>
+						<dt>Ended{end.toDateString() !== start.toDateString() && ` · ${dayLabel(end)}`}</dt>
+						<dd><time dateTime={room.endedAt}>{clock.format(end)}</time></dd>
 					</div>
 				</dl>
 			</div>
