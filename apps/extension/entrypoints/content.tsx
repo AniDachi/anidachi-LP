@@ -15,6 +15,7 @@ import { DisneyPlusVideoAdapter } from "../src/source-adapters/disneyplus/adapte
 import { readDisneyTitle } from "../src/source-adapters/disneyplus/published-catalog";
 import { startDisneyPlusCatalogCapture } from "../src/source-adapters/disneyplus/catalog";
 import { isDisneyPlusOrigin } from "../src/source-adapters/disneyplus/url";
+import { isCrunchyrollCatalogOrigin } from "../src/source-adapters/crunchyroll/url";
 import { CrunchyrollVideoAdapter } from "../src/source-adapters/crunchyroll/adapter";
 import { PrimeVideoAdapter } from "../src/source-adapters/primevideo/adapter";
 import { discardConflictingRoomLaunch, preparePrimeRoomDismissal, recoverPrimeLaunch } from "../src/prime-launch-client";
@@ -189,7 +190,7 @@ function startContentLifecycleSession(
   const lobbyRedirect = !restoredFromCache && window.top === window ? prepareDisneyLobbyRedirect(entryHref, document.referrer) : null;
   const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
-  const pilotEnabled = ROOMS_PILOT && window.top === window && (hasPrimeBrowserHost(location.href) || isDisneyPlusOrigin(location.href) || isHboMaxOrigin(location.origin) || location.origin === "https://www.netflix.com") &&
+  const pilotEnabled = ROOMS_PILOT && window.top === window && (isCrunchyrollCatalogOrigin(location.origin) || hasPrimeBrowserHost(location.href) || isDisneyPlusOrigin(location.href) || isHboMaxOrigin(location.origin) || location.origin === "https://www.netflix.com") &&
     typeof chrome !== "undefined" && Boolean(chrome.runtime?.onMessage);
   let hboLobbyInvite = pilotEnabled && !restoredFromCache && isHboMaxOrigin(location.origin)
     ? captureHboLobbyInvite(entryHref, performance.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming | undefined)

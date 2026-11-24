@@ -90,7 +90,7 @@ test("a Disney catalog invitation keeps sign-in and uses the membership form bef
   assert.doesNotMatch(await renderPage("https://example.com"), /join\?lobby=/);
 });
 
-for (const provider of ["disneyplus", "netflix", "primevideo", "hbomax"]) test(`an accepted Inbox invitation opens a ${provider} catalog room through its normal room URL`, async () => {
+for (const provider of ["disneyplus", "netflix", "primevideo", "hbomax", "crunchyroll"]) test(`an accepted Inbox invitation opens a ${provider} catalog room through its normal room URL`, async () => {
   alreadyMember = true;
   room = {...activeRoom, ...roomSourceCreationColumns({}), lobby_provider: provider};
   const html = await renderPage();

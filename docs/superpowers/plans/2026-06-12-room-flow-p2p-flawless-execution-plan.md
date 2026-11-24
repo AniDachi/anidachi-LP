@@ -1,5 +1,9 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## Crunchyroll catalog rooms on staging
+
+The Room tab uses the signed-in Crunchyroll catalog. Both copied links and Inbox invitations open Discover before playback. Once the host starts an episode, the existing adapter follows its watch ID in the guest’s site language. Acceptance covers two profiles, first playback and Back to video while the host is paused.
+
 ## HBO Max catalog rooms on staging
 
 The Room tab can create a room in the signed-in HBO Max catalog before a title starts. A copied link or Inbox invitation opens the catalog for the guest. After playback starts, the existing HBO adapter follows the host’s playable video ID. Verify guest return while the host is paused.

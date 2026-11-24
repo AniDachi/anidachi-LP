@@ -115,4 +115,12 @@ it("only the popup can request creation, only its destination can claim it, and 
 	tab.url = activeElsewhere.url;
 	await send("open", popup, "hbomax");
 	expect(create).toHaveBeenLastCalledWith({ url: "https://www.hbomax.com/home", active: false });
+	tab.url = "https://www.crunchyroll.com/ru/discover";
+	await send("open", popup, "crunchyroll");
+	expect(query).toHaveBeenCalledWith({ currentWindow: true, url: expect.arrayContaining(["https://www.crunchyroll.com/*", "https://crunchyroll.com/*"]) });
+	expect(update).toHaveBeenLastCalledWith(tab.id, { active: true });
+	expect(await send("claim", { ...content, url: tab.url })).toMatchObject({ provider: "crunchyroll" });
+	tab.url = activeElsewhere.url;
+	await send("open", popup, "crunchyroll");
+	expect(create).toHaveBeenLastCalledWith({ url: "https://www.crunchyroll.com/discover", active: false });
 });

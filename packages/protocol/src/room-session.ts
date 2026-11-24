@@ -23,12 +23,13 @@ export const ROOM_TOKEN_AUDIENCE = "anidachi-worker";
 export const ActiveRoomRoleSchema = z.enum(["host", "member"]);
 
 /** Platform of a room created in a catalog before any playback source exists. */
-export const RoomLobbyProviderSchema = z.enum(["disneyplus", "netflix", "primevideo", "hbomax"]);
+export const RoomLobbyProviderSchema = z.enum(["disneyplus", "netflix", "primevideo", "hbomax", "crunchyroll"]);
 export type RoomLobbyProvider = z.infer<typeof RoomLobbyProviderSchema>;
 export const ROOM_LOBBY_HOME: Record<RoomLobbyProvider, string> = {
   disneyplus: "https://www.disneyplus.com/home",
   netflix: "https://www.netflix.com/browse",
   primevideo: "https://www.primevideo.com/",
+  crunchyroll: "https://www.crunchyroll.com/discover",
   hbomax: HBO_MAX_ORIGIN + "/home",
 };
 
