@@ -1,5 +1,6 @@
 import type {PrimeNavigation} from "@anidachi/protocol";
 import {startPrimeResume,findPrimeNavigation} from "./prime-launch-client";
+import { PopupPlatformCarousel } from "./popup-platform-carousel";
 import { usePopupProviderBrowse } from "./use-popup-provider-browse";
 import { readPopupView, readPopupHistoryView, writePopupHistoryChoice, writePopupQuery } from "./popup-view-state";
 import { parseWatchHistoryBootstrapData, type WatchHistoryMessageResponse } from "./watch-history-client";
@@ -46,17 +47,15 @@ import {
 	formatClock,
 	formatProgressPercent,
 	groupWatchHistoryItems,
+	providerLabel,
 	isSameHistoryRevision,
 	latestPendingByEpisode,
-	type PopupHistoryLayout,
 	type PopupWatchHistoryClient,
 	type PopupWatchHistorySnapshot,
-	ProviderLogo,
 	pendingEpisodeKey,
 	pendingTitleKey,
 	pendingWatchHistoryEpisode,
 	projectPendingWatchHistoryItems,
-	reconcileHistoryLayout,
 	reconcilePopupPendingEvents,
 	requestPopupWatchHistory,
 	watchHistoryOverallProgress,
@@ -169,7 +168,7 @@ function WatchDrawer({
 	const currentClient = useRef(client);
 	currentClient.current = client;
 	const [oldOwnerPending, setOldOwnerPending] = useState(false);
-	const [layout, setLayout] = useState<PopupHistoryLayout | null>(null);
+	const [platform, setPlatform] = useState<WatchHistoryItem["provider"] | null>(null);
 	const [branches, setBranches] = useState<
 		Record<string, Record<string, boolean>>
 	>({});
@@ -532,8 +531,9 @@ function WatchDrawer({
 		}
 		return result;
 	}, [snapshot, accessStatus, queued]);
+	const filteredHistory = Boolean(search.trim()) || conditions.period !== "all-time";
 	const allowPending =
-		accessStatus === "allowed" && !browsing.authorityInvalid && snapshot?.captureAllowed !== false && !search.trim() && conditions.period === "all-time";
+		accessStatus === "allowed" && !browsing.authorityInvalid && snapshot?.captureAllowed !== false && !filteredHistory;
 	const canonical = new Map(
 		snapshot?.history.items.map((item) => [
 			pendingTitleKey(item.provider, item.titleKey),
@@ -555,6 +555,8 @@ function WatchDrawer({
 		return local
 			? {
 					...item,
+					lastWatchedAt: !filteredHistory && localIsCurrent && Date.parse(local.lastWatchedAt) > Date.parse(item.lastWatchedAt)
+						? local.lastWatchedAt : item.lastWatchedAt,
 					artworkUrl: localIsCurrent
 						? (local.artworkUrl ?? item.artworkUrl)
 						: (item.artworkUrl ?? local.artworkUrl),
@@ -614,18 +616,18 @@ function WatchDrawer({
 				}
 			: item;
 	});
-	const nextLayout = reconcileHistoryLayout(layout, items, queryKey);
-	if (nextLayout !== layout) setLayout(nextLayout);
-	const ranks = new Map(nextLayout.titleKeys.map((key, index) => [key, index]));
-	items.sort(
-		(a, b) =>
-			(ranks.get(pendingTitleKey(a.provider, a.titleKey)) ?? 0) -
-			(ranks.get(pendingTitleKey(b.provider, b.titleKey)) ?? 0),
-	);
+	const watchedAt = (item: WatchHistoryItem) => {
+		const match = filteredHistory && matches.get(pendingTitleKey(item.provider, item.titleKey));
+		return Date.parse(match ? match.lastWatchedAt : item.lastWatchedAt);
+	};
+	items.sort((a, b) => watchedAt(b) - watchedAt(a));
+	const groups = groupWatchHistoryItems(items);
+	const selected = groups.length > 1 && groups.some(group => group.provider === platform) ? platform : null;
+	const visibleItems = selected ? items.filter(item => item.provider === selected) : items;
 	const disclosure: Disclosure = {
 		isOpen: (key, initial) =>
 			branches[queryKey]?.[key] ??
-			(search.trim() ? true : (savedView.branches[key] ?? nextLayout.defaults[key] ?? initial)),
+			(search.trim() ? true : (savedView.branches[key] ?? initial)),
 		toggle: (key, initial) => {
 			const next = !disclosure.isOpen(key, initial);
 			if (!search.trim()) writePopupHistoryChoice(ownerUserId, generation, "branches", key, next);
@@ -897,89 +899,49 @@ function WatchDrawer({
 					{error}
 				</div>
 			) : null}
+			{groups.length > 1 && <PopupPlatformCarousel groups={groups} selected={selected} onSelect={setPlatform} />}
 			{items.length ? (
-				<div className="popup-resource-list">
-					{groupWatchHistoryItems(items).map((group) => {
-						if (group.provider !== "youtube" && group.provider !== "crunchyroll" && group.provider !== "netflix" && group.provider !== "primevideo" && group.provider !== "disneyplus" && group.provider !== "hbomax") return null;
-						const stream = browsing.providers[group.provider];
-						const count = stream.pages[0]?.history.totalTitleCount;
-						const branch = JSON.stringify([group.provider]);
-						const open = disclosure.isOpen(branch, true);
-						return (
-							<section
-								className="popup-provider"
-								data-provider={group.provider}
-								key={group.provider}
-							>
-								<button
-									aria-expanded={open}
-									aria-label={`Toggle ${group.label} history`}
-									aria-description={count === undefined ? `${group.items.length} titles shown` : `${count} ${count === 1 ? "title" : "titles"}, ${group.items.length} shown`}
-									className="popup-provider-row"
-									type="button"
-									onClick={() => disclosure.toggle(branch, true)}
-								>
-									<ProviderLogo label={group.label} provider={group.provider} />
-									<span className="popup-provider-main">
-										<strong className="popup-provider-name">
-											{group.label}
-										</strong>
-										<span className="popup-provider-count" aria-hidden="true">
-											{count ?? group.items.length}
-										</span>
-									</span>
-									<span
-										aria-hidden="true"
-										className="popup-provider-chevron"
-										data-open={open}
-									>
-										<ChevronDown size={16} />
-									</span>
-								</button>
-								{
-									<div className="popup-provider-body" hidden={!open}>
-										{group.items.map((item) => (
-											<PopupWatchHistoryItem
-												key={pendingTitleKey(item.provider, item.titleKey)}
-												item={item}
-												ownerUserId={ownerUserId}
-												client={client}
-												input={input}
-												refresh={refreshVersion + invalidation}
-												forceRefresh={refreshVersion}
-												preview={previews.get(
-													pendingTitleKey(item.provider, item.titleKey),
-												)}
-												generation={generation}
-												disclosure={disclosure}
-												initiallyOpen={false}
-												providerOpen={open}
-												matchingDate={
-													matches.get(
-														pendingTitleKey(item.provider, item.titleKey),
-													)?.lastWatchedAt
-												}
-												pending={pending}
-												queued={queued}
-												allowPending={allowPending}
-												canonical={canonical.get(
-													pendingTitleKey(item.provider, item.titleKey),
-												)}
-												busy={busy}
-												onOpen={(url, time, navigation) => openUrl(url, time, item.provider,navigation)}
-											/>
-										))}
-										{stream.nextCursor && dates.ok ? (
-											<button type="button" className="popup-watch-load-more"
-												aria-label={`Load more ${group.label} titles`} aria-busy={stream.loading}
-												disabled={stream.loading} onClick={stream.loadMore}>
-												{stream.loading ? "Loading…" : "Load more titles"}
-											</button>
-										) : null}
-									</div>
-								}
-							</section>
-						);
+				<div className="popup-resource-list popup-platform-titles">
+					{visibleItems.map(item => (
+						<PopupWatchHistoryItem
+							key={pendingTitleKey(item.provider, item.titleKey)}
+							item={item}
+							ownerUserId={ownerUserId}
+							client={client}
+							input={input}
+							refresh={refreshVersion + invalidation}
+							forceRefresh={refreshVersion}
+							preview={previews.get(
+								pendingTitleKey(item.provider, item.titleKey),
+							)}
+							generation={generation}
+							disclosure={disclosure}
+							initiallyOpen={false}
+							showProvider={selected === null}
+							matchingDate={
+								matches.get(
+									pendingTitleKey(item.provider, item.titleKey),
+								)?.lastWatchedAt
+							}
+							pending={pending}
+							queued={queued}
+							allowPending={allowPending}
+							canonical={canonical.get(
+								pendingTitleKey(item.provider, item.titleKey),
+							)}
+							busy={busy}
+							onOpen={(url, time, navigation) => openUrl(url, time, item.provider,navigation)}
+						/>
+					))}
+					{groups.map(({ provider, label }) => {
+						if ((selected && selected !== provider) || !(provider in browsing.providers)) return null;
+						const stream = browsing.providers[provider as keyof typeof browsing.providers];
+						if (!stream.nextCursor || !dates.ok) return null;
+						return <button key={provider} type="button" className="popup-watch-load-more"
+							aria-label={`Load more ${label} titles`} aria-busy={stream.loading}
+							disabled={stream.loading} onClick={stream.loadMore}>
+							{stream.loading ? "Loading…" : groups.length === 1 || selected ? "Load more titles" : `Load more ${label} titles`}
+						</button>;
 					})}
 				</div>
 			) : !recovering &&
@@ -1074,7 +1036,7 @@ function PopupWatchHistoryItem({
 	generation,
 	disclosure,
 	initiallyOpen,
-	providerOpen,
+	showProvider,
 	matchingDate,
 	pending,
 	queued,
@@ -1093,7 +1055,7 @@ function PopupWatchHistoryItem({
 	generation?: number;
 	disclosure: Disclosure;
 	initiallyOpen: boolean;
-	providerOpen: boolean;
+	showProvider: boolean;
 	matchingDate?: string;
 	pending: Map<string, WatchProgressEvent>;
 	queued: Map<string, WatchProgressEvent>;
@@ -1121,7 +1083,7 @@ function PopupWatchHistoryItem({
 		refresh,
 		forceRefresh,
 		initialPage: preview,
-		enabled: providerOpen && open && Boolean(matchingDate),
+		enabled: open && Boolean(matchingDate),
 		generation,
 	});
 	const matchingEpisodes = mergeBy(
@@ -1189,7 +1151,7 @@ function PopupWatchHistoryItem({
 		refresh,
 		forceRefresh,
 		generation,
-		enabled: providerOpen && open && isSeries && Boolean(matchingDate),
+		enabled: open && isSeries && Boolean(matchingDate),
 	});
 	// Retain just the season menu while another season loads. Never carry it
 	// across an account, generation, client, or history invalidation.
@@ -1278,9 +1240,9 @@ function PopupWatchHistoryItem({
 		// Observed episodes are only a partial roster. A hidden/closed title has
 		// no grid request yet, so absence there cannot invalidate a saved season.
 		if (chosenSeason && fullHistory && !exactCatalog) return;
-		if (providerOpen && open && selectedSeason && chosenSeason !== selectedSeason.seasonKey)
+		if (open && selectedSeason && chosenSeason !== selectedSeason.seasonKey)
 			setChosenSeason(selectedSeason.seasonKey);
-	}, [providerOpen, open, selectedSeason?.seasonKey, chosenSeason, fullHistory, exactCatalog]);
+	}, [open, selectedSeason?.seasonKey, chosenSeason, fullHistory, exactCatalog]);
 	const overall =
 		item.itemKind === "movie" && item.provider !== "youtube"
 			? {
@@ -1420,7 +1382,7 @@ function PopupWatchHistoryItem({
 			busy={busy}
 			onOpen={onOpen}
 			detail={detail}
-			active={providerOpen && open}
+			active={open}
 		/>
 	);
 	const selectedAggregate =
@@ -1453,7 +1415,7 @@ function PopupWatchHistoryItem({
 						item={item}
 						client={client}
 						ownerUserId={ownerUserId}
-						active={providerOpen}
+						active={true}
 					/>
 					<span className="popup-watch-main">
 						<strong className="popup-watch-title" dir="auto">
@@ -1461,7 +1423,7 @@ function PopupWatchHistoryItem({
 						</strong>
 						<span className="popup-watch-summary">
 							<span className="popup-watch-meta">
-								{overall.label.split(" · ")[0]}
+								{showProvider && <>{providerLabel(item.provider)} · </>}{overall.label.split(" · ")[0]}
 								{specialAggregate && (specialAggregate.availableEpisodes ?? 0) > 0 ? (
 									<span className="popup-watch-special-total">
 										{" "}
@@ -1503,134 +1465,137 @@ function PopupWatchHistoryItem({
 					/>
 				</button>
 			</div>
-			{hasOpened.current ? (
-				<div
-					hidden={!open}
-					aria-busy={page.loading || (isSeries && fullHistory && grid.loading)}
-					className={
-						isSeries ? "popup-watch-grid-view" : "popup-watch-video-list"
-					}
-					id={bodyId}
-				>
-					{!isSeries && page.loading && !page.pages.length && !ownPending.length ? (
-						<p className="popup-watch-slice-note" role="status">
-							Loading matching episodes...
-						</p>
-					) : null}
-					{page.error ? (
-						<p className="popup-watch-slice-note" role="alert">
-							Could not load episodes.{" "}
-							<button type="button" onClick={page.reload}>
-								Retry episodes
-							</button>
-						</p>
-					) : null}
-					{isSeries && selectedSeason ? (
-						<>
-							<div className="popup-season-toolbar">
-								<PopupSeasonPicker
-									seasons={seasons}
-									selected={selectedSeason.seasonKey}
-									onSelect={chooseSeason}
+			<div className="popup-watch-reveal">
+				{hasOpened.current ? (
+					<div
+						hidden={!open}
+						inert={!open}
+						aria-busy={page.loading || (isSeries && fullHistory && grid.loading)}
+						className={
+							isSeries ? "popup-watch-grid-view" : "popup-watch-video-list"
+						}
+						id={bodyId}
+					>
+						{!isSeries && page.loading && !page.pages.length && !ownPending.length ? (
+							<p className="popup-watch-slice-note" role="status">
+								Loading matching episodes...
+							</p>
+						) : null}
+						{page.error ? (
+							<p className="popup-watch-slice-note" role="alert">
+								Could not load episodes.{" "}
+								<button type="button" onClick={page.reload}>
+									Retry episodes
+								</button>
+							</p>
+						) : null}
+						{isSeries && selectedSeason ? (
+							<>
+								<div className="popup-season-toolbar">
+									<PopupSeasonPicker
+										seasons={seasons}
+										selected={selectedSeason.seasonKey}
+										onSelect={chooseSeason}
+										title={item.title}
+									/>
+									{selectedAggregate?.availableEpisodes != null && selectedAggregate.availableEpisodes > 0 ? (
+										<span className="popup-season-counter">
+											{selectedAggregate.completedEpisodes} / {selectedAggregate.availableEpisodes} watched
+										</span>
+									) : null}
+								</div>
+								<PopupEpisodePicker
+									pending={
+										fullHistory &&
+										Boolean(knownCatalog) &&
+										!rosterReady &&
+										grid.loading
+									}
 									title={item.title}
+									seasonKey={selectedSeason.seasonKey}
+									seasonTitle={selectedSeason.seasonTitle}
+									entries={choices}
+									latestKey={item.latestActivity.episodeKey}
+									knownLatest={
+										knownLatest
+											? {
+													key: knownLatest.episodeKey,
+													title: knownLatest.episodeTitle,
+													number: knownLatest.episodeNumber,
+													history: effectiveEpisode(knownLatest),
+													pending: episodePending(knownLatest),
+												}
+											: undefined
+									}
+									special={
+										selectedSeason.special ||
+										selectedSeason.seasonKey === "__unseasoned__"
+									}
+									loading={
+										Boolean((fullHistory && knownCatalog && grid.loading) ||
+											(includeSavedPages && page.loading))
+									}
+									hasMore={Boolean(
+										(rosterReady && grid.nextCursor) || (includeSavedPages && page.nextCursor),
+									)}
+									loadMore={() => {
+										if (rosterReady) grid.loadMore();
+										if (includeSavedPages) page.loadMore();
+									}}
+									renderSelected={(entry) =>
+										entry.history ? (
+											renderEpisode(entry.history, true)
+										) : (
+											<PopupUnwatchedEpisode
+												entry={entry}
+												onOpen={onOpen}
+												busy={busy === "open"}
+											/>
+										)
+									}
 								/>
-								{selectedAggregate?.availableEpisodes != null && selectedAggregate.availableEpisodes > 0 ? (
-									<span className="popup-season-counter">
-										{selectedAggregate.completedEpisodes} / {selectedAggregate.availableEpisodes} watched
-									</span>
-								) : null}
-							</div>
-							<PopupEpisodePicker
-								pending={
-									fullHistory &&
-									Boolean(knownCatalog) &&
-									!rosterReady &&
-									grid.loading
-								}
-								title={item.title}
-								seasonKey={selectedSeason.seasonKey}
-								seasonTitle={selectedSeason.seasonTitle}
-								entries={choices}
-								latestKey={item.latestActivity.episodeKey}
-								knownLatest={
-									knownLatest
-										? {
-												key: knownLatest.episodeKey,
-												title: knownLatest.episodeTitle,
-												number: knownLatest.episodeNumber,
-												history: effectiveEpisode(knownLatest),
-												pending: episodePending(knownLatest),
-											}
-										: undefined
-								}
-								special={
-									selectedSeason.special ||
-									selectedSeason.seasonKey === "__unseasoned__"
-								}
-								loading={
-									Boolean((fullHistory && knownCatalog && grid.loading) ||
-										(includeSavedPages && page.loading))
-								}
-								hasMore={Boolean(
-									(rosterReady && grid.nextCursor) || (includeSavedPages && page.nextCursor),
-								)}
-								loadMore={() => {
-									if (rosterReady) grid.loadMore();
-									if (includeSavedPages) page.loadMore();
-								}}
-								renderSelected={(entry) =>
-									entry.history ? (
-										renderEpisode(entry.history, true)
-									) : (
-										<PopupUnwatchedEpisode
-											entry={entry}
-											onOpen={onOpen}
-											busy={busy === "open"}
-										/>
-									)
-								}
-							/>
-						</>
-					) : isSeries ? null : item.itemKind === "movie" && item.provider !== "youtube" ? (
-						(() => {
-							const film =
-								matchingEpisodes.find(
-									(episode) =>
-										episode.episodeKey === item.latestActivity.episodeKey,
-								) ?? matchingEpisodes[0];
-							return film ? renderEpisode(film, true) : null;
-						})()
-					) : (
-						matchingEpisodes.map((episode) => renderEpisode(episode))
-					)}
-					{isSeries && fullHistory && grid.error ? (
-						<p className="popup-watch-slice-note" role="alert">
-							Could not load the episode catalog.{" "}
-							<button type="button" onClick={grid.reload}>
-								Retry catalog
+							</>
+						) : isSeries ? null : item.itemKind === "movie" && item.provider !== "youtube" ? (
+							(() => {
+								const film =
+									matchingEpisodes.find(
+										(episode) =>
+											episode.episodeKey === item.latestActivity.episodeKey,
+									) ?? matchingEpisodes[0];
+								return film ? renderEpisode(film, true) : null;
+							})()
+						) : (
+							matchingEpisodes.map((episode) => renderEpisode(episode))
+						)}
+						{isSeries && fullHistory && grid.error ? (
+							<p className="popup-watch-slice-note" role="alert">
+								Could not load the episode catalog.{" "}
+								<button type="button" onClick={grid.reload}>
+									Retry catalog
+								</button>
+							</p>
+						) : null}
+						{page.nextCursor && (!isSeries || !selectedSeason) ? (
+							<button
+								className="popup-watch-load-more"
+								aria-label={`Load more episodes for ${item.title}`}
+								type="button"
+								disabled={page.loading}
+								onClick={page.loadMore}
+							>
+								Load more episodes
 							</button>
-						</p>
-					) : null}
-					{page.nextCursor && (!isSeries || !selectedSeason) ? (
-						<button
-							className="popup-watch-load-more"
-							aria-label={`Load more episodes for ${item.title}`}
-							type="button"
-							disabled={page.loading}
-							onClick={page.loadMore}
-						>
-							Load more episodes
-						</button>
-					) : null}
-					{!page.loading &&
-					!page.error &&
-					page.pages.length > 0 &&
-					!matchingEpisodes.length &&
-					!selectedSeason ? (
-						<p className="popup-watch-slice-note">No matching episodes.</p>
-					) : null}
-				</div>
-			) : null}
+						) : null}
+						{!page.loading &&
+						!page.error &&
+						page.pages.length > 0 &&
+						!matchingEpisodes.length &&
+						!selectedSeason ? (
+							<p className="popup-watch-slice-note">No matching episodes.</p>
+						) : null}
+					</div>
+				) : null}
+			</div>
 		</article>
 	);
 }
