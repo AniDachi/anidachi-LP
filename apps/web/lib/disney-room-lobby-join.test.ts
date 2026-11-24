@@ -95,6 +95,14 @@ test("Disney lobby invites respect membership admission and resolve the latest p
 	const episode = "https://www.crunchyroll.com/watch/GABC123";
 	source = roomSourceCreationColumns({ sourceUrl: episode });
 	assert.equal((await join("crunchyroll")).headers.get("location"), episode + "#anidachiRoom=abc");
+	lobbyProvider = "youtube";
+	source = roomSourceCreationColumns({});
+	const youtubeHome = "https://www.youtube.com/#anidachiRoom=abc&anidachiLobby=youtube";
+	assert.equal((await join()).headers.get("location"), youtubeHome);
+	assert.equal((await join("youtube")).headers.get("location"), youtubeHome);
+	const video = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+	source = roomSourceCreationColumns({ sourceUrl: video });
+	assert.equal((await join("youtube")).headers.get("location"), video + "#anidachiRoom=abc");
 	const player =
 		"https://www.netflix.com/watch/80000123";
 	source = roomSourceCreationColumns({ sourceUrl: player });

@@ -4509,7 +4509,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						nextRoomId,
 						activeAccessToken,
 						preparedRoomSession,
-						ROOMS_PILOT && (adapter.provider === "primevideo" || adapter.provider === "hbomax" || adapter.provider === "crunchyroll") &&
+						ROOMS_PILOT && (adapter.provider === "primevideo" || adapter.provider === "hbomax" || adapter.provider === "crunchyroll" || adapter.provider === "youtube") &&
 							browseMode.current && readLobbyRoom() === nextRoomId ? adapter.provider : undefined,
 					);
 				} catch (error) {
@@ -5202,7 +5202,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				created = await createRoom(activeAccessToken, preparedRoomSession, lobbyProvider ? {
 					lobbyProvider,
 					...(lobbyProvider === "primevideo" && { lobbyMarketplace: primeDomainFamily(location.hostname) }),
-					title: { netflix: "Netflix watchroom", disneyplus: "Disney+ watchroom", primevideo: "Prime Video watchroom", hbomax: "HBO Max watchroom", crunchyroll: "Crunchyroll watchroom" }[lobbyProvider],
+					title: { netflix: "Netflix watchroom", disneyplus: "Disney+ watchroom", primevideo: "Prime Video watchroom", hbomax: "HBO Max watchroom", crunchyroll: "Crunchyroll watchroom", youtube: "YouTube watchroom" }[lobbyProvider],
 					clientRequestId: createRequestIdRef.current,
 				} : {
 					sourceUrl: source?.sourceUrl ?? buildCurrentSourceUrlForInvite(),

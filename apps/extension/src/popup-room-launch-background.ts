@@ -1,3 +1,4 @@
+import { YOUTUBE_CATALOG_ORIGINS } from "./source-adapters/youtube/url";
 import { CRUNCHYROLL_CATALOG_ORIGINS } from "./source-adapters/crunchyroll/url";
 import { catalogPlayerProvider } from "./catalog-room-routes";
 import { HBO_MAX_BROWSER_HOSTS, PRIME_CONTENT_MATCHES, ROOM_LOBBY_HOME, RoomLobbyProviderSchema, type RoomLobbyProvider } from "@anidachi/protocol";
@@ -119,6 +120,7 @@ export function registerPopupRoomLaunch() {
 							await chrome.tabs.query({
 								currentWindow: true,
 								url: provider === "primevideo" ? PRIME_CONTENT_MATCHES
+									: provider === "youtube" ? YOUTUBE_CATALOG_ORIGINS.map(origin => origin + "/*")
 									: provider === "crunchyroll" ? CRUNCHYROLL_CATALOG_ORIGINS.map(origin => origin + "/*")
 									: provider === "hbomax" ? HBO_MAX_BROWSER_HOSTS.map(host => `https://${host}/*`)
 									: new URL(ROOM_LOBBY_HOME[provider]).origin + "/*",

@@ -1,5 +1,9 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## YouTube catalog rooms on staging
+
+The Room tab opens YouTube Home or reuses a supported catalog. Guests can join before playback through a copied link or an Inbox invitation. Validate first playback on a regular watch video, then return from browsing through **Back to video**. Google sign-in is optional for public videos. AniDachi still verifies room admission.
+
 ## Crunchyroll catalog rooms on staging
 
 The Room tab uses the signed-in Crunchyroll catalog. Both copied links and Inbox invitations open Discover before playback. Once the host starts an episode, the existing adapter follows its watch ID in the guest’s site language. Acceptance covers two profiles, first playback and Back to video while the host is paused.

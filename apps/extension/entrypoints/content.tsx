@@ -190,7 +190,7 @@ function startContentLifecycleSession(
   const lobbyRedirect = !restoredFromCache && window.top === window ? prepareDisneyLobbyRedirect(entryHref, document.referrer) : null;
   const restoredLaunch = restoredFromCache ? suppressedPrimeLaunch(location.href) : null;
   removeLegacyPageDebugBufferOnce();
-  const pilotEnabled = ROOMS_PILOT && window.top === window && (isCrunchyrollCatalogOrigin(location.origin) || hasPrimeBrowserHost(location.href) || isDisneyPlusOrigin(location.href) || isHboMaxOrigin(location.origin) || location.origin === "https://www.netflix.com") &&
+  const pilotEnabled = ROOMS_PILOT && window.top === window && (YOUTUBE_CATALOG_ORIGINS.includes(location.origin) || isCrunchyrollCatalogOrigin(location.origin) || hasPrimeBrowserHost(location.href) || isDisneyPlusOrigin(location.href) || isHboMaxOrigin(location.origin) || location.origin === "https://www.netflix.com") &&
     typeof chrome !== "undefined" && Boolean(chrome.runtime?.onMessage);
   let hboLobbyInvite = pilotEnabled && !restoredFromCache && isHboMaxOrigin(location.origin)
     ? captureHboLobbyInvite(entryHref, performance.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming | undefined)

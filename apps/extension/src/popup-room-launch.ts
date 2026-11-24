@@ -14,8 +14,7 @@ export function isDisneyRoomSurface(href?: string): boolean {
 export function popupRoomProvider(href?: string): RoomLobbyProvider | null {
 	if (!href) return null;
 	const provider = catalogRoomProvider(href);
-	if (provider === "netflix" || provider === "primevideo" || provider === "hbomax" || provider === "crunchyroll") return provider;
-	return provider === "disneyplus" && isDisneyRoomSurface(href) ? provider : null;
+	return provider === "disneyplus" && !isDisneyRoomSurface(href) ? null : provider;
 }
 
 export function netflixProfileGate(doc: Document): boolean {
@@ -23,6 +22,10 @@ export function netflixProfileGate(doc: Document): boolean {
 }
 
 export function hasCatalogNavigation(doc: Document, provider: RoomLobbyProvider): boolean {
+	if (provider === "youtube") {
+		// Public videos can be watched without a Google account.
+		return Boolean(doc.querySelector('ytd-masthead a[href="/"], ytm-app a[href="/"]'));
+	}
 	if (provider === "crunchyroll") {
 		return Boolean(doc.querySelector('header [aria-controls="user-menu-authenticated"]'));
 	}
