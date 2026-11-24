@@ -3877,7 +3877,20 @@ ${popupWatchHistoryStyles}
   .popup-tabs:has(> :nth-child(4)) {grid-template-columns:repeat(4,minmax(0,1fr))}
   .rooms-card {margin: 12px 2px; border:1px solid #363438; border-radius:16px; background:linear-gradient(155deg,#242226,#151418 68%); padding:16px; color:#f3eee7}
   .rooms-kicker {font-size:12px; font-weight:600; color:#b8b2af; margin:0 0 10px}
-  .rooms-platforms {display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}
+  .rooms-picker {overflow:hidden;border-radius:17px;background:#17161a;box-shadow:inset 0 0 0 1px #ffffff25}
+  .rooms-picker .rooms-provider {background:transparent;border:none;gap:10px}
+  .rooms-trigger,.rooms-option {min-height:41px}
+  .rooms-chevron {display:block;width:8px;height:8px;flex:0 0 8px;margin:0 4px 3px auto;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:rotate(45deg);transition:transform .22s ease}
+  .rooms-trigger[aria-expanded=true] .rooms-chevron,.rooms-history-entry[open] .rooms-chevron {transform:translateY(3px) rotate(225deg)}
+  .rooms-reveal {display:grid;grid-template-rows:0fr;transition:grid-template-rows .27s cubic-bezier(.22,.75,.2,1)}
+  .rooms-picker[data-open=true] .rooms-reveal {grid-template-rows:1fr}
+  .rooms-reveal > div {min-height:0;overflow:hidden}
+  #rooms-platforms {margin:0 5px;padding:4px 0 5px;border-top:1px solid #ffffff10}
+  #rooms-platforms .rooms-option {min-height:35px;padding:4px 6px}
+  .rooms-picker button:hover {background:#ffffff07}
+  .rooms-picker .rooms-option[aria-pressed=true] {color:#ffddbf;background:#ffab6010}
+  .rooms-picker button:focus-visible,.rooms-history summary:focus-visible {outline:2px solid #ffac68;outline-offset:-2px}
+  @media(prefers-reduced-motion:reduce){.rooms-reveal,.rooms-chevron{transition:none}}
   .rooms-provider {display:flex;align-items:center;gap:7px;min-width:0;width:100%;background:#151518;color:inherit;border:1px solid #3d393e;border-radius:10px;padding:11px;text-align:left;cursor:pointer}
   .rooms-provider[aria-pressed=true] {border-color:#716054}
   .rooms-provider:disabled {opacity:1;cursor:default}
@@ -3887,5 +3900,29 @@ ${popupWatchHistoryStyles}
   .rooms-check {margin-left:auto;color:#ff9d53}
   .rooms-primary {width:100%;margin-top:14px;border:0;border-radius:100px;padding:11px;background:linear-gradient(105deg,#ffb45f,#ff841e);color:#251609;font:inherit;font-weight:700;cursor:pointer}
   .rooms-primary:disabled {opacity:.45;cursor:default}
+  .rooms-history {margin:22px 4px 8px;color:var(--ad-text)}
+  .rooms-history header,.rooms-history summary {display:flex;align-items:center}
+  .rooms-history header {justify-content:space-between;margin-bottom:6px}
+  .rooms-history h2 {margin:0;font-size:15px;font-weight:680}
+  .rooms-history button {background:transparent;color:#bcb8bd;border:0;padding:6px 0;font:inherit;font-size:12px;cursor:pointer}
+  .rooms-history-entry + .rooms-history-entry {border-top:1px solid #ffffff12}
+  .rooms-history summary {list-style:none;gap:12px;min-height:57px;padding:5px 2px;cursor:pointer}
+  .rooms-history summary::-webkit-details-marker {display:none}
+  .rooms-history .resource-provider-logo {width:33px;height:26px;flex:0 0 33px;display:grid;place-items:center}
+  .rooms-history .resource-provider-logo :is(img,svg) {width:100%;height:100%;object-fit:contain}
+  .rooms-history .netflix svg {width:13px}
+  .rooms-history-title {display:grid;gap:2px;flex:1;min-width:0;font-size:14px}
+  .rooms-history-title small,.rooms-duration,.rooms-history dt,.rooms-with {color:#aaa6ab;font-size:12px}
+  .rooms-duration,.rooms-history dd {font-variant-numeric:tabular-nums}
+  .rooms-history-entry .rooms-chevron {margin-left:0}
+  .rooms-history-detail {margin:0 0 12px 47px;font-size:12px}
+  .rooms-companions,.rooms-companion {display:flex;align-items:center;gap:6px}
+  .rooms-companions {flex-wrap:wrap;gap:6px 12px;margin-block:2px 9px}
+  .rooms-companion {max-width:100%;overflow-wrap:anywhere}
+  .rooms-avatar {position:relative;display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;overflow:hidden;background:#58473f;color:#fff;font-size:10px}
+  .rooms-avatar img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .rooms-history dl {display:flex;gap:26px;margin:0}
+  .rooms-history dd {margin:2px 0 0}
+  .rooms-history p {font-size:12px;color:#bbb}
   .rooms-card p {font-size:12px;margin:10px 0 0;color:#ffc79f}
 `;

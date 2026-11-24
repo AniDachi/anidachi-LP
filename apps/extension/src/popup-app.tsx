@@ -1,4 +1,5 @@
 import { ROOMS_PILOT } from "./popup-room-launch";
+import { PopupRoomHistory } from "./popup-room-history";
 import { PopupRooms } from "./popup-rooms";
 import { PopupNavigation } from "./popup-navigation";
 import { PopupRetainedPanel, usePopupNavigation } from "./use-popup-navigation";
@@ -951,7 +952,9 @@ export function PopupApp() {
         />
         </div>
       </PopupRetainedPanel>
-      {ROOMS_PILOT && activeTab === "rooms" && <div data-popup-tab="rooms"><PopupRooms key={accountUser?.id ?? "signed-out"} owner={accountUser?.id ?? null} onSignIn={() => void syncPopupData({interactive:true})} /></div>}
+      {ROOMS_PILOT && activeTab === "rooms" && <div data-popup-tab="rooms"><PopupRooms key={accountUser?.id ?? "signed-out"} owner={accountUser?.id ?? null} onSignIn={() => void syncPopupData({interactive:true})} />
+        {authSession.status === "ready" && <PopupRoomHistory key={extensionAuthSessionKey(authSession.tokens)} tokens={authSession.tokens} />}
+      </div>}
       <PopupRetainedPanel key={`${accountUser?.id}:friends`} active={activeTab === "friends"} tab="friends">
         <PopupPeoplePanel
           actionNotice={peopleActionNotice}

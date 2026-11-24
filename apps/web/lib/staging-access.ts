@@ -169,6 +169,7 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
     return true;
   }
   if (pathname === "/api/account/inbox" && method === "GET") return true;
+  if (pathname === "/api/account/room-history" && method === "GET") return true;
   if (pathname === "/api/account/inbox/seen" && method === "POST") return true;
   if (pathname === "/api/devices/push-subscription" && method === "POST") {
     return true;
