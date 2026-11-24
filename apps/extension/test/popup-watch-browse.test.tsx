@@ -12,7 +12,7 @@ import {
 } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { usePopupWatchBrowse } from "../src/popup-watch-browse";
 import { PopupHistorySettings } from "../src/popup-history-settings";
 import {
@@ -297,8 +297,8 @@ async function mount(client: PopupWatchHistoryClient, openFirstTitle = true) {
 	await act(async () =>
 		root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER} />),
 	);
-	if (openFirstTitle) for (const provider of container.querySelectorAll(".popup-provider")) {
-		const title = provider.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
+	if (openFirstTitle) {
+    const title = container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
 		if (title) await act(async () => title.click());
 	}
 	return container;
@@ -410,27 +410,57 @@ describe("production watch browsing", () => {
     }
   });
 
-  it("pages each provider by 20 with full counts and no load-more button outside the provider", async () => {
+  it("pages each platform independently and filters the visible titles", async () => {
     const { client, requests } = providerLibrary();
     await mount(client, false);
-    for (const [provider, total] of [["youtube", 45], ["crunchyroll", 23]] as const) {
-      const section = required(container.querySelector(`[data-provider="${provider}"]`));
-      expect(section.querySelectorAll(".popup-watch-item")).toHaveLength(20);
-      expect(section.querySelector(".popup-provider-count")?.textContent).toBe(String(total));
-      expect(section.querySelector(".popup-watch-load-more")).not.toBeNull();
+    for (const provider of ["youtube", "crunchyroll"]) {
+      expect(container.querySelectorAll(`.popup-watch-item[data-provider="${provider}"]`)).toHaveLength(20);
     }
-    expect(container.querySelector(".popup-watch-screen > .popup-watch-load-more")).toBeNull();
+    expect(container.querySelector(".popup-platform-inline:not([inert])")).not.toBeNull();
+    expect(container.querySelector(".popup-platform-arrow")).toBeNull();
+    expect(container.querySelectorAll(".popup-watch-load-more")).toHaveLength(2);
     expect(requests).toHaveLength(5);
     expect(requests.every(query => query.limit === 20 && query.providerVersion === 4 && query.provider && !query.cursor)).toBe(true);
     await click("Load more YouTube titles");
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
-    expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(20);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(40);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="crunchyroll"]')).toHaveLength(20);
     expect(requests.at(-1)).toMatchObject({ provider: "youtube", limit: 20, cursor: "20" });
     await click("Load more YouTube titles");
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(45);
-    expect(container.querySelector('[data-provider="youtube"] .popup-watch-load-more')).toBeNull();
-    await click("Toggle Crunchyroll history");
-    expect(container.querySelector('[data-provider="crunchyroll"] .popup-provider-body')?.hasAttribute("hidden")).toBe(true);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(45);
+    expect(container.querySelector('[aria-label="Load more YouTube titles"]')).toBeNull();
+    await click("Crunchyroll");
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(0);
+  });
+
+  it("centers each selection, cycles in both directions and returns to all cached titles", async () => {
+    const nativeRect = HTMLElement.prototype.getBoundingClientRect;
+    const measurement = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      if (this.classList.contains("popup-platform-inline")) return DOMRect.fromRect({ width: 400 });
+      if (this.classList.contains("popup-platform-choices")) return DOMRect.fromRect({ width: 280 });
+      return nativeRect.call(this);
+    });
+    onTestFinished(() => measurement.mockRestore());
+    const { client, requests } = providerLibrary(3, 3);
+    await mount(client, false);
+    const all = button("All");
+    const initialRequests = requests.length;
+    const items = () => [...container.querySelectorAll<HTMLElement>(".popup-watch-item")];
+    const choose = async (direction: string) => {
+      await click(direction);
+      const middle = container.querySelector('.popup-platform-slots [aria-pressed="true"]');
+      expect((middle as HTMLElement)?.style.transform).toBe("translateX(100%)");
+      expect(new Set(items().map(item => item.dataset.provider)).size).toBe(1);
+      return middle?.getAttribute("aria-label");
+    };
+    const first = await choose("Next platform");
+    const previous = await choose("Previous platform");
+    expect(previous).not.toBe(first);
+    expect(await choose("Next platform")).toBe(first);
+    expect(button("All")).toBe(all);
+    await click("All");
+    expect(new Set(items().map(item => item.dataset.provider)).size).toBe(4);
+    expect(container.querySelector('button[aria-label="Disney+"]')).toBeNull();
+    expect(requests).toHaveLength(initialRequests);
   });
 
   it.each([1, 2])("shows truthful Netflix capacity on version %s", async version => {
@@ -469,14 +499,14 @@ describe("production watch browsing", () => {
   it("pages Netflix independently and searches its unloaded movies", async () => {
     const { client, requests } = providerLibrary(45);
     await mount(client, false);
-    expect(container.querySelector('[data-provider="netflix"] .popup-provider-name')?.textContent).toBe("Netflix");
-    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(20);
+    expect(button("Netflix")).toBeDefined();
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="netflix"]')).toHaveLength(20);
     await click("Load more Netflix titles");
-    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(40);
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="netflix"]')).toHaveLength(40);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(20);
     expect(requests.at(-1)).toMatchObject({ provider: "netflix", providerVersion: 4, limit: 20, cursor: "20" });
     await change("Search watch history", "needle");
-    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(1);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="netflix"]')).toHaveLength(1);
     expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "netflix", search: "needle", providerVersion: 4, limit: 20 })]));
     expect(vi.mocked(client.request).mock.calls.some(([m]) => m.command === "browse-catalog")).toBe(false);
   });
@@ -484,23 +514,21 @@ describe("production watch browsing", () => {
   it("pages and restores Prime depth independently from every existing provider", async () => {
     const { client, requests } = providerLibrary(45, 45);
     await mount(client, false);
-    expect(container.querySelector('[data-provider="primevideo"] .popup-provider-name')?.textContent).toBe("Prime Video");
-    expect(container.querySelector('[data-provider="primevideo"] .resource-provider-logo.primevideo img')).not.toBeNull();
     await click("Load more Prime Video titles");
     expect(requests.at(-1)).toMatchObject({ provider: "primevideo", providerVersion: 4, limit: 20, cursor: "20" });
-    expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="primevideo"]')).toHaveLength(40);
     for (const provider of ["youtube", "crunchyroll", "netflix"])
-      expect(container.querySelectorAll(`[data-provider="${provider}"] .popup-watch-item`)).toHaveLength(20);
+      expect(container.querySelectorAll(`.popup-watch-item[data-provider="${provider}"]`)).toHaveLength(20);
     await change("Search watch history", "needle");
-    expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(1);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="primevideo"]')).toHaveLength(1);
     expect(requests).toEqual(expect.arrayContaining([expect.objectContaining({ provider: "primevideo", providerVersion: 4, search: "needle", limit: 20 })]));
     await click("Clear watch history search");
-    expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(40);
-    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(20);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="primevideo"]')).toHaveLength(40);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="netflix"]')).toHaveLength(20);
     await act(async () => root.unmount()); container.remove();
     await mount(client, false);
-    expect(container.querySelectorAll('[data-provider="primevideo"] .popup-watch-item')).toHaveLength(40);
-    expect(container.querySelectorAll('[data-provider="netflix"] .popup-watch-item')).toHaveLength(20);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="primevideo"]')).toHaveLength(40);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="netflix"]')).toHaveLength(20);
     expect(vi.mocked(client.request).mock.calls.some(([m]) => m.command === "browse-catalog")).toBe(false);
   });
 
@@ -596,12 +624,12 @@ describe("production watch browsing", () => {
     ]));
     expect(requests.filter(query => query.search).every(query => !query.cursor)).toBe(true);
     await click("Clear watch history search");
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
-    expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(23);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(20);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="crunchyroll"]')).toHaveLength(23);
     await act(async () => root.unmount()); container.remove();
     await mount(client, false);
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
-    expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(23);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(20);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="crunchyroll"]')).toHaveLength(23);
   });
 
   it("keeps each loaded list on failure and prevents duplicate next-page requests", async () => {
@@ -623,10 +651,10 @@ describe("production watch browsing", () => {
     expect(attempts).toBe(1);
     expect(button("Load more YouTube titles").disabled).toBe(true);
     await act(async () => finish({ ok: false, status: "retryable" }));
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(20);
-    expect(container.querySelectorAll('[data-provider="crunchyroll"] .popup-watch-item')).toHaveLength(20);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(20);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="crunchyroll"]')).toHaveLength(20);
     await click("Load more YouTube titles");
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(40);
     expect(container.querySelector('[role="alert"]')).toBeNull();
     expect(library.requests.filter(query => query.provider === "crunchyroll")).toHaveLength(1);
   });
@@ -655,7 +683,7 @@ describe("production watch browsing", () => {
     expect(container.textContent).toContain("Pending private title");
     await act(async () => finishProvider({ ok: false, status }));
     expect(container.querySelectorAll(".popup-watch-item")).toHaveLength(0);
-    expect(container.querySelector(".popup-provider-count")).toBeNull();
+    expect(container.querySelector(".popup-platform-carousel")).toBeNull();
     if (status === "generation-mismatch") {
       expect(finishRecovery).toBeTypeOf("function");
       cacheReady = true; // Fresh cache must not release a known authority failure.
@@ -705,10 +733,10 @@ describe("production watch browsing", () => {
     expect(button("Load more YouTube titles").disabled).toBe(false);
     await click("Load more YouTube titles");
     expect(attempts).toBe(2);
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(40);
     await act(async () => finish({ ok: false, status: "retryable" }));
     expect(container.querySelector('[role="alert"]')).toBeNull();
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(40);
   });
 
   it("preserves requested provider depth through a partial-cache restore failure", async () => {
@@ -733,7 +761,7 @@ describe("production watch browsing", () => {
     expect(container.querySelector('[role="alert"]')).not.toBeNull();
     fail = false;
     await click("Retry watch history");
-    expect(container.querySelectorAll('[data-provider="youtube"] .popup-watch-item')).toHaveLength(40);
+    expect(container.querySelectorAll('.popup-watch-item[data-provider="youtube"]')).toHaveLength(40);
   });
 
   it("restores all user-loaded title pages when the drawer is recreated", async () => {
@@ -753,17 +781,17 @@ describe("production watch browsing", () => {
     expect(container.textContent).toContain("Second page");
   });
 
-  it("remembers explicit title and provider disclosure choices across drawer remounts", async () => {
-    const client = clientFixture();
+  it("retains title disclosure across drawer remounts and platform selection", async () => {
+    const { client } = providerLibrary();
     await mount(client, false);
     expect(required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).getAttribute("aria-expanded")).toBe("false");
     await act(async () => required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).click());
-    await click("Toggle Crunchyroll history");
+    await click("Crunchyroll");
     await act(async () => root.unmount());
     container.remove();
     await mount(client, false);
-    expect(button("Toggle Crunchyroll history").getAttribute("aria-expanded")).toBe("false");
-    await click("Toggle Crunchyroll history");
+    expect(button("All").getAttribute("aria-pressed")).toBe("true");
+    await click("Crunchyroll");
     expect(required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).getAttribute("aria-expanded")).toBe("true");
   });
 
@@ -2320,7 +2348,7 @@ describe("watch episode grid", () => {
 		expect(intent?.sourceUrl).toBe(episode.sourceUrl);
 		expect(intent?.currentTime).toBe(state === "watched" ? 0 : saved.currentTime);
 	});
-  it.each(["open", "provider-closed", "title-closed"])("keeps the remembered unwatched season after reopening with %s", async state => {
+  it.each(["open", "title-closed"])("keeps the remembered unwatched season after reopening with %s", async state => {
     const fallback = gridClient();
     let hold = false;
     let finish!: (value: WatchHistoryMessageResponse) => void;
@@ -2335,13 +2363,11 @@ describe("watch episode grid", () => {
     });
     await mount(client);
     await click("Season for Frieren: Season 1"); await click("Season 2");
-    if (state === "provider-closed") await click("Toggle Crunchyroll history");
     if (state === "title-closed") await act(async () => required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).click());
     await act(async () => root.unmount()); container.remove();
     hold = true; requested.length = 0;
     await mount(client, false);
     if (state !== "open") expect(requested).toEqual([]);
-    if (state === "provider-closed") await click("Toggle Crunchyroll history");
     if (state === "title-closed") await act(async () => required(container.querySelector<HTMLButtonElement>(".popup-watch-title-toggle")).click());
     expect(requested).toEqual(["season:two"]);
     expect(container.querySelector('.popup-watch-grid-view[aria-busy="true"]')).not.toBeNull();
