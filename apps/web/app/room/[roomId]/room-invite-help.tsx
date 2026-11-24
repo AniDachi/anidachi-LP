@@ -5,19 +5,19 @@ import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { INSTALL_HUB_PATH, installHubHref } from "@/lib/install-cta";
 import styles from "./room-invite.module.css";
 
-export function RoomInviteHelp({ hasLaunchUrl }: { hasLaunchUrl: boolean }) {
+export function RoomInviteHelp({ hasLaunchUrl, showInstallLink }: { hasLaunchUrl: boolean; showInstallLink: boolean }) {
 	const [helpOpen, setHelpOpen] = useState(false);
 	const helpId = useId();
 	const [installHref, setInstallHref] = useState(INSTALL_HUB_PATH);
 	useEffect(() => {
-		setInstallHref(installHubHref(window.location.pathname));
+		setInstallHref(installHubHref(window.location.pathname + window.location.search));
 	}, []);
 	return (
 		<footer className={styles.help}>
-			<a className={styles.install} href={installHref}>
+			{showInstallLink && <a className={styles.install} href={installHref} target="_blank" rel="noopener noreferrer">
 				Get the extension
 				<ArrowUpRight size={16} aria-hidden="true" />
-			</a>
+			</a>}
 			<button
 				type="button"
 				className={styles.helpToggle}

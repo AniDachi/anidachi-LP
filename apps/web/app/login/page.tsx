@@ -7,6 +7,9 @@ import { getSession } from "@/lib/anidachi-auth/session";
 import { sanitizeAuthReturnTo } from "@/lib/anidachi-auth/return-to";
 import { getLoginContext } from "@/lib/login-context";
 import { isMobileUserAgent } from "@/lib/mobile-user-agent";
+import { RoomInviteExtensionStep } from "@/components/room-invite-extension-step";
+import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
+import { isSafeInstallNextPath } from "@/lib/install-cta";
 import { LoginOAuthButtons } from "./login-oauth-buttons";
 import { LoginEmailForm } from "./login-email-form";
 import { emailLoginEnabled } from "@/lib/anidachi-auth/email-login";
@@ -39,8 +42,9 @@ export default async function LoginPage({ searchParams }: Props) {
 
   const safeNext = sanitizedNext ? encodeURIComponent(sanitizedNext) : "";
   const userAgent = (await headers()).get("user-agent");
+  const isMobile = isMobileUserAgent(userAgent);
   const loginContext = getLoginContext(sanitizedNext, {
-    isMobile: isMobileUserAgent(userAgent),
+    isMobile,
   });
 
   const errorMessage = error
@@ -75,8 +79,13 @@ export default async function LoginPage({ searchParams }: Props) {
           </div>
         ) : null}
 
-        <LoginOAuthButtons safeNext={safeNext} />
-        {emailLoginEnabled() ? <LoginEmailForm returnTo={sanitizedNext} /> : null}
+        <RoomInviteExtensionStep
+          extensionId={isSafeInstallNextPath(sanitizedNext) ? readApprovedExtensionClientId() : null}
+          initialMobile={isMobile}
+        >
+          <LoginOAuthButtons safeNext={safeNext} />
+          {emailLoginEnabled() ? <LoginEmailForm returnTo={sanitizedNext} /> : null}
+        </RoomInviteExtensionStep>
 
         <p className="mt-5 text-center text-xs text-foreground/45">
           Crunchyroll · YouTube · Netflix

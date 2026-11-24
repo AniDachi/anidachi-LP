@@ -2,6 +2,7 @@ import { AuthPageCard, AuthPageShell } from "@/components/auth-page-shell";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { ArrowRight } from "lucide-react";
 import type { RoomSourceProvider } from "@anidachi/protocol";
+import { RoomInviteExtensionStep } from "@/components/room-invite-extension-step";
 import { RoomInviteHelp } from "./room-invite-help";
 import styles from "./room-invite.module.css";
 import { RoomMobileHandoff } from "./room-mobile-handoff";
@@ -26,6 +27,7 @@ type RoomInviteViewProps = {
 	hostName: string;
 	sourceProvider?: RoomSourceProvider;
 	joinAction?: string;
+	extensionId?: string | null;
 	isParticipant: boolean;
 	hasLaunchUrl: boolean;
 	initialMobile: boolean;
@@ -39,6 +41,7 @@ export function RoomInviteView({
 	hostName,
 	sourceProvider,
 	joinAction,
+	extensionId,
 	isParticipant,
 	hasLaunchUrl,
 	initialMobile,
@@ -70,23 +73,25 @@ export function RoomInviteView({
 				</header>
 
 				<div className={styles.join}>
-					<form action={joinAction} method="POST">
-						<button
-							type={joinAction ? "submit" : "button"}
-							className={styles.primary}
-						>
-							{ctaLabel}
-							<ArrowRight size={18} aria-hidden="true" />
-						</button>
-					</form>
-					<p className={styles.nextStep}>Join free. No subscription needed.</p>
+					<RoomInviteExtensionStep extensionId={extensionId} initialMobile={initialMobile}>
+						<form action={joinAction} method="POST">
+							<button
+								type={joinAction ? "submit" : "button"}
+								className={styles.primary}
+							>
+								{ctaLabel}
+								<ArrowRight size={18} aria-hidden="true" />
+							</button>
+						</form>
+						<p className={styles.nextStep}>Join free. No subscription needed.</p>
+					</RoomInviteExtensionStep>
 				</div>
 
 				<RoomMobileHandoff
 					variant={isParticipant && hasLaunchUrl ? "joined" : "ready"}
 					initialMobile={initialMobile}
 				/>
-				<RoomInviteHelp hasLaunchUrl={hasLaunchUrl} />
+				<RoomInviteHelp showInstallLink={!extensionId || initialMobile} hasLaunchUrl={hasLaunchUrl} />
 			</div>
 		</main>
 	);
