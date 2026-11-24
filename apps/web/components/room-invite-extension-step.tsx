@@ -38,22 +38,18 @@ export function RoomInviteExtensionStep({ extensionId, initialMobile, children }
   }, [extensionId, initialMobile]);
 
   if (!missing || !extensionId || initialMobile) return children;
-  const storeBuild = new URL(CHROME_WEB_STORE_URL).pathname.endsWith("/" + extensionId);
   return (
     <section className="mx-auto max-w-sm text-center" aria-label="Extension setup">
       <h2 className="text-xl font-semibold tracking-tight text-ani-text">
-        Install {storeBuild ? "AniDachi" : "AniDachi Staging"} to join
+        Install AniDachi to join
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-ani-muted">
-        {storeBuild ? "Add the extension to Chrome, then return to this tab to join the room."
-          : <>In <code>chrome://extensions</code>, enable Developer mode and choose <strong>Load unpacked</strong>. Select the AniDachi Staging folder, then return here to join.</>}
+        Add the extension to Chrome, then return to this tab to join the room.
       </p>
-      {storeBuild && (
-        <a className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ani-text px-5 font-semibold text-ani-canvas"
-          href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer">
-          Install extension <ArrowUpRight size={16} aria-hidden="true" />
-        </a>
-      )}
+      <a className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-ani-text px-5 font-semibold text-ani-canvas"
+        href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer">
+        Install extension <ArrowUpRight size={16} aria-hidden="true" />
+      </a>
       <div>
         <button type="button" className="mt-2 min-h-11 text-sm font-medium text-ani-text underline underline-offset-4"
           onClick={() => window.location.reload()}>Check again</button>

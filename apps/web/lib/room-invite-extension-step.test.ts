@@ -45,17 +45,21 @@ test("a desktop guest can install in another tab and return to the original join
   } finally { await act(async () => root.unmount()); }
 });
 
-test("staging instructions stay in the correct channel and mobile keeps its existing handoff", async () => {
+test("both channels show the same install prompt and mobile keeps its existing handoff", async () => {
   Object.defineProperty(globalThis, "chrome", {configurable: true, value: {}});
   const container = document.createElement("div");
   const root = createRoot(container);
   try {
-    const render = (initialMobile: boolean) => act(async () => root.render(createElement(RoomInviteExtensionStep,
-      {extensionId: "a".repeat(32), initialMobile}, "Continue on desktop")));
-    await render(false);
-    assert.match(container.textContent!, /AniDachi Staging/);
-    assert.equal(container.querySelector("a"), null);
-    await render(true);
+    const render = (id: string, initialMobile: boolean) => act(async () => root.render(createElement(RoomInviteExtensionStep,
+      {extensionId: id, initialMobile}, "Continue on desktop")));
+    await render(extensionId, false);
+    const publicPrompt = container.innerHTML;
+    const stagingId = "a".repeat(32);
+    await render(stagingId, false);
+    assert.equal(container.innerHTML, publicPrompt);
+    assert.equal(container.querySelector("h2")?.textContent, "Install AniDachi to join");
+    assert.equal(container.querySelector("a")?.href, CHROME_WEB_STORE_URL);
+    await render(stagingId, true);
     assert.equal(container.textContent, "Continue on desktop");
   } finally { await act(async () => root.unmount()); }
 });
