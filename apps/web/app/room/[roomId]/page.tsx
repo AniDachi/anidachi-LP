@@ -9,6 +9,8 @@ import {
 } from "@/lib/anidachi-auth/db";
 import { RoomInviteShell as Shell, RoomInviteView } from "./room-invite-view";
 import { Button } from "@/components/ui/button";
+import { RoomInviteExtensionStep } from "@/components/room-invite-extension-step";
+import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
 import { ExtensionCheck } from "./extension-check";
 import { RoomMobileHandoff } from "./room-mobile-handoff";
 import { WaitingRefresh } from "./waiting-refresh";
@@ -78,39 +80,44 @@ export default async function RoomPage({ params, searchParams }: Props) {
     ? buildRoomSourceLaunchUrl(source.source, roomId)
     : null;
   const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
+  const extensionId = readApprovedExtensionClientId();
   const justJoined = joined === "1";
 
   // Joined, but the host has not opened a video yet: keep the guest informed
   // and auto-upgrade to "Open watchroom" once a source URL appears.
   if (isParticipant && !launchUrl) {
     return (
-      <Shell>
+      <>
         <TrackOnView event="invite_viewed" params={{ state: "waiting_for_host", mobile: initialMobile }} />
-        <div className="mb-1 flex items-center gap-2">
-          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-orange" />
-          <span className="text-xs font-medium tracking-[-0.01em] text-ani-muted">
-            Waiting for host
-          </span>
-        </div>
-        <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ani-text">
-          {justJoined ? "You're in!" : roomTitle}
-        </h1>
-        <p className="mt-2 text-sm text-ani-muted">
-          The host hasn&apos;t opened a video yet. Keep this tab open — it updates
-          automatically the moment the watch party starts.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-4 text-sm text-ani-muted">
-          <span>
-            Host:{" "}
-            <span className="font-medium text-ani-text">
-              {host?.display_name ?? "Unknown"}
-            </span>
-          </span>
-        </div>
-        <ExtensionCheck initialMobile={initialMobile} />
-        <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
+        <RoomInviteExtensionStep extensionId={extensionId} initialMobile={initialMobile}>
+          <Shell>
+            <div className="mb-1 flex items-center gap-2">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-orange" />
+              <span className="text-xs font-medium tracking-[-0.01em] text-ani-muted">
+                Waiting for host
+              </span>
+            </div>
+            <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ani-text">
+              {justJoined ? "You're in!" : roomTitle}
+            </h1>
+            <p className="mt-2 text-sm text-ani-muted">
+              The host hasn&apos;t opened a video yet. Keep this tab open — it updates
+              automatically the moment the watch party starts.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-4 text-sm text-ani-muted">
+              <span>
+                Host:{" "}
+                <span className="font-medium text-ani-text">
+                  {host?.display_name ?? "Unknown"}
+                </span>
+              </span>
+            </div>
+            {!extensionId && <ExtensionCheck initialMobile={initialMobile} />}
+            <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
+          </Shell>
+        </RoomInviteExtensionStep>
         <WaitingRefresh roomId={roomId} />
-      </Shell>
+      </>
     );
   }
 
@@ -130,6 +137,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
         roomTitle={roomTitle}
         roomSubtitle={roomSubtitle}
         hostName={host?.display_name ?? "Unknown"}
+        extensionId={extensionId}
         sourceProvider={source?.source.provider}
         joinAction={`/api/rooms/${roomId}/join`}
         isParticipant={isParticipant}
