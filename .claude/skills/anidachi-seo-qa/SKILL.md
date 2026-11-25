@@ -57,9 +57,17 @@ Run the on-page check first (ANI-81; rules in the Linear document
 pnpm --filter @anidachi/web seo:onpage --base http://localhost:3003 --pages <changed path(s)>
 ```
 
-- **FAIL** on any new must-fix finding. Fix it, or add an approved exception in
-  `apps/web/lib/seo-onpage/targets.ts` that names the decisions-log entry or ticket.
-- **List** every new warning in the QA comment. Either fix it or say why it stays.
+- **FAIL** on any must-fix finding without an exception. Fix it, or add an exception
+  in `apps/web/lib/seo-onpage/targets.ts` that names the decisions-log entry or ticket.
+  A must-fix the owner chose to fix later gets `deferredTo` (for example "adapter
+  launch"). There is no list of known findings to update.
+- **Remove exceptions that are no longer needed.** When the check prints "Exceptions
+  no longer needed", delete those lines from `targets.ts` in the same PR.
+- **List** every warning in the QA comment that is new since the last run. Either fix
+  it or say why it stays. The last run is stored outside the repo
+  (`~/.cache/anidachi-seo-onpage/`), so comparing needs no commit.
+- **Staging is password-protected:** the check stops there. Use a local server or
+  the PR's Vercel preview (`--base <preview URL>`).
 - **Targets first:** a new page, or a page changing what it targets, gets its entry
   in `targets.ts` before writing. That entry lists its primary and secondary search
   groups, the questions it answers, and the searches other pages own.

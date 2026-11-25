@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { auditPage, auditLinks } from "./checks";
-import { extractPage } from "./html";
+import { auditPage, auditLinks, staleExceptions } from "./checks";
+import { extractPage, isPasswordGate } from "./html";
 import { PAGE_TARGETS, type PageTargets } from "./targets";
 import { countExact, matchGroup, matchPhrase, normalize, queryMatches, similarity } from "./text";
 import { phoneLines, titlePx } from "./width";
@@ -175,5 +175,41 @@ describe("search query matching (ANI-81)", () => {
 
   it("keeps small words that change the intent", () => {
     assert.equal(queryMatches("anime to watch with friends", ["how to watch anime with friends"]), false);
+  });
+});
+
+describe("exceptions and gates (ANI-81)", () => {
+  const t: PageTargets = {
+    path: "/x",
+    kind: "hub",
+    ticket: "TEST",
+    primary: { phrases: ["netflix watch party"], volume: 1 },
+    secondary: [],
+    questions: [],
+    ownedElsewhere: [],
+    parentLinks: [],
+    exceptions: [{ rule: "intro-primary", reason: "Fixed at launch.", ref: "ANI-0", deferredTo: "adapter launch" }],
+  };
+  const page = (intro: string) =>
+    extractPage(`<html lang="en"><head><title>Netflix Watch Party</title><meta name="description" content="Netflix watch party.">
+      <link rel="canonical" href="https://www.anidachi.app/x"></head><body><main><h1>Netflix Watch Party</h1>
+      <div id="answer"><h2>Short answer</h2><p>${intro}</p></div></main></body></html>`);
+  const run = (intro: string) =>
+    auditPage(page(intro), t, { status: 200, finalPath: "/x", allowNoindex: false }, "https://www.anidachi.app");
+
+  it("marks a deferred must-fix as excepted, not failing", () => {
+    const f = run("Something else entirely, with no target words at all here.").find((x) => x.rule === "intro-primary");
+    assert.ok(f?.excepted?.startsWith("Deferred to adapter launch"));
+  });
+
+  it("reports an exception whose finding is gone", () => {
+    const findings = run("A Netflix watch party keeps everyone in sync.");
+    assert.equal(staleExceptions([t], findings).length, 1);
+    assert.equal(staleExceptions([t], run("Nothing relevant in this short answer, sorry.")).length, 0);
+  });
+
+  it("recognises a password page", () => {
+    assert.equal(isPasswordGate('<form><input name="password" type="password" /></form>'), true);
+    assert.equal(isPasswordGate("<main><h1>Netflix Watch Party</h1></main>"), false);
   });
 });

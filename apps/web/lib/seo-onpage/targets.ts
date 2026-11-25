@@ -27,6 +27,11 @@ export type RuleException = {
   reason: string;
   /** Decisions-log entry or ticket that approved it. */
   ref: string;
+  /**
+   * Set for a known must-fix finding we chose to fix later: what lifts it (a release or date).
+   * The check stops failing on it, and says when the exception is no longer needed.
+   */
+  deferredTo?: string;
 };
 
 export type PageTargets = {
@@ -83,6 +88,12 @@ export const PAGE_TARGETS: readonly PageTargets[] = [
     parentLinks: [],
     exceptions: [
       { rule: "h1-primary", reason: "The H1 is fixed by owner rule (19 Nov 2026); the title carries \"watch party app\".", ref: "ANI-36" },
+      {
+        rule: "intro-primary",
+        reason: "Homepage copy ships with the four-adapter launch; the revised draft puts \"watch party app\" in the opening.",
+        ref: "ANI-36",
+        deferredTo: "adapter launch",
+      },
     ],
   },
   {
@@ -237,6 +248,14 @@ export const PAGE_TARGETS: readonly PageTargets[] = [
     ],
     ownedElsewhere: [{ phrases: ["watch party app"], owner: "/" }],
     parentLinks: ["/"],
+    exceptions: [
+      {
+        rule: "intro-primary",
+        reason: "The directory is rewritten at the four-adapter launch, with new targets.",
+        ref: "ANI-40",
+        deferredTo: "adapter launch",
+      },
+    ],
   },
   {
     path: "/guides/watch-movies-together-online",
