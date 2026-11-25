@@ -6,7 +6,7 @@
  */
 import { jsonLdNodes, type ExtractedPage } from "./html";
 import type { PageTargets, SearchGroup } from "./targets";
-import { countExact, firstWords, matchGroup, normalize, queryMatches, readingGrade, similarity, wordCount } from "./text";
+import { exactOccurrences, firstWords, matchGroup, normalize, queryMatches, readingGrade, similarity, wordCount } from "./text";
 import { META_MAX_CHARS, META_SOFT_CHARS, TITLE_MAX_PX, phoneLines, titlePx } from "./width";
 
 export type Severity = "must" | "warn" | "info";
@@ -124,8 +124,8 @@ export function auditPage(page: ExtractedPage, t: PageTargets, fetched: FetchInf
     if (!matchGroup(fullText, s.phrases) && !matchGroup(page.faqVisible.join(" "), s.phrases)) add("content", "secondary-missing", "warn", `The page never mentions ${label(s)}.`, "Use it once in natural wording, in a heading, paragraph or FAQ answer.", s.phrases[0]);
   }
   for (const grp of allGroups) {
-    const n = countExact(fullText, grp.phrases);
-    const share = words ? (n * grp.phrases[0].split(" ").length) / words : 0;
+    const { count: n, words: covered } = exactOccurrences(fullText, grp.phrases);
+    const share = words ? covered / words : 0;
     if (share > 0.025) add("content", "repetition", "warn", `${label(grp)} makes up ${(share * 100).toFixed(1)}% of the words (${n} times).`, "Use it less often; vary the wording.", grp.phrases[0]);
   }
   const grade = readingGrade(page.mainText);
@@ -242,16 +242,19 @@ export function staleExceptions(targets: readonly PageTargets[], findings: reado
 
 export function syncWithKeywordMap(targets: readonly PageTargets[], map: { sections: { key: string; queries: [string, string[], number][] }[] }): string[] {
   const notes: string[] = [];
-  for (const t of targets) {
-    if (!t.keywordMapKey) continue;
-    const section = map.sections.find((s) => s.key === t.keywordMapKey);
+  // A map section can cover several pages (the Teleparty or Discord guides): check it against all of them.
+  const byKey = new Map<string, PageTargets[]>();
+  for (const t of targets) if (t.keywordMapKey) byKey.set(t.keywordMapKey, [...(byKey.get(t.keywordMapKey) ?? []), t]);
+  for (const [key, pages] of byKey) {
+    const where = pages.length === 1 ? pages[0].path : `section "${key}" (${pages.length} pages)`;
+    const section = map.sections.find((s) => s.key === key);
     if (!section) {
-      notes.push(`${t.path}: section "${t.keywordMapKey}" not found in the ANI-68 map.`);
+      notes.push(`${where}: section "${key}" not found in the ANI-68 map.`);
       continue;
     }
-    const ours = new Set([t.primary, ...t.secondary, ...t.ownedElsewhere].flatMap((g) => g.phrases).map(normalize));
+    const ours = new Set(pages.flatMap((t) => [t.primary, ...t.secondary, ...t.ownedElsewhere]).flatMap((g) => g.phrases).map(normalize));
     for (const [labelText, variants] of section.queries) {
-      if (!variants.some((v) => ours.has(normalize(v)))) notes.push(`${t.path}: ANI-68 tracks "${labelText}", which targets.ts doesn't list.`);
+      if (!variants.some((v) => ours.has(normalize(v)))) notes.push(`${where}: ANI-68 tracks "${labelText}", which targets.ts doesn't list.`);
     }
   }
   return notes;

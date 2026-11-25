@@ -17,7 +17,7 @@ import { getSeoSiteOrigin } from "@/lib/site-url";
 const PAGE_PATH = "/guides/teleparty-not-working-youtube";
 const PAGE_TITLE = "Teleparty Not Working or Syncing? Fixes for YouTube";
 const PAGE_DESCRIPTION =
-  "Teleparty works with YouTube for free. If the TP button won't start or the party won't sync, here are Teleparty's own fixes and what to check next.";
+  "Teleparty not working on YouTube? It works there for free. If the TP button won't start or the party won't sync, here are Teleparty's own fixes.";
 const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${getSeoSiteOrigin()}${BRAND_OG_PATH}`;
 
@@ -161,9 +161,9 @@ export default function TelepartyNotWorkingYoutubePage() {
         <SeoGuideAnswer>
           <p>
             <strong>
-              Teleparty does work with YouTube, and it&apos;s free there. When a
-              party won&apos;t start, it&apos;s usually because Teleparty
-              can&apos;t see a playing video: check that you&apos;re signed in,
+              Teleparty does work with YouTube, and it&apos;s free there. When
+              Teleparty is not working and a party won&apos;t start, it&apos;s
+              usually because Teleparty can&apos;t see a playing video: check that you&apos;re signed in,
               on your main profile, on a full youtube.com/watch page with the
               video playing, then click the red TP button.
             </strong>{" "}

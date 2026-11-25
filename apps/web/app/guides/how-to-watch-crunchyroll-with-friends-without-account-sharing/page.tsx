@@ -316,7 +316,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
             href="/guides/can-you-screen-share-crunchyroll-on-discord"
             className="text-brand-orange hover:underline"
           >
-            can you screen share Crunchyroll on Discord
+            how to stream Crunchyroll on Discord
           </Link>
           .
         </p>

@@ -375,7 +375,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 							href="/guides/can-you-screen-share-crunchyroll-on-discord"
 							className="hover:underline"
 						>
-							Can you screen share Crunchyroll on Discord?
+							How to stream Crunchyroll on Discord
 						</Link>
 					</li>
 				</ul>

@@ -222,9 +222,9 @@ export default function WatchCrunchyrollTogetherPage() {
 							body: (
 								<>
 									Often a black screen because of DRM. Keep Discord for voice;
-									sync video in AniDachi. Why it fails:{" "}
+									sync video in AniDachi. More on the black screen:{" "}
 									<Link href="/guides/can-you-screen-share-crunchyroll-on-discord">
-										can you screen share Crunchyroll on Discord
+										how to stream Crunchyroll on Discord
 									</Link>
 									.
 								</>

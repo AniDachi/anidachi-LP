@@ -100,23 +100,36 @@ export function queryMatches(query: string, phrases: readonly string[]): boolean
   });
 }
 
-/** Exact, non-overlapping occurrences of any phrase in the group. */
-export function countExact(text: string, phrases: readonly string[]): number {
+/**
+ * Exact occurrences of any phrase in the group, never counting the same words twice: "How to
+ * stream Netflix on Discord" is one occurrence even though the variant "stream Netflix on
+ * Discord" sits inside it. Longer phrases are matched first. Returns the count and the number of
+ * words those occurrences cover (for the repetition share).
+ */
+export function exactOccurrences(text: string, phrases: readonly string[]): { count: number; words: number } {
   const hay = tokens(text);
+  const used = new Array<boolean>(hay.length).fill(false);
   let count = 0;
-  for (const phrase of phrases) {
-    const needle = tokens(phrase);
-    if (needle.length === 0) continue;
+  let words = 0;
+  const needles = phrases.map(tokens).filter((n) => n.length > 0).sort((a, b) => b.length - a.length);
+  for (const needle of needles) {
     for (let i = 0; i + needle.length <= hay.length; ) {
-      if (needle.every((t, j) => hay[i + j] === t)) {
+      if (needle.every((t, j) => hay[i + j] === t && !used[i + j])) {
+        for (let j = 0; j < needle.length; j += 1) used[i + j] = true;
         count += 1;
+        words += needle.length;
         i += needle.length;
       } else {
         i += 1;
       }
     }
   }
-  return count;
+  return { count, words };
+}
+
+/** Exact, non-overlapping occurrences of any phrase in the group. */
+export function countExact(text: string, phrases: readonly string[]): number {
+  return exactOccurrences(text, phrases).count;
 }
 
 export function wordCount(text: string): number {

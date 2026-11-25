@@ -119,7 +119,7 @@ const tocHeadings: TocHeading[] = [
 
 const startHereItemList = [
   {
-    name: "Can you screen share YouTube on Discord?",
+    name: "How to stream YouTube on Discord",
     url: "/guides/can-you-screen-share-youtube-on-discord",
     position: 1,
   },

@@ -209,7 +209,10 @@ export function extractPage(html: string): ExtractedPage {
   const blocks: string[] = [];
   walk(main, (n) => {
     if (isIgnored(n)) return false;
-    if (BLOCK.has(n.tag) && !find(n, (d) => BLOCK.has(d.tag))) {
+    // A div holding only inline content (text, strong, links) is a block too: some components
+    // render the short answer as bare text in a div, with no <p>.
+    const leaf = (BLOCK.has(n.tag) || n.tag === "div") && !find(n, (d) => BLOCK.has(d.tag) || d.tag === "div");
+    if (leaf) {
       const t = textOf(n);
       if (t && !seen.has(t)) {
         seen.add(t);
