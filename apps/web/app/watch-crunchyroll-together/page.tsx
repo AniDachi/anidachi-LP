@@ -44,7 +44,7 @@ const faq = [
 	{
 		question: "Does Crunchyroll have a watch party feature?",
 		answer:
-			"No. As of 2026, Crunchyroll has no built-in watch party, watch together or group watch feature. To watch together, each friend uses a Chrome extension such as AniDachi, Crunchyroll Party or Teleparty on their own Crunchyroll account.",
+			"No. As of 2026, Crunchyroll has no built-in watch party, watch together or group watch feature. To watch together, each friend uses a Chrome extension such as AniDachi, or Teleparty with its Premium plan, on their own Crunchyroll account.",
 	},
 	{
 		question: "How do you watch Crunchyroll together with friends?",
@@ -69,17 +69,17 @@ const faq = [
 	{
 		question: "Does Teleparty work with Crunchyroll?",
 		answer:
-			"Teleparty lists Crunchyroll as one of its platforms, but compatibility can vary after player updates. AniDachi is built for Crunchyroll anime groups, with live sync, chat and personal watch history on Plus or Pro, and it also works on YouTube and Netflix.",
+			"Yes, but only with Teleparty Premium. Its support FAQ lists Crunchyroll among the premium services, at $6.59 a month or $47.88 a year when we checked on November 23, 2026; guests can join a Premium host's party free. AniDachi works on Crunchyroll on its Free plan, with live sync, chat and calls.",
 	},
 	{
 		question: "Does Watch2Gether work with Crunchyroll?",
 		answer:
-			"Watch2Gether is a free browser room site that works best for public video links. It is not a reliable Crunchyroll watch party, because licensed episodes need to play on each person's own Crunchyroll account. Use an extension watchroom such as AniDachi or Crunchyroll Party instead.",
+			"Watch2Gether is a free browser room site that works best for public video links. It is not a reliable Crunchyroll watch party, because licensed episodes need to play on each person's own Crunchyroll account. Use an extension watchroom such as AniDachi instead.",
 	},
 	{
-		question: "How is AniDachi different from Crunchyroll Party?",
+		question: "What happened to Crunchyroll Party?",
 		answer:
-			"Crunchyroll Party is presented as a live-sync extension. AniDachi adds live chat, camera and microphone controls, and personal history on Plus or Pro. Async catch-up and replayed chat are planned.",
+			"Crunchyroll Party was never a Crunchyroll product; it is the name of several unofficial extensions. The best-known one was removed from the Chrome Web Store on March 29, 2025, and Chrome-Stats lists the reason as malware. Smaller extensions with similar names are still listed, so check the developer before installing one.",
 	},
 	{
 		question: "What is a Crunchyroll watch party extension?",
@@ -89,7 +89,7 @@ const faq = [
 	{
 		question: "What is a Crunchyroll group watch?",
 		answer:
-			"A group watch is when several people watch the same anime on Crunchyroll at the same time, with synced playback and shared chat. Crunchyroll has no built-in group watch, so you set one up with an extension such as AniDachi or Crunchyroll Party.",
+			"A group watch is when several people watch the same anime on Crunchyroll at the same time, with synced playback and shared chat. Crunchyroll has no built-in group watch, so you set one up with an extension such as AniDachi.",
 	},
 	{
 		question: "Why is Teleparty not syncing on Crunchyroll?",
@@ -99,14 +99,17 @@ const faq = [
 	{
 		question: "What is a good Crunchyroll Party alternative?",
 		answer:
-			"Crunchyroll Party is an extension for live sync on Crunchyroll. If your group also wants voice and video calls, YouTube and Netflix rooms, or a personal watch history, AniDachi covers those. Either way, each friend still needs their own Crunchyroll plan.",
+			"The best-known Crunchyroll Party extension was removed from the Chrome Web Store in March 2025. AniDachi does the same job on Crunchyroll, synced playback and chat, and adds voice and video calls, YouTube and Netflix rooms, and a personal watch history. Each friend still needs their own Crunchyroll plan.",
 	},
 ];
 
 const tocHeadings: TocHeading[] = [
 	{ id: "step-by-step", label: "Step-by-step", level: 2 },
 	{ id: "quick-answers", label: "Does Crunchyroll have a watch party?", level: 2 },
+	{ id: "with-friends", label: "How to watch Crunchyroll with friends online", level: 2 },
 	{ id: "compare-methods", label: "Compare methods", level: 2 },
+	{ id: "teleparty-crunchyroll", label: "Teleparty on Crunchyroll", level: 2 },
+	{ id: "crunchyroll-party", label: "What happened to Crunchyroll Party?", level: 2 },
 	{ id: "group-watch", label: "Crunchyroll group watch tips", level: 2 },
 	{ id: "anidachi-difference", label: "What makes AniDachi different", level: 2 },
 	{ id: "continue-watching", label: "Continue Watching and watch history", level: 2 },
@@ -153,7 +156,7 @@ export default function WatchCrunchyrollTogetherPage() {
 				description="Host a Crunchyroll watch party with AniDachi — synced playback and live chat on each person's account."
 				url="/watch-crunchyroll-together"
 				datePublished="2026-04-23"
-				dateModified="2026-11-10"
+				dateModified="2026-11-24"
 				faq={faq}
 				headings={tocHeadings}
 				h1="Crunchyroll Watch Party"
@@ -183,7 +186,7 @@ export default function WatchCrunchyrollTogetherPage() {
 				}}
 			>
 				<h2 id="quick-answers" className="scroll-mt-24">
-					Does Crunchyroll have a watch party — and does Teleparty work?
+					Does Crunchyroll Have a Watch Party, and Does Teleparty Work?
 				</h2>
 				<SeoGuideOptions
 					options={[
@@ -202,9 +205,10 @@ export default function WatchCrunchyrollTogetherPage() {
 							title: "Does Teleparty work with Crunchyroll?",
 							body: (
 								<>
-									Yes for live sync, with compatibility that can slip after
-									player updates. AniDachi is the Crunchyroll-first Teleparty alternative
-									(and also covers YouTube and Netflix). Full compare:{" "}
+									Only with Teleparty Premium, which lists Crunchyroll as a
+									premium service. AniDachi works on Crunchyroll on its Free plan.
+									Details in <a href="#teleparty-crunchyroll">Teleparty on Crunchyroll</a>
+									; full compare:{" "}
 									<Link href="/guides/best-teleparty-alternatives-for-anime">
 										Best Teleparty alternatives
 									</Link>
@@ -229,6 +233,27 @@ export default function WatchCrunchyrollTogetherPage() {
 					]}
 				/>
 
+				<h2 id="with-friends" className="scroll-mt-24">
+					How to Watch Crunchyroll with Friends Online
+				</h2>
+				<p>
+					To watch Crunchyroll with friends online, everyone opens the same episode
+					on their own Crunchyroll account in desktop Chrome. One person hosts an
+					AniDachi room and sends the invite link. Friends join free, and the room
+					keeps every player on the same moment, with chat, reactions, and voice
+					and video calls.
+				</p>
+				<p>
+					Each friend needs their own Crunchyroll plan; Fan, the cheapest, is
+					enough. Whether two people can share one account is covered in{" "}
+					<Link href="/guides/how-to-watch-crunchyroll-with-friends">
+						how to watch Crunchyroll with friends
+					</Link>
+					. AniDachi is a <Link href="/">watch party app</Link> that also works on
+					Netflix and YouTube, so the same group can switch services on another
+					night.
+				</p>
+
 				<h2 id="compare-methods" className="scroll-mt-24">
 					Best Ways to Watch Crunchyroll with Friends
 				</h2>
@@ -236,8 +261,8 @@ export default function WatchCrunchyrollTogetherPage() {
 				<ResponsiveCompareTable
 					columns={[
 						{ id: "anidachi", label: "AniDachi", highlight: true },
-						{ id: "crunchyroll-party", label: "Crunchyroll Party" },
 						{ id: "teleparty", label: "Teleparty" },
+						{ id: "crunchyroll", label: "Crunchyroll's own feature" },
 						{ id: "discord", label: "Discord" },
 					]}
 					rows={[
@@ -245,8 +270,8 @@ export default function WatchCrunchyrollTogetherPage() {
 							feature: "Sync",
 							values: {
 								anidachi: "yes",
-								"crunchyroll-party": "yes",
 								teleparty: "yes",
+								crunchyroll: "No watch party feature",
 								discord: "Manual",
 							},
 						},
@@ -254,8 +279,8 @@ export default function WatchCrunchyrollTogetherPage() {
 							feature: "Chat",
 							values: {
 								anidachi: "yes",
-								"crunchyroll-party": "yes",
 								teleparty: "yes",
+								crunchyroll: "No feature",
 								discord: "Voice/Text",
 							},
 						},
@@ -263,17 +288,17 @@ export default function WatchCrunchyrollTogetherPage() {
 							feature: "Everyone watches on their own account",
 							values: {
 								anidachi: "yes",
-								"crunchyroll-party": "yes",
 								teleparty: "yes",
+								crunchyroll: "No feature",
 								discord: "Screen share only",
 							},
 						},
 						{
-							feature: "Free",
+							feature: "Cost on Crunchyroll",
 							values: {
 								anidachi: PRICING_FREE_TIER_TABLE,
-								"crunchyroll-party": "Free",
-								teleparty: "Freemium",
+								teleparty: "Premium only",
+								crunchyroll: "No feature",
 								discord: "Free",
 							},
 						},
@@ -297,6 +322,56 @@ export default function WatchCrunchyrollTogetherPage() {
 					has the step-by-step fixes.
 				</p>
 
+				<h2 id="teleparty-crunchyroll" className="scroll-mt-24">
+					Teleparty on Crunchyroll
+				</h2>
+				<p>
+					Teleparty works on Crunchyroll only with Teleparty Premium. Its support
+					FAQ lists Crunchyroll among the premium services, next to Paramount+ and
+					ESPN+, and voice and video chat need Premium too. Premium cost $6.59 a
+					month or $47.88 a year on its website when we checked on November 23,
+					2026. Guests can join a Premium host&apos;s party for free. The free tier
+					covers Netflix, YouTube, Disney+, Hulu, HBO Max and Prime Video.
+				</p>
+				<p>
+					AniDachi works on Crunchyroll on its Free plan. {PRICING_FREE20_SUMMARY}{" "}
+					Calls are included. Teleparty&apos;s tiers and privacy are covered in{" "}
+					<Link href="/guides/is-teleparty-free">is Teleparty free and safe</Link>.
+				</p>
+
+				<h2 id="crunchyroll-party" className="scroll-mt-24">
+					What Happened to Crunchyroll Party?
+				</h2>
+				<p>
+					Crunchyroll Party was never a Crunchyroll product. It is the name several
+					unofficial Chrome extensions used. The best-known one, with about 10,000
+					users, was removed from the Chrome Web Store on March 29, 2025, and
+					Chrome-Stats lists the reason as malware. Its store page has been empty
+					since (checked November 24, 2026).
+				</p>
+				<p>
+					Smaller extensions with similar names are still listed, made by
+					independent developers. Check who publishes one before you install it.
+					AniDachi does the same job on Crunchyroll, with synced playback and chat,
+					and adds voice and video calls. Sources:{" "}
+					<a
+						href="https://www.teleparty.com/support"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						Teleparty support FAQ
+					</a>
+					,{" "}
+					<a
+						href="https://chrome-stats.com/d/doiccohjdlfcjejcpoddcolekfgipkna"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						Chrome-Stats on the removed Crunchyroll Party extension
+					</a>
+					.
+				</p>
+
 				<HubCtaBand
 					pagePath={PAGE_PATH}
 					ctaLabel="Start a Crunchyroll Watch Party"
@@ -305,7 +380,7 @@ export default function WatchCrunchyrollTogetherPage() {
 				/>
 
 				<h2 id="group-watch" className="scroll-mt-24">
-					Crunchyroll Group Watch — Tips for Bigger Groups
+					Crunchyroll Group Watch: Tips for Bigger Groups
 				</h2>
 				<p>
 					Running a <strong>Crunchyroll group watch</strong> for more than two

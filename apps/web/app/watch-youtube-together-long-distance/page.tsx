@@ -310,7 +310,7 @@ export default function WatchYoutubeTogetherLongDistancePage() {
           </li>
           <li>
             <Link
-              href="/guides/how-to-watch-youtube-with-friends"
+              href="/watch-youtube-together#with-friends"
               className="hover:underline"
             >
               How to watch YouTube with friends

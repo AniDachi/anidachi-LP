@@ -25,7 +25,7 @@ const BRAND_OG_PATH = "/opengraph-image.png";
 const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 
 export const metadata: Metadata = {
-  title: "YouTube Watch Party: Watch YouTube Together",
+  title: "Watch YouTube Together: YouTube Watch Party",
   description:
     "YouTube watch party hub: Add AniDachi from the Chrome Web Store, open a full youtube.com/watch page, and sync with friends. Teleparty and Discord compared.",
   alternates: languageAlternates({ en: "/watch-youtube-together", de: "/de/youtube-watchparty" }, "en"),
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
       },
     ],
 
-    title: "YouTube Watch Party: Watch YouTube Together",
+    title: "Watch YouTube Together: YouTube Watch Party",
     description:
       "Create a YouTube watch party from the Chrome Web Store. Live sync on full videos.",
     url: "/watch-youtube-together",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   twitter: {
     images: ["/opengraph-image.png"],
     card: "summary_large_image",
-    title: "YouTube Watch Party: Watch YouTube Together",
+    title: "Watch YouTube Together: YouTube Watch Party",
     description:
       "Live YouTube rooms with AniDachi. Free friends join a Free, Plus, or Pro host.",
   },
@@ -81,7 +81,17 @@ const faq = [
   {
     question: "Does Teleparty work with YouTube?",
     answer:
-      "Yes, for live sync. AniDachi also runs live YouTube rooms today; async catch-up is planned.",
+      "Yes. Teleparty is free on YouTube with synced playback and text chat; its voice and video chat need Premium ($6.59 a month when we checked on November 23, 2026). AniDachi includes calls in every room.",
+  },
+  {
+    question: "Does a YouTube watch party work on Shorts?",
+    answer:
+      "Not with AniDachi. Rooms work on full youtube.com/watch pages in desktop Chrome, not on Shorts, embedded players or the YouTube phone app.",
+  },
+  {
+    question: "Do all viewers need a YouTube account?",
+    answer:
+      "Most public videos play without signing in, but each person needs their own browser tab on the full watch page. AniDachi does not re-stream the video. Signing in keeps each person's own settings and YouTube Premium.",
   },
   {
     question: "Can you watch YouTube together asynchronously?",
@@ -97,9 +107,11 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "step-by-step", label: "How it works", level: 2 },
-  { id: "no-native", label: "Watching together on desktop", level: 2 },
+  { id: "with-friends", label: "How to watch YouTube with friends online", level: 2 },
+  { id: "no-native", label: "Does YouTube have a watch party?", level: 2 },
   { id: "watch2gether-or-anidachi", label: "Watch2Gether or AniDachi?", level: 2 },
   { id: "compare-methods", label: "Compare methods", level: 2 },
+  { id: "extension", label: "YouTube watch party extension", level: 2 },
   { id: "start-here", label: "Start here", level: 2 },
   { id: "anidachi-difference", label: "What makes AniDachi different", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
@@ -107,18 +119,18 @@ const tocHeadings: TocHeading[] = [
 
 const startHereItemList = [
   {
-    name: "How to watch YouTube with friends",
-    url: "/guides/how-to-watch-youtube-with-friends",
+    name: "Can you screen share YouTube on Discord?",
+    url: "/guides/can-you-screen-share-youtube-on-discord",
     position: 1,
   },
   {
-    name: "Can you screen share YouTube on Discord?",
-    url: "/guides/can-you-screen-share-youtube-on-discord",
+    name: "Best apps to watch YouTube together",
+    url: "/guides/best-apps-to-watch-youtube-together",
     position: 2,
   },
   {
-    name: "Free YouTube watch party options",
-    url: "/guides/youtube-watch-party-free",
+    name: "Teleparty not working on YouTube?",
+    url: "/guides/teleparty-not-working-youtube",
     position: 3,
   },
   {
@@ -127,8 +139,8 @@ const startHereItemList = [
     position: 4,
   },
   {
-    name: "How to host a YouTube watch party",
-    url: "/guides/how-to-host-a-youtube-watch-party",
+    name: "Discord watch party",
+    url: "/discord-watch-party",
     position: 5,
   },
 ];
@@ -163,16 +175,16 @@ export default function WatchYoutubeTogetherPage() {
           { name: "Home", url: "/" },
           { name: "YouTube Watch Party", url: PAGE_PATH },
         ]}
-        title="YouTube Watch Party: Watch YouTube Together"
+        title="Watch YouTube Together: YouTube Watch Party"
         description="The complete guide to YouTube watch parties: live sync, chat, and every alternative compared."
         url={PAGE_PATH}
         datePublished="2026-07-25"
-        dateModified="2026-11-19"
+        dateModified="2026-11-24"
         faq={faq}
         headings={tocHeadings}
         itemList={startHereItemList}
         articleImage={articleImageAbsolute}
-        h1="YouTube Watch Party: Watch YouTube Together"
+        h1="Watch YouTube Together: YouTube Watch Party"
         heroLead="Everyone watches on their own YouTube tab and account. AniDachi keeps play, pause and seeking in sync, with chat and calls on top."
         heroCtaLabel="Start a YouTube Watch Party"
         heroWorksOn={["YouTube", "Crunchyroll", "Netflix"]}
@@ -186,10 +198,7 @@ export default function WatchYoutubeTogetherPage() {
               and seeking stay in sync.
             </strong>{" "}
             Step-by-step:{" "}
-            <Link href="/guides/how-to-watch-youtube-with-friends">
-              how to watch YouTube with friends
-            </Link>
-            .
+            <a href="#with-friends">how to watch YouTube with friends online</a>.
           </>
         }
         steps={{
@@ -198,8 +207,27 @@ export default function WatchYoutubeTogetherPage() {
           items: howToSteps,
         }}
       >
+        <h2 id="with-friends" className="scroll-mt-24">
+          How to Watch YouTube with Friends Online
+        </h2>
+        <p>
+          To watch YouTube with friends online, everyone opens the same video on a
+          full youtube.com/watch page in desktop Chrome. One person hosts an
+          AniDachi room and sends the invite link. Friends join free, and the room
+          keeps every player on the same moment, with chat, reactions, and voice
+          and video calls.
+        </p>
+        <p>
+          Most public videos play without signing in, but signing in keeps each
+          person&apos;s own settings and YouTube Premium, so nobody sees ads they
+          already pay to skip. Rooms don&apos;t work on Shorts, embedded players or
+          the YouTube phone app. AniDachi is a{" "}
+          <Link href="/">watch party app</Link> that also runs Crunchyroll and
+          Netflix rooms, so a group can stay in one room format across services.
+        </p>
+
         <h2 id="no-native" className="scroll-mt-24">
-          Watching YouTube Together on Desktop
+          Does YouTube Have a Watch Party?
         </h2>
         <p>
           YouTube has no built-in watch-together button for regular videos on
@@ -319,7 +347,7 @@ export default function WatchYoutubeTogetherPage() {
               values: {
                 anidachi: PRICING_PLUS_PRICE_LINE,
                 w2g: "Free + paid",
-                teleparty: "Freemium",
+                teleparty: "Free on YouTube; calls need Premium",
                 discord: "Free",
               },
             },
@@ -337,6 +365,24 @@ export default function WatchYoutubeTogetherPage() {
           . If your group already meets in Discord, the{" "}
           <Link href="/discord-watch-party">Discord watch party guide</Link>{" "}
           compares Watch Together, Go Live and a synced extension.
+        </p>
+
+        <h2 id="extension" className="scroll-mt-24">
+          YouTube Watch Party Extension
+        </h2>
+        <p>
+          A YouTube watch party extension adds a shared room to each
+          person&apos;s own YouTube tab. It keeps play, pause and seeking in step,
+          so nobody watches a compressed copy of someone else&apos;s screen.
+          AniDachi is one, installed from the Chrome Web Store; Teleparty is
+          another, free on YouTube with text chat.
+        </p>
+        <p>
+          With AniDachi, chat, reactions and calls sit on top of the player, and
+          the same extension works on Crunchyroll and Netflix. It needs desktop
+          Chrome and a full youtube.com/watch page. If your friends won&apos;t
+          install anything, a room site such as Watch2Gether is the better fit;
+          see <a href="#watch2gether-or-anidachi">Watch2Gether or AniDachi</a>.
         </p>
 
         <HubCtaBand
@@ -394,11 +440,9 @@ export default function WatchYoutubeTogetherPage() {
         <SeoGuideRelated
           className="divide-y-0 sm:grid sm:grid-cols-2 sm:gap-x-10 [&>li]:border-b [&>li]:border-ani-line"
           links={[
-            { href: "/guides/youtube-watch-party-chrome-extension", label: "YouTube watch party Chrome extension" },
-            { href: "/guides/does-youtube-have-watch-party", label: "Does YouTube have a watch party?" },
             { href: "/guides/teleparty-not-working-youtube", label: "Does Teleparty work with YouTube?" },
-            { href: "/guides/youtube-group-watch", label: "YouTube group watch" },
             { href: "/guides/watch2gether-alternatives-for-anime", label: "Watch2Gether alternatives" },
+            { href: "/guides/rave-alternatives-for-youtube", label: "Rave alternatives" },
             { href: "/watch-youtube-together-long-distance", label: "Watch YouTube together long distance" },
             { href: "/netflix-watch-party", label: "Netflix watch party" },
             { href: "/prime-video-watch-party", label: "Prime Video watch party" },

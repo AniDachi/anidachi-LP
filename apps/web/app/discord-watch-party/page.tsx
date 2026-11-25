@@ -394,7 +394,9 @@ export default function DiscordWatchPartyPage() {
 								Each person plays the same title on their own account in desktop
 								Chrome, and AniDachi keeps the players together. Talk stays in
 								Discord. This is the only one of the three that works on
-								Crunchyroll and Netflix.
+								Crunchyroll and Netflix. AniDachi is a{" "}
+								<Link href="/">watch party app</Link>, so the same room works
+								without Discord too.
 							</>
 						),
 						highlight: true,

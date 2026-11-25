@@ -64,7 +64,6 @@ export function inferPageTemplateFromPath(path: string): PageTemplateId {
     path === "/watch-crunchyroll-together" ||
     path === "/watch-youtube-together" ||
     path === "/anime-watch-party-toolkit" ||
-    path === "/anime-watch-party" ||
     path === "/anime-tracker" ||
     path === "/discord-watch-party" ||
     path === "/sub-vs-dub" ||

@@ -183,7 +183,7 @@ export default function BestAnimeToWatchAsynchronouslyPage() {
       <ul className="space-y-2 text-brand-orange mb-8">
         <li><Link href="/guides/asynchronous-vs-live-watch-party" className="hover:underline">Async vs live watch parties</Link></li>
         <li><Link href="/guides/how-to-watch-anime-long-distance" className="hover:underline">How to watch anime long distance</Link></li>
-        <li><Link href="/anime-watch-party" className="hover:underline">Anime watch party — start here</Link></li>
+        <li><Link href="/watch-anime-together#watch-party" className="hover:underline">Anime watch party — start here</Link></li>
         <li><Link href="/watch-anime-together" className="hover:underline">Watch anime together online</Link></li>
       </ul>
     </SeoPageLayout>

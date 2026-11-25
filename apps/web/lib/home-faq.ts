@@ -34,6 +34,21 @@ export const homeFAQ = [
       `Plus supports up to ${getPlanPolicy("plus").maxParticipants} people; Pro supports up to ${getPlanPolicy("pro").maxParticipants}, including the host. Both have no daily time limit and include personal watch history. Pro also has more microphones and priority support. Both offer monthly or yearly billing.`,
   },
   {
+    question: "What is a watch party app?",
+    answer:
+      "A watch party app lets people in different places watch the same show or movie at the same time. Each person plays it on their own screen and account, the app keeps play, pause and seeking in sync, and you chat or talk while you watch. AniDachi is a watch party app for Crunchyroll, Netflix and YouTube in desktop Chrome.",
+  },
+  {
+    question: "Can you watch together online on any streaming service?",
+    answer:
+      "Not on every service yet. AniDachi works on Crunchyroll, Netflix and YouTube today, in desktop Chrome. Everyone uses their own account on the service, so nobody shares a login or a screen, and each person sees the video at full quality.",
+  },
+  {
+    question: "Is AniDachi a watch party website or an extension?",
+    answer:
+      "An extension. AniDachi runs in desktop Chrome on top of each person's own streaming tab, so the video plays from the service itself. Watch party websites such as Watch2Gether play shared links in their own room, which suits public YouTube videos but not Crunchyroll or Netflix episodes. The AniDachi website is where you manage your account and watch history.",
+  },
+  {
     question: "Can I watch YouTube together with AniDachi?",
     answer:
       "Yes. Open a full youtube.com/watch page in desktop Chrome. A Free, Plus, or Pro host creates the room and shares the invite; friends join for free on their own video pages. Shorts, embeds, and the mobile apps are not supported. Async catch-up is coming soon.",
@@ -54,9 +69,9 @@ export const homeFAQ = [
       "No. Crunchyroll does not offer a native watch-together feature. AniDachi fills this gap with a Chrome extension that syncs playback, detects anime automatically, and adds real-time chat on top of your existing Crunchyroll account.",
   },
   {
-    question: "How is AniDachi different from Teleparty or Crunchyroll Party?",
+    question: "How is AniDachi different from Teleparty?",
     answer:
-      "AniDachi syncs each person’s own player on Crunchyroll, YouTube and Netflix. Chat, reactions, voice and video stay on your video. Plus and Pro also save your personal watch progress.",
+      "Teleparty is free on Netflix, YouTube and most services with text chat; Crunchyroll and voice or video chat need Teleparty Premium. AniDachi includes chat, reactions, voice and video in every room on Crunchyroll, YouTube and Netflix, and Plus and Pro also save your personal watch progress.",
   },
   {
     question: "Does AniDachi work on mobile?",

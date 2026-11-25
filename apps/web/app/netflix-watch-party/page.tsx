@@ -65,6 +65,12 @@ const SOURCES = [
   { href: "https://help.netflix.com/en/node/24853", label: "Netflix Help: watching in another country" },
 ];
 
+/** Netflix's own holiday list (Tudum, dated 17 Dec 2025); every December pick below appears on it. */
+const HOLIDAY_SOURCE = {
+  href: "https://www.netflix.com/tudum/articles/christmas-movies-on-netflix",
+  label: "Netflix Tudum: best Christmas movies on Netflix",
+};
+
 /** One step list for the visible "How it works" section and the HowTo JSON-LD, so they always match. */
 const howToSteps = [
   HUB_INSTALL_STEP,
@@ -149,9 +155,9 @@ const faq = [
       "It was renamed Teleparty. The extension's Chrome Web Store listing says version 2.0.0 of Netflix Party added three more streaming services and renamed the product Teleparty. MakeUseOf dates the change to October 2020.",
   },
   {
-    question: "Is Netflix Party still available?",
+    question: "Does Netflix Party still exist?",
     answer:
-      "Yes, under the name Teleparty. Its Chrome Web Store listing is titled \"Netflix Party is now Teleparty\" and showed version 5.8.5, updated October 8, 2026, when we checked on October 20, 2026.",
+      "Yes, under the name Teleparty. Its Chrome Web Store listing is still titled \"Netflix Party is now Teleparty\", and the extension is maintained: Chrome-Stats showed version 5.8.9, released November 13, 2026, when we checked on November 19, 2026.",
   },
   {
     question: "Was Netflix Party made by Netflix?",
@@ -167,11 +173,13 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "how-it-works", label: "How to watch Netflix together", level: 2 },
+  { id: "with-friends", label: "How to watch Netflix with friends online", level: 2 },
   { id: "what-works", label: "What works and the limits", level: 2 },
   { id: "everyone-needs-netflix", label: "Does everyone need Netflix?", level: 2 },
   { id: "not-working", label: "Watch party not working", level: 2 },
   { id: "netflix-party", label: "What happened to Netflix Party?", level: 2 },
-  { id: "vs-teleparty", label: "AniDachi vs Teleparty", level: 2 },
+  { id: "vs-teleparty", label: "AniDachi vs Teleparty vs Discord", level: 2 },
+  { id: "what-to-watch", label: "What to watch together in December", level: 2 },
   { id: "plan", label: "Plan your night", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
 ];
@@ -193,7 +201,7 @@ export default function NetflixWatchPartyPage() {
         description={PAGE_DESCRIPTION}
         url={PAGE_PATH}
         datePublished="2026-10-08"
-        dateModified="2026-11-14"
+        dateModified="2026-11-24"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
@@ -207,7 +215,7 @@ export default function NetflixWatchPartyPage() {
           {
             name: "Stream Netflix on Discord",
             url: "/guides/how-to-screen-share-netflix-on-discord",
-            position: 4,
+            position: 3,
           },
         ]}
         h1="Netflix Watch Party"
@@ -234,6 +242,27 @@ export default function NetflixWatchPartyPage() {
           items: howToSteps,
         }}
       >
+        <h2 id="with-friends" className="scroll-mt-24">
+          How to watch Netflix with friends online
+        </h2>
+        <p className="mb-4 leading-relaxed text-ani-muted">
+          To watch Netflix with friends online, everyone opens the same title on their
+          own Netflix account in desktop Chrome. One person hosts an AniDachi room and
+          sends the invite link. Friends join free from the link, and the room keeps
+          every player on the same moment.
+        </p>
+        <p className="mb-6 leading-relaxed text-ani-muted">
+          Talk in the room&apos;s voice and video call, or keep your usual Discord or
+          group call for voice. Free rooms hold up to {FREE_ROOM} people including the
+          host, Plus up to {PLUS_ROOM} and Pro up to {PRO_ROOM}. If your friends live
+          in different time zones, agree on one start time and have everyone open the
+          title a few minutes early. AniDachi is a{" "}
+          <Link href="/" className="text-brand-orange hover:underline">
+            watch party app
+          </Link>{" "}
+          that also runs Crunchyroll and YouTube rooms.
+        </p>
+
         <h2 id="what-works" className="scroll-mt-24">
           What works today, and the limits
         </h2>
@@ -387,25 +416,40 @@ export default function NetflixWatchPartyPage() {
         </p>
 
         <h2 id="vs-teleparty" className="scroll-mt-24">
-          AniDachi vs Teleparty on Netflix
+          AniDachi vs Teleparty vs Discord on Netflix
         </h2>
         <p className="mb-4 leading-relaxed text-ani-muted">
           Teleparty, which started life as Netflix Party, is the best-known Netflix
-          sync extension. Here is how the two compare for a Netflix night. Teleparty
-          details come from its support FAQ and Chrome Web Store listing, checked
+          sync extension. Netflix has no watch party feature of its own, and a Discord
+          screen share is the free option many groups try first. Here is how they
+          compare for a Netflix night. Teleparty details come from its support FAQ and
+          Chrome Web Store listing, and Discord details from its help center, checked
           October 20, 2026.
         </p>
         <ResponsiveCompareTable
           columns={[
             { id: "anidachi", label: "AniDachi", highlight: true },
             { id: "teleparty", label: "Teleparty" },
+            { id: "netflix", label: "Netflix's own feature" },
+            { id: "discord", label: "Discord screen share" },
           ]}
           rows={[
+            {
+              feature: "Picture on Netflix",
+              values: {
+                anidachi: "Each person's own Netflix player",
+                teleparty: "Each person's own Netflix player",
+                netflix: "No watch party feature",
+                discord: "Usually black (DRM-protected video)",
+              },
+            },
             {
               feature: "Cost to host a Netflix party",
               values: {
                 anidachi: PRICING_FREE20_SUMMARY,
                 teleparty: "Free tier",
+                netflix: "No feature",
+                discord: "Free; Nitro for higher quality",
               },
             },
             {
@@ -413,6 +457,8 @@ export default function NetflixWatchPartyPage() {
               values: {
                 anidachi: "Included in rooms",
                 teleparty: "Premium only ($6.59/mo, or $47.88/yr)",
+                netflix: "No feature",
+                discord: "Yes, in the call",
               },
             },
             {
@@ -420,6 +466,8 @@ export default function NetflixWatchPartyPage() {
               values: {
                 anidachi: `Up to ${FREE_ROOM} (Free), ${PLUS_ROOM} (Plus) or ${PRO_ROOM} (Pro)`,
                 teleparty: "Up to 1,000+",
+                netflix: "No feature",
+                discord: "Up to 50 viewers per Go Live stream",
               },
             },
             {
@@ -427,6 +475,8 @@ export default function NetflixWatchPartyPage() {
               values: {
                 anidachi: "Desktop Chrome",
                 teleparty: "Chrome, Edge, Safari, Opera; Android and iOS apps",
+                netflix: "No feature",
+                discord: "Desktop; Netflix blocks phone screen share",
               },
             },
             {
@@ -434,6 +484,8 @@ export default function NetflixWatchPartyPage() {
               values: {
                 anidachi: "Crunchyroll, YouTube",
                 teleparty: "Disney+, Hulu, HBO Max, Prime Video and more",
+                netflix: "No feature",
+                discord: "Any app, but protected video often shows black",
               },
             },
           ]}
@@ -457,6 +509,44 @@ export default function NetflixWatchPartyPage() {
             is Teleparty free and safe
           </Link>
           .
+        </p>
+
+        <h2 id="what-to-watch" className="scroll-mt-24">
+          What to watch together on Netflix in December
+        </h2>
+        <p className="mb-4 leading-relaxed text-ani-muted">
+          Picks for December 2026, all Netflix films from Netflix&apos;s own holiday
+          list, which helps when your group is spread across countries. Have everyone
+          search the title the day before, in case a catalog differs.
+        </p>
+        <SeoGuideOptions
+          options={[
+            {
+              title: "Family night",
+              body: "Klaus (2019), The Christmas Chronicles (2018) and That Christmas (2024).",
+              highlight: true,
+            },
+            {
+              title: "Couples apart for the holidays",
+              body: "A Castle for Christmas (2021), Falling for Christmas (2022) and The Noel Diary (2022).",
+            },
+            {
+              title: "Friends",
+              body: "Let It Snow (2019) and Single All the Way (2021).",
+            },
+          ]}
+        />
+        <p className="mb-6 leading-relaxed text-ani-muted">
+          Picks from{" "}
+          <a
+            href={HOLIDAY_SOURCE.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-orange hover:underline"
+          >
+            {HOLIDAY_SOURCE.label}
+          </a>{" "}
+          (dated December 17, 2025), checked November 24, 2026.
         </p>
 
         <HubCtaBand

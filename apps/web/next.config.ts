@@ -4,6 +4,7 @@ import {
   ANI38_BATCH1_SOURCES,
   COMPETITOR_PAGE_MERGES,
   DISCORD_HUB_MERGE_SOURCES,
+  HUB_PAGE_MERGES,
 } from "./lib/recrawl-redirects";
 
 const nextConfig: NextConfig = {
@@ -175,6 +176,11 @@ const nextConfig: NextConfig = {
         destination: "/guides/best-teleparty-alternatives-for-anime",
         permanent: true,
       })),
+      // 2026-11-24 (owner-approved, ANI-8, ANI-39): /anime-watch-party folds into the
+      // anime hub, and nine YouTube guides that target the hub's searches fold into it.
+      ...Object.entries(HUB_PAGE_MERGES).flatMap(([destination, sources]) =>
+        sources.map((source) => ({ source, destination, permanent: true })),
+      ),
       // 2026-11-23 (owner-approved, ANI-79/ANI-80): one alternatives page per competitor
       // people search for; low-demand "AniDachi vs X" pages fold into the /compare pillar,
       // and the Discord comparison pages into the Discord hub.

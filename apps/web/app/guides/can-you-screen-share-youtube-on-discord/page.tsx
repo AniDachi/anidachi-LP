@@ -177,7 +177,7 @@ export default function CanYouScreenShareYoutubeOnDiscordPage() {
       <p className="text-foreground/80 mb-8">
         Prefer no screen share at all?{" "}
         <Link
-          href="/guides/how-to-watch-youtube-together-without-screen-share"
+          href="/watch-youtube-together#with-friends"
           className="text-brand-orange hover:underline"
         >
           Watch YouTube together without screen share

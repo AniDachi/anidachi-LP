@@ -55,7 +55,7 @@ export const deHomeFAQ = [
       "Nein. Crunchyroll bietet keine eigene Funktion zum gemeinsamen Schauen. AniDachi füllt diese Lücke mit einer Chrome-Erweiterung, die die Wiedergabe synchronisiert, den Anime automatisch erkennt und einen Live-Chat zu deinem Crunchyroll-Konto hinzufügt.",
   },
   {
-    question: "Was unterscheidet AniDachi von Teleparty oder Crunchyroll Party?",
+    question: "Was unterscheidet AniDachi von Teleparty?",
     answer:
       "AniDachi synchronisiert den Player jeder Person auf Crunchyroll, YouTube und Netflix. Chat, Reaktionen, Sprach- und Videoanruf liegen direkt auf dem Video. Plus und Pro speichern außerdem deinen persönlichen Schaufortschritt.",
   },

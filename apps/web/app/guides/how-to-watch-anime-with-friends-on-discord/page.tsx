@@ -299,7 +299,7 @@ export default function HowToWatchAnimeWithFriendsOnDiscordPage() {
 					</li>
 					<li>
 						<strong>For bigger groups or better quality:</strong> Use Discord
-						for voice only and switch video to AniDachi or Crunchyroll Party so
+						for voice only and switch video to AniDachi so
 						everyone streams at full quality on their own account.
 					</li>
 				</ol>
