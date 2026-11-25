@@ -1,6 +1,7 @@
 /**
- * On-page SEO checks (ANI-81). Each finding has a stable key so a baseline can separate new
- * problems from known ones. Severities: "must" fails the gate, "warn" needs a PR note, "info" is advice.
+ * On-page SEO checks (ANI-81). Each finding has a stable key so a run can be compared with the
+ * last one. Severities: "must" fails the gate unless targets.ts records an exception, "warn" needs a
+ * PR note, "info" is advice.
  * Rules: Linear document "On-page SEO rules" (owner-approved 25 Nov 2026).
  */
 import { jsonLdNodes, type ExtractedPage } from "./html";
@@ -55,7 +56,10 @@ export function auditPage(page: ExtractedPage, t: PageTargets, fetched: FetchInf
   const add = (group: Group, rule: string, severity: Severity, message: string, fix: string, detail = "") => {
     const key = `${t.path}|${rule}${detail ? `|${detail}` : ""}`;
     const exception = t.exceptions?.find((e) => e.rule === rule);
-    out.push({ path: t.path, group, rule, severity, message, fix, key, excepted: exception ? `${exception.reason} (${exception.ref})` : undefined });
+    const excepted = exception
+      ? `${exception.deferredTo ? `Deferred to ${exception.deferredTo}: ` : ""}${exception.reason} (${exception.ref})`
+      : undefined;
+    out.push({ path: t.path, group, rule, severity, message, fix, key, excepted });
   };
   const primary = t.primary;
   const allGroups = [primary, ...t.secondary];
@@ -223,6 +227,19 @@ export function auditGsc(t: PageTargets, page: ExtractedPage, rows: GscRow[], ba
 }
 
 /** Sync check against the locked ANI-68 keyword map (read-only). */
+/** Exceptions in targets.ts whose finding no longer occurs: remove them in the PR that fixed the page. */
+export function staleExceptions(targets: readonly PageTargets[], findings: readonly Finding[]): string[] {
+  const notes: string[] = [];
+  for (const t of targets) {
+    for (const e of t.exceptions ?? []) {
+      if (!findings.some((f) => f.path === t.path && f.rule === e.rule)) {
+        notes.push(`${t.path}: the "${e.rule}" exception (${e.ref}) is no longer needed. Remove it from targets.ts.`);
+      }
+    }
+  }
+  return notes;
+}
+
 export function syncWithKeywordMap(targets: readonly PageTargets[], map: { sections: { key: string; queries: [string, string[], number][] }[] }): string[] {
   const notes: string[] = [];
   for (const t of targets) {

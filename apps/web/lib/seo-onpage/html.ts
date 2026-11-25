@@ -168,6 +168,11 @@ export type ExtractedPage = {
   jsonLd: unknown[];
 };
 
+/** The staging password page (or any page asking for a password) instead of real content. */
+export function isPasswordGate(html: string): boolean {
+  return /<input\b[^>]*\btype=["']?password\b/i.test(html);
+}
+
 export function extractPage(html: string): ExtractedPage {
   const root = parseHtml(html);
   const htmlEl = find(root, (n) => n.tag === "html");
