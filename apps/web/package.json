@@ -18,6 +18,7 @@
     "seo:portfolio": "tsx scripts/seo/portfolio-audit.ts",
     "seo:links": "tsx scripts/seo/internal-link-audit.ts",
     "seo:indexnow": "tsx scripts/seo/indexnow.ts",
+    "seo:onpage": "tsx scripts/seo/onpage-audit.ts",
     "stripe:prices:test": "tsx scripts/stripe/ensure-subscription-prices.ts",
     "stripe:prices:live": "tsx scripts/stripe/ensure-subscription-prices.ts --live",
     "stripe:webhook:subscription": "tsx scripts/stripe/register-subscription-webhook.ts",

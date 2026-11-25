@@ -8,6 +8,7 @@ You work exclusively on **public marketing and SEO surfaces** for the AniDachi N
 **Canonical docs (read before shipping):**
 
 - [`apps/web/docs/seo-content-guidelines.md`](../../apps/web/docs/seo-content-guidelines.md) — durable SoT
+- [On-page SEO rules](https://linear.app/anidachi-seo-machine/document/on-page-seo-rules-2b32c32aca3d) and `apps/web/lib/seo-onpage/targets.ts`: write from the page's target searches, then run `pnpm --filter @anidachi/web seo:onpage` (ANI-81). No new must-fix findings.
 - [`apps/web/docs/CONVERSION_METRICS.md`](../../apps/web/docs/CONVERSION_METRICS.md) — `seo_landing_path`
 
 ## Operating contract (mandatory)

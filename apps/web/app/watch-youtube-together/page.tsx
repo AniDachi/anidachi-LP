@@ -27,7 +27,7 @@ const articleImageAbsolute = `${SITE_URL}${BRAND_OG_PATH}`;
 export const metadata: Metadata = {
   title: "Watch YouTube Together: YouTube Watch Party",
   description:
-    "YouTube watch party hub: Add AniDachi from the Chrome Web Store, open a full youtube.com/watch page, and sync with friends. Teleparty and Discord compared.",
+    "Watch YouTube together in sync: a YouTube watch party in desktop Chrome with chat, voice and video on any full video page. Friends join free.",
   alternates: languageAlternates({ en: "/watch-youtube-together", de: "/de/youtube-watchparty" }, "en"),
   openGraph: {
     images: [
@@ -192,10 +192,10 @@ export default function WatchYoutubeTogetherPage() {
         answer={
           <>
             <strong>
-              To host a YouTube watch party, install AniDachi in desktop Chrome,
+              To watch YouTube together, install AniDachi in desktop Chrome,
               open the video on youtube.com/watch, choose Create room and send
-              the invite. Everyone watches on their own player, and play, pause
-              and seeking stay in sync.
+              the invite: that starts a YouTube watch party. Everyone watches on
+              their own player, and play, pause and seeking stay in sync.
             </strong>{" "}
             Step-by-step:{" "}
             <a href="#with-friends">how to watch YouTube with friends online</a>.

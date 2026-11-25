@@ -94,6 +94,7 @@ const faq = [
 const tocHeadings: TocHeading[] = [
 	{ id: "answer", label: "Short answer", level: 2 },
 	{ id: "options", label: "4 ways, compared", level: 2 },
+	{ id: "best-way", label: "Best way for your group", level: 3 },
 	{ id: "flow", label: "Movie-night flow", level: 2 },
 	{ id: "where", label: "Netflix, YouTube or anime films", level: 2 },
 	{ id: "picks", label: "Picking the film", level: 2 },
@@ -224,7 +225,7 @@ export default function WatchMoviesTogetherOnlinePage() {
 					id="options"
 					className="mt-10 mb-4 scroll-mt-24 text-2xl font-bold text-ani-text"
 				>
-					4 ways to watch movies together online, compared
+					4 ways to watch movies with friends online, compared
 				</h2>
 				<p className="mb-4 leading-relaxed text-ani-muted">
 					Whether you call it a movie night or a film night, the options are
@@ -242,6 +243,12 @@ export default function WatchMoviesTogetherOnlinePage() {
 					]}
 					rows={optionRows}
 				/>
+				<h3
+					id="best-way"
+					className="mt-8 mb-3 scroll-mt-24 text-xl font-semibold text-ani-text"
+				>
+					Best way for your group
+				</h3>
 				<p className="mb-8 leading-relaxed text-ani-muted">
 					Use AniDachi when your film is on Netflix, YouTube or Crunchyroll and
 					you want faces and voices on the player. Use Teleparty when the film
