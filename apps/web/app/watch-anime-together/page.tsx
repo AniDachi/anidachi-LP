@@ -24,7 +24,7 @@ const PRO_ROOM = getPlanPolicy("pro").maxParticipants;
 export const metadata: Metadata = {
   title: "Watch Anime Together Online: Sync with Friends",
   description:
-    "Watch anime together online with friends. AniDachi syncs Crunchyroll, Netflix and YouTube in desktop Chrome, each person on their own account. Friends join free.",
+    "Watch anime together online with friends. AniDachi syncs Crunchyroll, Netflix and YouTube in desktop Chrome, each on their own account. Friends join free.",
   alternates: { canonical: PAGE_PATH },
   openGraph: {
     images: [
