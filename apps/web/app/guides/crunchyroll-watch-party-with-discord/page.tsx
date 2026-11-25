@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "How to watch Crunchyroll with friends on Discord: use Discord voice for reactions and AniDachi for synced playback — not Go Live screen share.",
   alternates: { canonical: "/guides/crunchyroll-watch-party-with-discord" },
   openGraph: {
-    title: "Crunchyroll Watch Party With Discord",
+    title: "Watch Crunchyroll With Friends on Discord",
     description:
       "Hybrid setup: Discord voice + AniDachi per-user Crunchyroll sync for anime nights.",
     url: "/guides/crunchyroll-watch-party-with-discord",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crunchyroll Watch Party With Discord",
+    title: "Watch Crunchyroll With Friends on Discord",
     description: "Discord voice + AniDachi sync — skip Go Live for full episodes.",
     images: [BRAND_OG_PATH],
   },
@@ -60,7 +60,7 @@ const faq = [
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
   { id: "why-not-golive", label: "Why not Go Live", level: 2 },
-  { id: "howto", label: "HowTo: Discord + AniDachi", level: 2 },
+  { id: "howto", label: "Setup with AniDachi", level: 2 },
   { id: "tips", label: "Voice and sync tips", level: 2 },
   { id: "related", label: "Related guides", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
@@ -112,7 +112,7 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
             url: "/guides/crunchyroll-watch-party-with-discord",
           },
         ]}
-        title="Crunchyroll watch party with Discord"
+        title="Watch Crunchyroll with friends on Discord"
         description="Discord voice + AniDachi sync — the hybrid setup anime groups prefer over Go Live."
         url="/guides/crunchyroll-watch-party-with-discord"
         datePublished="2026-07-22"
@@ -123,7 +123,7 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
         aboveFoldCta={true}
       >
         <h1 className="text-4xl font-bold text-foreground mb-6">
-          Crunchyroll Watch Party With Discord (Voice + Sync)
+          Watch Crunchyroll With Friends on Discord (Voice + Sync)
         </h1>
 
         <h2
@@ -182,7 +182,7 @@ export default function CrunchyrollWatchPartyWithDiscordPage() {
           id="howto"
           className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
         >
-          HowTo: Discord + AniDachi
+          Set up Crunchyroll on Discord with AniDachi
         </h2>
         <ol className="list-decimal pl-6 space-y-3 text-foreground/80 mb-8">
           {howToSteps.map((step) => (

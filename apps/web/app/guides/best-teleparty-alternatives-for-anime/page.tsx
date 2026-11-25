@@ -45,7 +45,7 @@ const SOURCES = [
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
   description:
-    "Teleparty alternatives compared: AniDachi, Kosmi, Rave, Watch2Gether and Discord. Which works on phones, Crunchyroll and Netflix, and which has free video chat.",
+    "Teleparty alternatives and apps like Teleparty compared: AniDachi, Kosmi, Rave, Watch2Gether and Discord, for phones, Crunchyroll, Netflix and video chat.",
   alternates: { canonical: PAGE_PATH },
   openGraph: {
     title: PAGE_TITLE,
@@ -74,7 +74,7 @@ const faq = [
       "Kosmi and Rave are free, and Kosmi includes video chat at no cost. Watch2Gether is free and needs no account. AniDachi's friends join free, and a Free host gets 20 minutes a day for up to 4 people; Plus and Pro remove the daily limit.",
   },
   {
-    question: "Is there a Teleparty alternative that works on phones?",
+    question: "Is there an app like Teleparty that works on phones?",
     answer:
       "Yes. Kosmi rooms open in a phone browser, and Rave has an Android app. Rave's site says Apple removed Rave from the App Store (checked 23 Nov 2026), so iPhone users can't download it there. Teleparty's own mobile apps support fewer services than its browser extension. AniDachi is desktop Chrome only.",
   },
@@ -150,7 +150,7 @@ export default function BestTelepartyAlternativesPage() {
       </SeoGuideAnswer>
 
       <h2 id="compared" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
-        Teleparty alternatives compared
+        Apps and sites like Teleparty, compared
       </h2>
       <p className="mb-4 leading-relaxed text-ani-muted">
         Every tool here keeps video in sync, and with every one of them each

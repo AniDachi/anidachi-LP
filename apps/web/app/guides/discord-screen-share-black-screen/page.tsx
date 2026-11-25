@@ -17,7 +17,7 @@ const articleImage = `${getSeoSiteOrigin()}/opengraph-image.png`;
 const howToSteps = [
   {
     name: "Confirm you shared the video window",
-    text: "A Discord screen share black screen is often the wrong surface: a second monitor, the desktop, or a window that is not the player. Share the Chrome window that has the video.",
+    text: "The black picture often comes from the wrong surface: a second monitor, the desktop, or a window that is not the player. Share the Chrome window that has the video.",
   },
   {
     name: "Ask whether they hear audio",
@@ -36,7 +36,7 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: "Discord Screen Share Black Screen — What to Check",
   description:
-    "A Discord screen share black screen usually means the wrong window or a player blocking capture. Sync full Crunchyroll, YouTube, or Netflix with AniDachi.",
+    "Discord screen share black screen? Usually the wrong window or a player that blocks capture. How to fix a Discord stream black screen, and what works.",
   alternates: { canonical: "/guides/discord-screen-share-black-screen" },
   openGraph: {
     title: "Discord Screen Share Black Screen",
@@ -77,6 +77,7 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
+  { id: "why", label: "Why the stream is black", level: 2 },
   { id: "steps", label: "What to check", level: 2 },
   { id: "crunchyroll", label: "Crunchyroll", level: 2 },
   { id: "youtube", label: "YouTube", level: 2 },
@@ -104,7 +105,7 @@ export default function DiscordScreenShareBlackScreenPage() {
         description="A black Discord share, and the watch that does not depend on capture."
         url="/guides/discord-screen-share-black-screen"
         datePublished="2026-10-08"
-        dateModified="2026-10-17"
+        dateModified="2026-11-25"
         faq={faq}
         headings={tocHeadings}
         articleImage={articleImage}
@@ -116,13 +117,28 @@ export default function DiscordScreenShareBlackScreenPage() {
         </h2>
         <SeoGuideAnswer>
           <p>
-            A Discord screen share black screen means friends see a dark window,
-            sometimes with the audio still playing. Share the Chrome window that
-            has the video. For a whole episode, stop the share and use a{" "}
+            A Discord screen share black screen means friends see a dark window
+            when you stream, sometimes with the audio still playing. A Discord
+            stream black screen has two usual causes: the wrong window is
+            shared, or the video player blocks capture. Share the Chrome window
+            that has the video. For a whole episode, stop the share and use a{" "}
             <Link href="/discord-watch-party">Discord watch party</Link> so each
             person plays Crunchyroll, YouTube, or Netflix on their own account.
           </p>
         </SeoGuideAnswer>
+        <h2 id="why" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
+          Why is my Discord stream black?
+        </h2>
+        <p className="mb-6 leading-relaxed text-ani-muted">
+          If you get a Discord black screen when streaming, one of two things
+          is usually behind it. Discord may be sharing a different window or
+          screen than the one playing the video, which the steps below fix. Or
+          the site protects its video: Netflix, Crunchyroll and Prime Video
+          block capture, so the share usually stays black. Turning off
+          hardware acceleration in Chrome and Discord helps some people, not
+          all. The reliable way around it is to stop sharing the video and
+          have each person play it on their own account.
+        </p>
         <h2 id="steps" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
           What to check
         </h2>
@@ -151,7 +167,7 @@ export default function DiscordScreenShareBlackScreenPage() {
             href="/guides/can-you-screen-share-crunchyroll-on-discord"
             className="text-brand-orange hover:underline"
           >
-            can you screen share Crunchyroll on Discord
+            how to stream Crunchyroll on Discord
           </Link>
           , with Go Live steps and the hardware acceleration fix.
         </p>

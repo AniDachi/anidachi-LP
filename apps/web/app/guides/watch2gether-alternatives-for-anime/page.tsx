@@ -13,7 +13,7 @@ import { languageAlternates } from "@/lib/hreflang";
 const PAGE_PATH = "/guides/watch2gether-alternatives-for-anime";
 const PAGE_TITLE = "Best Watch2Gether Alternatives: 6 Sites Like W2G";
 const PAGE_DESCRIPTION =
-  "Watch2Gether alternatives compared: which work with Netflix and Crunchyroll, which run on phones, and which have free voice and video chat. Checked Nov 2026.";
+  "Watch2Gether alternatives and sites like Watch2Gether compared: which work with Netflix and Crunchyroll, which run on phones, and which have video chat.";
 
 export const metadata: Metadata = {
   title: { absolute: PAGE_TITLE },
@@ -71,10 +71,11 @@ export default function Watch2GetherAlternativesPage() {
       answer={
         <p>
           <strong>
-            Watch2Gether is great for free YouTube rooms. Switch when you want
-            Netflix or Crunchyroll with calls (AniDachi), free video chat on any
-            device (Kosmi), free web rooms plus a streaming extension (SyncUp),
-            or the most streaming services (Teleparty).
+            Watch2Gether is great for free YouTube rooms. The best Watch2Gether
+            alternative depends on what you want: Netflix or Crunchyroll with
+            calls (AniDachi), free video chat on any device (Kosmi), free web
+            rooms plus a streaming extension (SyncUp), or the most streaming
+            services (Teleparty).
           </strong>{" "}
           Every competitor detail here comes from that company&apos;s own site,
           checked on 23 Nov 2026.
@@ -83,7 +84,7 @@ export default function Watch2GetherAlternativesPage() {
       sections={[
         {
           id: "by-platform",
-          label: "Watch2Gether alternatives by platform",
+          label: "Sites like Watch2Gether, by platform",
           content: (
             <>
               <h3 id="netflix" className="mt-6 scroll-mt-24 text-xl font-semibold text-ani-text">

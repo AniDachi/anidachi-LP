@@ -371,7 +371,7 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/guides/can-you-screen-share-crunchyroll-on-discord",
-		label: "Can You Screen Share Crunchyroll on Discord?",
+		label: "How to Stream Crunchyroll on Discord",
 		tags: [
 			"template-c",
 			"discord",
@@ -476,7 +476,7 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/guides/can-you-screen-share-youtube-on-discord",
-		label: "Can You Screen Share YouTube on Discord?",
+		label: "How to Stream YouTube on Discord",
 		tags: [
 			"template-c",
 			"youtube",

@@ -65,7 +65,7 @@ const howToSteps = [
 export const metadata: Metadata = {
   title: { absolute: "How to Stream Netflix on Discord (Black Screen Fix)" },
   description:
-    "Netflix goes black on Discord because the video is DRM-protected. Why it happens, what people try, mobile limits, and how to watch in sync with friends.",
+    "How to stream Netflix on Discord without a black screen: why Go Live goes black, what people try, and how to watch in sync with friends on Discord voice.",
   alternates: languageAlternates({ en: PAGE_PATH, de: "/de/netflix-auf-discord-streamen" }, "en"),
   openGraph: {
     title: "How to Stream Netflix on Discord (Black Screen Fix)",
@@ -166,12 +166,12 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
         <SeoGuideAnswer>
           <p>
             <strong>
-              You usually can&apos;t. Netflix video is DRM-protected, so when you
-              share it with Discord Go Live, friends see a black screen and
-              sometimes hear only the audio. The setup that works: stay in the
-              Discord call for voice, and have each person play the same title
-              on their own Netflix account, kept in sync by a watch-party
-              extension.
+              To stream Netflix on Discord, you would share it with Go Live, but
+              it usually fails: Netflix video is DRM-protected, so friends see a
+              black screen and sometimes hear only the audio. To watch Netflix
+              on Discord without a black screen, stay in the Discord call for
+              voice and have each person play the same title on their own
+              Netflix account, kept in sync by a watch-party extension.
             </strong>{" "}
             AniDachi does that in desktop Chrome, and friends join a{" "}
             <Link href="/netflix-watch-party">Netflix watch party</Link> free.
@@ -416,7 +416,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
             { href: "/discord-watch-party", label: "Discord watch party" },
             {
               href: "/guides/can-you-screen-share-crunchyroll-on-discord",
-              label: "Can you screen share Crunchyroll on Discord?",
+              label: "How to stream Crunchyroll on Discord",
             },
             {
               href: "/guides/discord-screen-share-black-screen",

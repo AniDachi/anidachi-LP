@@ -436,7 +436,7 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
             href="/guides/can-you-screen-share-crunchyroll-on-discord"
             className="text-brand-orange hover:underline"
           >
-            can you screen share Crunchyroll on Discord
+            how to stream Crunchyroll on Discord
           </Link>
           . For voice drift during a session, see{" "}
           <Link
