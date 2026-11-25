@@ -74,8 +74,8 @@ const faq = [
 
 const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
-  { id: "go-live-steps", label: "How to stream it with Go Live", level: 2 },
-  { id: "why-it-fails", label: "Why Go Live fails", level: 2 },
+  { id: "go-live-steps", label: "Go Live steps", level: 2 },
+  { id: "why-it-fails", label: "Why the screen goes black", level: 2 },
   { id: "workaround", label: "Watch together without screen share", level: 2 },
   { id: "legal", label: "Accounts and fair use of access", level: 2 },
   { id: "better-path", label: "Better path", level: 2 },
@@ -140,11 +140,11 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         { name: "Home", url: "/" },
         { name: "Watch Crunchyroll Together", url: "/watch-crunchyroll-together" },
         {
-          name: "Screen share Crunchyroll on Discord?",
+          name: "Stream Crunchyroll on Discord",
           url: "/guides/can-you-screen-share-crunchyroll-on-discord",
         },
       ]}
-      title="Can you screen share Crunchyroll on Discord?"
+      title="How to Stream Crunchyroll on Discord"
       description="How to stream Crunchyroll on Discord, why Go Live shows a black screen, and what works instead."
       url="/guides/can-you-screen-share-crunchyroll-on-discord"
       datePublished="2026-07-19"
@@ -156,17 +156,18 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
       aboveFoldStyle="hero"
       watchroom="crunchyroll"
     >
-      <SeoGuideTitle>Can You Screen Share Crunchyroll on Discord?</SeoGuideTitle>
+      <SeoGuideTitle>How to Stream Crunchyroll on Discord</SeoGuideTitle>
 
       <h2 id="answer" className="scroll-mt-24">
         Short Answer
       </h2>
       <SeoGuideAnswer>
         <strong>
-          You can try, but it often fails. Crunchyroll protects its video, so
-          Discord Go Live usually shows friends a black screen. Turning off
-          hardware acceleration in Chrome and in Discord fixes that for some
-          people.
+          To stream Crunchyroll on Discord, share it with Go Live, but it
+          often fails: Crunchyroll protects its video, so friends usually see
+          a black screen. To stream Crunchyroll on Discord without a black
+          screen, turn off hardware acceleration in Chrome and in Discord;
+          that fixes it for some people.
         </strong>{" "}
         When it works, everyone watches one compressed feed from your upload
         and can&apos;t pause or pick their own subtitles. To avoid screen sharing,
@@ -180,7 +181,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         id="go-live-steps"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        How to stream Crunchyroll on Discord with Go Live
+        Go Live steps for Crunchyroll on Discord
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         If you want to try screen sharing first, these steps give it the best
@@ -206,7 +207,7 @@ export default function CanYouScreenShareCrunchyrollOnDiscordPage() {
         id="why-it-fails"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        Why Discord Go Live fails on Crunchyroll
+        Why Crunchyroll shows a black screen on Discord
       </h2>
       <ul className="list-disc pl-6 space-y-2 text-foreground/80 mb-8">
         <li>

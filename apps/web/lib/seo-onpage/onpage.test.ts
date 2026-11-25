@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { auditPage, auditLinks, staleExceptions } from "./checks";
+import { auditPage, auditLinks, staleExceptions, syncWithKeywordMap } from "./checks";
 import { extractPage, isPasswordGate } from "./html";
 import { PAGE_TARGETS, type PageTargets } from "./targets";
-import { countExact, matchGroup, matchPhrase, normalize, queryMatches, similarity } from "./text";
+import { countExact, exactOccurrences, matchGroup, matchPhrase, normalize, queryMatches, similarity } from "./text";
 import { phoneLines, titlePx } from "./width";
 
 describe("on-page matcher (ANI-81)", () => {
@@ -211,5 +211,30 @@ describe("exceptions and gates (ANI-81)", () => {
   it("recognises a password page", () => {
     assert.equal(isPasswordGate('<form><input name="password" type="password" /></form>'), true);
     assert.equal(isPasswordGate("<main><h1>Netflix Watch Party</h1></main>"), false);
+  });
+});
+
+describe("keyword map sync across pages (ANI-81)", () => {
+  const page = (path: string, phrase: string): PageTargets => ({
+    path, kind: "guide", ticket: "T", keywordMapKey: "teleparty",
+    primary: { phrases: [phrase], volume: 1 }, secondary: [], questions: [], ownedElsewhere: [], parentLinks: [],
+  });
+  const map = { sections: [{ key: "teleparty", queries: [["is teleparty free", ["is teleparty free"], 1], ["rave alternative", ["rave alternative"], 1]] as [string, string[], number][] }] };
+
+  it("checks a section against every page that shares it", () => {
+    assert.deepEqual(syncWithKeywordMap([page("/a", "is teleparty free"), page("/b", "rave alternative")], map), []);
+    assert.equal(syncWithKeywordMap([page("/a", "is teleparty free")], map).length, 1);
+  });
+});
+
+describe("repetition counting and bare-text blocks (ANI-81)", () => {
+  it("counts a phrase once when a shorter variant sits inside it", () => {
+    const r = exactOccurrences("How to stream Netflix on Discord. Stream Netflix on Discord.", ["how to stream netflix on discord", "stream netflix on discord"]);
+    assert.deepEqual(r, { count: 2, words: 10 });
+  });
+
+  it("reads text sitting directly in a div", () => {
+    const page = extractPage(`<html><body><main><h1>T</h1><div><strong>Bare answer text</strong> and more.</div></main></body></html>`);
+    assert.match(page.mainText, /Bare answer text and more/);
   });
 });

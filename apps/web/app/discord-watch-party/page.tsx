@@ -219,7 +219,7 @@ export default function DiscordWatchPartyPage() {
 			articleImage={articleImage}
 			itemList={[
 				{
-					name: "Can you screen share Crunchyroll on Discord?",
+					name: "How to stream Crunchyroll on Discord",
 					url: "/guides/can-you-screen-share-crunchyroll-on-discord",
 					position: 1,
 				},
@@ -229,7 +229,7 @@ export default function DiscordWatchPartyPage() {
 					position: 2,
 				},
 				{
-					name: "Can you screen share YouTube on Discord?",
+					name: "How to stream YouTube on Discord",
 					url: "/guides/can-you-screen-share-youtube-on-discord",
 					position: 3,
 				},
@@ -561,9 +561,9 @@ export default function DiscordWatchPartyPage() {
 								Go Live of the player usually shows black, and Watch Together
 								can&apos;t open Crunchyroll. Everyone opens the same episode on
 								their own account in Chrome; the host creates the AniDachi room
-								and pastes the invite in Discord. Why the share fails:{" "}
+								and pastes the invite in Discord. The black screen and its fix:{" "}
 								<Link href="/guides/can-you-screen-share-crunchyroll-on-discord">
-									can you screen share Crunchyroll on Discord
+									how to stream Crunchyroll on Discord
 								</Link>
 								. Full nights:{" "}
 								<Link href="/guides/crunchyroll-watch-party-with-discord">
@@ -587,7 +587,7 @@ export default function DiscordWatchPartyPage() {
 								account, your own quality and no 180-minute cap (not Shorts,
 								embeds or the mobile app). More:{" "}
 								<Link href="/guides/can-you-screen-share-youtube-on-discord">
-									screen sharing YouTube on Discord
+									how to stream YouTube on Discord
 								</Link>
 								.
 							</>
