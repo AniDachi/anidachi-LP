@@ -5,7 +5,7 @@ import { ResponsiveCompareTable } from "@/components/responsive-compare-table";
 import { PRICING_PRICE_TABLE, PRICING_CANCELLATION_NOTE } from "@/lib/pricing-copy";
 
 export const metadata: Metadata = {
-  title: "Long Distance Anime: 7 Best Apps to Watch Together",
+  title: "Long Distance Anime: 6 Best Apps to Watch Together",
   description:
     "Long-distance anime apps compared for couples: AniDachi for Crunchyroll and YouTube sync, plus Teleparty, Rave and Discord voice.",
   alternates: { canonical: "/best-apps-watch-anime-together-long-distance" },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
       },
     ],
 
-    title: "Long Distance Anime: 7 Best Apps to Watch Together",
+    title: "Long Distance Anime: 6 Best Apps to Watch Together",
     description:
       "Every major watch-together app compared for long-distance couples — Crunchyroll support, async mode, group size, and price.",
     url: "/best-apps-watch-anime-together-long-distance",
@@ -35,7 +35,7 @@ const faq = [
   {
     question: "Does Teleparty work for long-distance anime watching?",
     answer:
-      "Teleparty supports Crunchyroll for live synchronized watching. Both people must be online at the same time. AniDachi's current rooms also sync live playback; async catch-up is coming soon.",
+      "Teleparty supports Crunchyroll with its Premium plan, for live synchronized watching. Both people must be online at the same time. AniDachi's current rooms also sync live playback; async catch-up is coming soon.",
   },
   {
     question: "Is Teleparty better than AniDachi for long distance?",
@@ -62,8 +62,8 @@ const tocHeadings: TocHeading[] = [
   { id: "rave", label: "3. Rave", level: 2 },
   { id: "scener", label: "4. Scener", level: 2 },
   { id: "discord", label: "5. Discord screen share", level: 2 },
-  { id: "crunchyroll-party", label: "6. Crunchyroll Party", level: 2 },
-  { id: "watch2gether", label: "7. Watch2Gether", level: 2 },
+  { id: "watch2gether", label: "6. Watch2Gether", level: 2 },
+  { id: "crunchyroll-party", label: "Crunchyroll Party (removed)", level: 2 },
   { id: "decision", label: "Which should you pick?", level: 2 },
   { id: "related", label: "Related", level: 2 },
   { id: "faq", label: "FAQ", level: 2 },
@@ -75,8 +75,7 @@ const itemList = [
   { name: "Rave", url: "https://rave.io", position: 3 },
   { name: "Scener", url: "https://scener.com", position: 4 },
   { name: "Discord screen share", url: "https://discord.com", position: 5 },
-  { name: "Crunchyroll Party", url: "https://chrome.google.com/webstore", position: 6 },
-  { name: "Watch2Gether", url: "https://w2g.tv", position: 7 },
+  { name: "Watch2Gether", url: "https://w2g.tv", position: 6 },
 ];
 
 export default function BestAppsWatchAnimeTogetherLongDistancePage() {
@@ -86,18 +85,18 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         { name: "Home", url: "/" },
         { name: "Long-distance anime apps", url: "/best-apps-watch-anime-together-long-distance" },
       ]}
-      title="Long Distance Anime: 7 Best Apps to Watch Together (2026)"
+      title="Long Distance Anime: 6 Best Apps to Watch Together (2026)"
       description="Every watch-together app compared for long-distance anime couples."
       url="/best-apps-watch-anime-together-long-distance"
       datePublished="2026-06-23"
-      dateModified="2026-10-20"
+      dateModified="2026-11-25"
       faq={faq}
       headings={tocHeadings}
       itemList={itemList}
       aboveFoldCta
     >
       <h1 className="text-4xl font-bold text-foreground mb-6">
-        Long Distance Anime: 7 Best Apps to Watch Together (2026)
+        Long Distance Anime: 6 Best Apps to Watch Together (2026)
       </h1>
 
       <h2
@@ -130,32 +129,31 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
           { id: "teleparty", label: "Teleparty" },
           { id: "rave", label: "Rave" },
           { id: "discord", label: "Discord" },
-          { id: "crunchyroll-party", label: "CR Party" },
         ]}
         rows={[
           {
             feature: "Crunchyroll support",
-            values: { anidachi: "yes", teleparty: "yes", rave: "yes", discord: "partial", "crunchyroll-party": "yes" },
+            values: { anidachi: "yes", teleparty: "Premium only", rave: "yes", discord: "partial" },
           },
           {
             feature: "Async watching (different times)",
-            values: { anidachi: "Planned", teleparty: "no", rave: "no", discord: "no", "crunchyroll-party": "no" },
+            values: { anidachi: "Planned", teleparty: "no", rave: "no", discord: "no" },
           },
           {
             feature: "Live sync",
-            values: { anidachi: "yes", teleparty: "yes", rave: "yes", discord: "partial", "crunchyroll-party": "yes" },
+            values: { anidachi: "yes", teleparty: "yes", rave: "yes", discord: "partial" },
           },
           {
             feature: "Spoiler control",
-            values: { anidachi: "Agree a boundary in chat", teleparty: "no", rave: "no", discord: "no", "crunchyroll-party": "no" },
+            values: { anidachi: "Agree a boundary in chat", teleparty: "no", rave: "no", discord: "no" },
           },
           {
             feature: "Per-person progress tracking",
-            values: { anidachi: "Own Plus/Pro + recording permission", teleparty: "no", rave: "no", discord: "no", "crunchyroll-party": "no" },
+            values: { anidachi: "Own Plus/Pro + recording permission", teleparty: "no", rave: "no", discord: "no" },
           },
           {
             feature: "Price",
-            values: { anidachi: PRICING_PRICE_TABLE, teleparty: "Freemium", rave: "Freemium", discord: "Free", "crunchyroll-party": "Free" },
+            values: { anidachi: PRICING_PRICE_TABLE, teleparty: "Free tier; Crunchyroll needs Premium", rave: "Freemium", discord: "Free" },
           },
         ]}
       />
@@ -165,7 +163,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         id="anidachi"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        1. AniDachi — Best for Long-Distance Crunchyroll Couples
+        1. AniDachi: Best for Long-Distance Crunchyroll Couples
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         AniDachi is the Crunchyroll- and YouTube-first watch-party Chrome
@@ -200,7 +198,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         id="teleparty"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        2. Teleparty — Best Free Multi-Platform Option
+        2. Teleparty: Best Free Multi-Platform Option
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         Teleparty, which started as{" "}
@@ -222,7 +220,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         id="rave"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        3. Rave — Best Free Option with Voice Chat
+        3. Rave: Best Free Option with Voice Chat
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         Rave (formerly Wacup) supports live sync across Crunchyroll, Netflix,
@@ -239,7 +237,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         id="scener"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        4. Scener — Best for Video Call Alongside Streaming
+        4. Scener: Best for Video Call Alongside Streaming
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         Scener runs in the browser and overlays video calling directly on top
@@ -257,7 +255,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         id="discord"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        5. Discord Screen Share — Best Free Fallback
+        5. Discord Screen Share: Best Free Fallback
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         Discord is not a watch party app — it is a voice and screen share
@@ -273,27 +271,10 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
       </p>
 
       <h2
-        id="crunchyroll-party"
-        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
-      >
-        6. Crunchyroll Party — Best Free Crunchyroll-Only Option
-      </h2>
-      <p className="text-foreground/80 leading-relaxed mb-4">
-        Crunchyroll Party is a free Chrome extension that adds live sync and
-        text chat to Crunchyroll. It is straightforward and works well for
-        same-time watching. No async, no progress tracking, no video
-        reactions.
-      </p>
-      <p className="text-foreground/80 mb-8">
-        <strong>Best for:</strong> Budget-conscious couples who can always
-        watch live together and only use Crunchyroll.
-      </p>
-
-      <h2
         id="watch2gether"
         className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
       >
-        7. Watch2Gether — Best for YouTube and Non-Streaming Content
+        6. Watch2Gether: Best for YouTube and Non-Streaming Content
       </h2>
       <p className="text-foreground/80 leading-relaxed mb-4">
         Watch2Gether supports YouTube, Vimeo, and some other platforms — but
@@ -303,6 +284,27 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
       </p>
       <p className="text-foreground/80 mb-8">
         <strong>Best for:</strong> YouTube content specifically.
+      </p>
+
+      <h2
+        id="crunchyroll-party"
+        className="text-2xl font-bold text-foreground mt-10 mb-4 scroll-mt-24"
+      >
+        A Note on Crunchyroll Party: Removed From the Chrome Web Store
+      </h2>
+      <p className="text-foreground/80 leading-relaxed mb-4">
+        The best-known Crunchyroll Party extension was removed from the Chrome
+        Web Store on March 29, 2025, and Chrome-Stats lists the reason as
+        malware. Smaller extensions with similar names are still listed, so
+        check who publishes one before installing it.
+      </p>
+      <p className="text-foreground/80 mb-8">
+        <strong>Instead:</strong> AniDachi&apos;s Free plan covers short
+        Crunchyroll sessions, and the full story is in{" "}
+        <Link href="/watch-crunchyroll-together#crunchyroll-party" className="text-brand-orange hover:underline">
+          what happened to Crunchyroll Party
+        </Link>
+        .
       </p>
 
       <h2
@@ -318,7 +320,7 @@ export default function BestAppsWatchAnimeTogetherLongDistancePage() {
         <li><strong>You watch live on Crunchyroll or YouTube → AniDachi</strong> (sync, chat, reactions, and voice/video beside the player)</li>
         <li><strong>You watch live together across multiple platforms → Teleparty or Rave</strong></li>
         <li><strong>You want video calling built in → Rave or Scener</strong></li>
-        <li><strong>You want completely free + Crunchyroll → Crunchyroll Party or Discord</strong></li>
+        <li><strong>You want completely free + Crunchyroll → AniDachi&apos;s Free plan or Discord</strong></li>
       </ul>
       <p className="text-foreground/80 leading-relaxed mb-8">
         If your schedules do not overlap, arrange independent catch-up and

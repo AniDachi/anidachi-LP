@@ -24,7 +24,7 @@ const PRO_ROOM = getPlanPolicy("pro").maxParticipants;
 export const metadata: Metadata = {
   title: "Watch Anime Together Online: Sync with Friends",
   description:
-    "How to watch anime with friends online — websites and apps compared. Add AniDachi from the Chrome Web Store for Crunchyroll or YouTube rooms; Discord and Crunchyroll Party stay as free fallbacks.",
+    "Watch anime together online with friends. AniDachi syncs Crunchyroll, Netflix and YouTube in desktop Chrome, each person on their own account. Friends join free.",
   alternates: { canonical: PAGE_PATH },
   openGraph: {
     images: [
@@ -52,16 +52,16 @@ const faq = [
   {
     question: "How do you watch anime with friends online?",
     answer:
-      "Pick the platform, usually Crunchyroll, then install a watchroom extension so everyone streams on their own account in sync. AniDachi and Crunchyroll Party cover that path. Discord Go Live is the free fallback, with lower quality and no automatic sync.",
+      "Pick the platform, usually Crunchyroll, then install a watchroom extension so everyone streams on their own account in sync. AniDachi covers that path on its Free plan; Teleparty does on Crunchyroll with Premium. Discord Go Live is the free fallback, with lower quality and no automatic sync.",
   },
   {
     question: "Is there a website to watch anime together?",
     answer:
-      "There is no single free website that replaces each person's streaming plan. Tools like AniDachi and Crunchyroll Party sit on top of streaming sites as a Chrome watchroom. Browser room sites such as Watch2Gether fit public YouTube links better than licensed Crunchyroll episodes.",
+      "There is no single free website that replaces each person's streaming plan. Tools like AniDachi sit on top of streaming sites as a Chrome watchroom. Browser room sites such as Watch2Gether fit public YouTube links better than licensed Crunchyroll episodes.",
   },
   {
     question: "Is there a free anime watch party app?",
-    answer: `Yes. Crunchyroll Party is a free Chrome extension for live anime watch parties, and Discord screen sharing is free too. On AniDachi, ${PRICING_FREE20_SUMMARY.charAt(0).toLowerCase()}${PRICING_FREE20_SUMMARY.slice(1)} Friends join free.`,
+    answer: `Yes. On AniDachi, ${PRICING_FREE20_SUMMARY.charAt(0).toLowerCase()}${PRICING_FREE20_SUMMARY.slice(1)} Friends join free. Discord screen sharing is free too, with capped quality and no sync. The best-known Crunchyroll Party extension was removed from the Chrome Web Store in March 2025.`,
   },
   {
     question: "How do you host an anime watch party online?",
@@ -71,7 +71,7 @@ const faq = [
   {
     question: "Can you watch anime together long distance for free?",
     answer:
-      "Yes. Discord screen sharing works over any distance at no cost. Crunchyroll Party or AniDachi's Free plan give everyone playback on their own accounts with live sync. Live rooms need a shared start time; AniDachi's async catch-up is planned.",
+      "Yes. Discord screen sharing works over any distance at no cost. AniDachi's Free plan gives everyone playback on their own accounts with live sync. Live rooms need a shared start time; AniDachi's async catch-up is planned.",
   },
   {
     question: "Can you watch anime together without being online at the same time?",
@@ -115,6 +115,7 @@ const tocHeadings: TocHeading[] = [
   { id: "step-by-step", label: "How it works", level: 2 },
   { id: "platform-hubs", label: "Pick your platform", level: 2 },
   { id: "watch-party", label: "Watch party options", level: 2 },
+  { id: "websites", label: "Websites to watch anime together", level: 2 },
   { id: "methods-heading", label: "Methods", level: 2 },
   { id: "long-distance", label: "Long distance", level: 2 },
   { id: "anidachi-difference", label: "What makes AniDachi different", level: 2 },
@@ -165,7 +166,7 @@ export default function WatchAnimeTogetherPage() {
         description="Compare every way to watch anime together online — AniDachi watchrooms, free options, long-distance tips, and genre hubs."
         url={PAGE_PATH}
         datePublished="2026-04-23"
-        dateModified="2026-11-07"
+        dateModified="2026-11-24"
         faq={faq}
         headings={tocHeadings}
         itemList={genreHubItemList(1)}
@@ -240,7 +241,7 @@ export default function WatchAnimeTogetherPage() {
         </p>
 
         <h2 id="watch-party" className="scroll-mt-24">
-          Host an Anime Watch Party Online — Free &amp; Paid Options
+          Host an Anime Watch Party Online: Free and Paid Options
         </h2>
         <p>
           An <strong>anime watch party</strong> lets your group watch the same
@@ -250,7 +251,6 @@ export default function WatchAnimeTogetherPage() {
         <ResponsiveCompareTable
           columns={[
             { id: "anidachi", label: "AniDachi", highlight: true },
-            { id: "crunchyroll-party", label: "Crunchyroll Party" },
             { id: "teleparty", label: "Teleparty" },
             { id: "discord", label: "Discord screen share" },
           ]}
@@ -259,8 +259,7 @@ export default function WatchAnimeTogetherPage() {
               feature: "Price",
               values: {
                 anidachi: `Free 20 min a day; Plus from ${PRICING_STARTING_AT}`,
-                "crunchyroll-party": "Free",
-                teleparty: "Freemium",
+                teleparty: "Free tier; Crunchyroll needs Premium",
                 discord: "Free",
               },
             },
@@ -268,7 +267,6 @@ export default function WatchAnimeTogetherPage() {
               feature: "Synced playback",
               values: {
                 anidachi: "yes",
-                "crunchyroll-party": "yes",
                 teleparty: "yes",
                 discord: "No",
               },
@@ -277,7 +275,6 @@ export default function WatchAnimeTogetherPage() {
               feature: "Chat",
               values: {
                 anidachi: "yes",
-                "crunchyroll-party": "yes",
                 teleparty: "yes",
                 discord: "Voice/Text",
               },
@@ -286,7 +283,6 @@ export default function WatchAnimeTogetherPage() {
               feature: "Picture quality",
               values: {
                 anidachi: "Full, on each person's own account",
-                "crunchyroll-party": "Full, on each person's own account",
                 teleparty: "Full, on each person's own account",
                 discord: "Capped, often 720p",
               },
@@ -295,17 +291,41 @@ export default function WatchAnimeTogetherPage() {
               feature: "Platforms",
               values: {
                 anidachi: "Crunchyroll, YouTube, Netflix",
-                "crunchyroll-party": "Crunchyroll",
-                teleparty: "Crunchyroll, Netflix, Disney+",
+                teleparty: "Netflix, Disney+ and more; Crunchyroll on Premium",
                 discord: "Anything you can screen share",
               },
             },
           ]}
         />
         <p className="mt-4">
-          AniDachi also records your own watch history on Plus or Pro.
-          Crunchyroll Party has no progress tracking, and Discord is the
-          quickest zero-setup option when nobody wants to install anything.
+          AniDachi also records your own watch history on Plus or Pro. Discord
+          is the quickest zero-setup option when nobody wants to install
+          anything. Looking for Crunchyroll Party? The best-known extension by
+          that name was removed from the Chrome Web Store in March 2025; see{" "}
+          <Link href="/watch-crunchyroll-together#crunchyroll-party">
+            what happened to Crunchyroll Party
+          </Link>
+          .
+        </p>
+        <p>
+          Not sure what to start with? Try the{" "}
+          <Link href="/guides/best-anime-to-watch-in-a-watch-party">
+            best anime for a watch party
+          </Link>
+          , the{" "}
+          <Link href="/guides/best-shonen-anime-to-watch-with-friends">
+            shonen
+          </Link>{" "}
+          and{" "}
+          <Link href="/guides/best-action-anime-to-watch-with-friends">
+            action
+          </Link>{" "}
+          picks, or{" "}
+          <Link href="/guides/best-anime-to-watch-asynchronously">
+            anime to watch at your own pace
+          </Link>
+          . More setup help is in the{" "}
+          <Link href="/anime-watch-party-toolkit">anime watch party toolkit</Link>.
         </p>
         <p>
           Want a full walkthrough? Read{" "}
@@ -322,6 +342,29 @@ export default function WatchAnimeTogetherPage() {
           body="Install AniDachi, open an episode and send the invite. 20 free minutes a day, and friends join free."
         />
 
+        <h2 id="websites" className="scroll-mt-24">
+          Websites to Watch Anime Together
+        </h2>
+        <p>
+          No website can stream licensed anime to a whole group from one account.
+          Crunchyroll, Netflix and YouTube play on each viewer&apos;s own account,
+          so a watch party works in one of two ways. A browser extension like
+          AniDachi sits on top of each person&apos;s own streaming tab and keeps
+          everyone in sync. A room site like Watch2Gether plays public links,
+          which suits YouTube uploads but not Crunchyroll episodes.
+        </p>
+        <p>
+          For anime on Crunchyroll or Netflix, use an extension. AniDachi is a{" "}
+          <Link href="/">watch party app</Link> for desktop Chrome: one person
+          creates a room, friends join free from the link, and everyone watches
+          in full quality. For YouTube links, a room site works too; the
+          trade-offs are in{" "}
+          <Link href="/guides/watch2gether-alternatives-for-anime">
+            Watch2Gether alternatives
+          </Link>
+          .
+        </p>
+
         <h2 id="methods-heading" className="scroll-mt-24">
           Methods for Watching Anime Together
         </h2>
@@ -329,7 +372,7 @@ export default function WatchAnimeTogetherPage() {
           1. Chrome extensions (best quality and features)
         </h3>
         <p>
-          Extensions like AniDachi, Crunchyroll Party and Teleparty sync
+          Extensions like AniDachi and Teleparty sync
           playback so everyone sees the same frame. Each person watches on their
           own account in full quality. AniDachi supports live rooms and personal
           history; async catch-up is planned, not available today.
@@ -369,7 +412,7 @@ export default function WatchAnimeTogetherPage() {
           items={[
             {
               title: "Live sync across distance",
-              body: "AniDachi, Crunchyroll Party and Teleparty work wherever you are. Each person needs a stable connection and their own Crunchyroll account; playback stays in sync automatically.",
+              body: "AniDachi and Teleparty work wherever you are. Each person needs a stable connection and their own Crunchyroll account; playback stays in sync automatically.",
             },
             {
               title: "Time-zone gaps",

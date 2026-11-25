@@ -125,7 +125,7 @@ const tocHeadings: TocHeading[] = [
   { id: "answer", label: "Short answer", level: 2 },
   { id: "why-black", label: "Why Netflix goes black", level: 2 },
   { id: "what-people-try", label: "What people try", level: 2 },
-  { id: "watch-in-sync", label: "Watch in sync instead", level: 2 },
+  { id: "watch-in-sync", label: "Without a black screen", level: 2 },
   { id: "compare", label: "Screen share vs AniDachi", level: 2 },
   { id: "mobile", label: "Netflix on Discord mobile", level: 2 },
   { id: "movies", label: "How to watch movies on Discord", level: 2 },
@@ -245,10 +245,11 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
         </SeoGuideNote>
 
         <h2 id="watch-in-sync" className="mt-10 scroll-mt-24 text-2xl font-bold text-ani-text">
-          Watch in sync instead: voice in Discord, video through AniDachi
+          How to stream Netflix on Discord without a black screen
         </h2>
         <p className="mb-4 leading-relaxed text-ani-muted">
-          The fix is to stop sending the video through Discord at all. Discord
+          The fix is to stop sending the video through Discord at all: voice in
+          Discord, video through each person&apos;s own Netflix. Discord
           keeps doing what it is good at, which is voice. The movie plays on
           each person&apos;s own Netflix account in their own Chrome tab, at
           full quality, and AniDachi keeps those players on the same moment.

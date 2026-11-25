@@ -62,7 +62,7 @@ const faq = [
   {
     question: "Hat Crunchyroll eine Watchparty-Funktion?",
     answer:
-      "Nein. Stand 2026 hat Crunchyroll keine eingebaute Watchparty und kein Gruppenschauen. Um zusammen zu schauen, nutzt jeder eine Chrome-Erweiterung wie AniDachi, Crunchyroll Party oder Teleparty im eigenen Crunchyroll-Konto.",
+      "Nein. Stand 2026 hat Crunchyroll keine eingebaute Watchparty und kein Gruppenschauen. Um zusammen zu schauen, nutzt jeder eine Chrome-Erweiterung wie AniDachi oder Teleparty (auf Crunchyroll nur mit Premium) im eigenen Crunchyroll-Konto.",
   },
   {
     question: "Wie schaut man Crunchyroll mit Freunden zusammen?",

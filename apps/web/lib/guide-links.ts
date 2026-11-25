@@ -59,16 +59,6 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/anime-watch-party",
-		label: "Anime Watch Party",
-		tags: [
-			"how-to-core",
-			"watch-party",
-			"pillar-watch-anime",
-			"pillar-watch-crunchyroll",
-		],
-	},
-	{
 		href: "/guides/best-anime-to-watch-asynchronously",
 		label: "Best Anime to Watch Asynchronously",
 		tags: ["template-d", "listicle", "async", "pillar-watch-anime"],
@@ -465,28 +455,12 @@ export const guideLinks: GuideLinkItem[] = [
 	},
 	{
 		href: "/watch-youtube-together",
-		label: "YouTube Watch Party — Watch YouTube Together",
+		label: "Watch YouTube Together: YouTube Watch Party",
 		tags: ["youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
-		href: "/guides/how-to-watch-youtube-with-friends",
-		label: "How to Watch YouTube With Friends",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"youtube",
-			"watch-party",
-			"pillar-watch-youtube",
-		],
 	},
 	{
 		href: "/guides/netflix-party-for-youtube",
 		label: "Netflix Party for YouTube",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
-		href: "/guides/youtube-watch-party-chrome-extension",
-		label: "YouTube Watch Party Chrome Extension",
 		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{
@@ -501,11 +475,6 @@ export const guideLinks: GuideLinkItem[] = [
 		],
 	},
 	{
-		href: "/guides/does-youtube-have-watch-party",
-		label: "Does YouTube Have a Watch Party?",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
-	},
-	{
 		href: "/guides/can-you-screen-share-youtube-on-discord",
 		label: "Can You Screen Share YouTube on Discord?",
 		tags: [
@@ -515,55 +484,6 @@ export const guideLinks: GuideLinkItem[] = [
 			"pillar-watch-youtube",
 			"discord",
 		],
-	},
-	{
-		href: "/guides/youtube-group-watch",
-		label: "YouTube Group Watch",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"youtube",
-			"watch-party",
-			"pillar-watch-youtube",
-		],
-	},
-	{
-		href: "/guides/how-to-host-a-youtube-watch-party",
-		label: "How to Host a YouTube Watch Party",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"youtube",
-			"watch-party",
-			"pillar-watch-youtube",
-		],
-	},
-	{
-		href: "/guides/how-to-sync-youtube-with-friends",
-		label: "How to Sync YouTube With Friends",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"youtube",
-			"watch-party",
-			"pillar-watch-youtube",
-		],
-	},
-	{
-		href: "/guides/how-to-watch-youtube-together-without-screen-share",
-		label: "Watch YouTube Together Without Screen Share",
-		tags: [
-			"template-c",
-			"how-to-core",
-			"youtube",
-			"watch-party",
-			"pillar-watch-youtube",
-		],
-	},
-	{
-		href: "/guides/youtube-watch-party-free",
-		label: "YouTube Watch Party Free Options",
-		tags: ["template-c", "youtube", "watch-party", "pillar-watch-youtube"],
 	},
 	{
 		href: "/watch-movies-together-long-distance",
@@ -579,17 +499,6 @@ export const guideLinks: GuideLinkItem[] = [
 		href: "/watch-netflix-together-long-distance",
 		label: "How to Watch Netflix Together Long Distance",
 		tags: ["how-to-core", "long-distance", "online"],
-	},
-	{
-		href: "/guides/best-way-to-watch-youtube-with-friends",
-		label: "Best Way to Watch YouTube With Friends",
-		tags: [
-			"template-c",
-			"listicle",
-			"youtube",
-			"watch-party",
-			"pillar-watch-youtube",
-		],
 	},
 	{
 		href: "/guides/teleparty-not-working-youtube",

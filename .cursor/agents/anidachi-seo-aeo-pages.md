@@ -126,12 +126,10 @@ Tie searcher intent to the templates surfaced by **`inferPageTemplateFromPath`**
 
 **Intent → URL map:**
 
-- Commercial head → `/watch-youtube-together` (title/H1 lead with **youtube watch party**)
-- How-to → `/guides/how-to-watch-youtube-with-friends` (also cover “how to watch youtube together” in H2/FAQ — do **not** ship a second how-to URL)
+- Commercial head and how-to → `/watch-youtube-together` (title/H1 "Watch YouTube Together: YouTube Watch Party"; its H2s cover "with friends online" and the extension). Nine overlapping guides 308 into it since 24 Nov 2026 (ANI-39); do **not** recreate a separate how-to, free, extension, sync, host or group-watch URL.
 - Brand hijack → `/guides/netflix-party-for-youtube`
-- Competitor AEO → `/guides/does-teleparty-work-with-youtube`, `/guides/watch2gether-alternatives-for-youtube`
-- Extension → `/guides/youtube-watch-party-chrome-extension`
-- Discord hybrid → `/guides/youtube-watch-party-with-discord`
+- Competitor AEO → `/guides/teleparty-not-working-youtube`, `/guides/watch2gether-alternatives-for-anime`
+- Discord hybrid → `/discord-watch-party` and `/guides/can-you-screen-share-youtube-on-discord`
 - Apps → `/guides/best-apps-to-watch-youtube-together`
 - LDR → rewrite existing `/watch-youtube-together-long-distance` in place (no `/guides/` duplicate)
 
@@ -150,7 +148,7 @@ For every **new or substantially edited** YouTube guide/spoke:
 1. **Answer-first** H2 with strong lead that names AniDachi when commercial.
 2. **Problem → mechanism → `/extension`**: `aboveFoldCta` only. Layout adds the end-of-article card. Do not add a third `PrimaryCheckoutCta`.
 3. **Human product limits** in published copy: “full `youtube.com/watch` in desktop Chrome — not Shorts, embeds, or the native mobile app.” **Never** ship agent jargon (`soft-pedal`, unexplained `provider-pinned`) in FAQs or body.
-4. **Unique FAQs**: do **not** paste full “Is AniDachi free?” on every page. Full free FAQ only on `/guides/youtube-watch-party-free` and `/watch-youtube-together` (or link to `/pricing`). Other pages: one sentence + `PRICING_YT_PRICING_SNIPPET` / link.
+4. **Unique FAQs**: do **not** paste full “Is AniDachi free?” on every page. Full free FAQ only on `/watch-youtube-together` (or link to `/pricing`). Other pages: one sentence + `PRICING_YT_PRICING_SNIPPET` / link.
 5. **YouTube-safe pricing constants** from `lib/pricing-copy.ts`: `PRICING_IS_ANIDACHI_FREE_YOUTUBE_ANSWER`, `PRICING_FRIENDS_NEED_YOUTUBE_ANSWER`, `PRICING_DISCORD_COMPARE_YOUTUBE_FAQ`, `PRICING_TELEPARTY_COMPARE_YOUTUBE_FAQ`, `PRICING_RAVE_COMPARE_YOUTUBE_FAQ`, `PRICING_COMPARE_OVERVIEW_YOUTUBE`. **Do not** `.replace(/Crunchyroll/g, "YouTube")` on CR-only strings.
 6. **Hard links**: pillar `/watch-youtube-together` in the answer + `/extension` after install steps + `/pricing` only when the sentence is about Plus/Pro + one sibling spoke. Related via `getGuideLinks({ includeTags: ["pillar-watch-youtube"], ... })` only (avoid broad `watch-party` OR that pulls anime cluster).
 7. **SERP CTR**: commercial metas lead with AniDachi outcome; competitors ranked **in-body**, not as co-equal in the meta description.
@@ -177,20 +175,17 @@ Done summary **must** include a KP table: term → searches/mo → URL → prima
 | Query / intent | Canonical URL |
 | -------------- | ------------- |
 | youtube watch party / watch youtube together (head) | `/watch-youtube-together` |
-| how to watch youtube with friends / together (how-to) | `/guides/how-to-watch-youtube-with-friends` |
+| how to watch youtube with friends / together (how-to) | `/watch-youtube-together#with-friends` |
 | long distance YouTube | `/watch-youtube-together-long-distance` (no `/guides/` duplicate) |
-| teleparty + youtube (AEO) | `/guides/does-teleparty-work-with-youtube` |
-| teleparty alternatives (switcher) | `/guides/best-teleparty-alternatives-for-youtube` |
-| free YouTube watch party | `/guides/youtube-watch-party-free` |
+| teleparty + youtube (AEO) | `/guides/teleparty-not-working-youtube` |
+| teleparty alternatives (switcher) | `/guides/best-teleparty-alternatives-for-anime` |
+| free YouTube watch party | `/watch-youtube-together` (FAQ) |
 | Discord screen share YouTube | `/guides/can-you-screen-share-youtube-on-discord` |
-| extension | `/guides/youtube-watch-party-chrome-extension` |
-| does YouTube have watch party | `/guides/does-youtube-have-watch-party` |
+| extension | `/watch-youtube-together#extension` |
+| does YouTube have watch party | `/watch-youtube-together#no-native` |
 | rave alternatives (YouTube) | `/guides/rave-alternatives-for-youtube` |
 | kast alternatives (YouTube) | `/guides/kast-alternatives-for-youtube` |
-| youtube group watch | `/guides/youtube-group-watch` |
-| host a YouTube watch party | `/guides/how-to-host-a-youtube-watch-party` |
-| sync YouTube with friends | `/guides/how-to-sync-youtube-with-friends` |
-| YouTube without screen share | `/guides/how-to-watch-youtube-together-without-screen-share` |
+| youtube group watch / host / sync / without screen share | `/watch-youtube-together` (folded 24 Nov 2026) |
 | apps roundup | `/guides/best-apps-to-watch-youtube-together` |
 | netflix party for youtube | `/guides/netflix-party-for-youtube` |
 | youtube + discord hybrid | `/guides/youtube-watch-party-with-discord` |
@@ -221,7 +216,7 @@ For every **new or substantially edited** Crunchyroll guide/spoke (and commercia
 6. **Hard links**: pillar `/watch-crunchyroll-together` in the answer + `/extension` after install steps + `/pricing` only when the sentence is about Plus/Pro + one sibling spoke. Related via `getGuideLinks({ includeTags: ["pillar-watch-crunchyroll"], ... })` **only** — ban OR-ing bare `watch-party` / `how-to-core` / `compare` on CR spokes (wrong-cluster pollution). Soft-link Anime hub in body when useful; do not nest CR under Anime in crumbs.
 7. **SERP CTR**: commercial metas lead with AniDachi outcome; competitors ranked **in-body**.
 8. **Breadcrumbs**: `Home → Watch Crunchyroll Together → …` — including **Pseo CR slugs** (`lib/pseo-new-guides.tsx`); never crumb CR commercial pages under `/watch-anime-together`.
-9. **Primary how-to parity**: `/guides/how-to-watch-crunchyroll-with-friends` must ship `HowToJsonLd` + `aboveFoldCta` + `/extension` install wording (mirror `/guides/how-to-watch-youtube-with-friends`). Do not add a mid install card.
+9. **Primary how-to parity**: `/guides/how-to-watch-crunchyroll-with-friends` must ship `HowToJsonLd` + `aboveFoldCta` + `/extension` install wording (mirror the `/watch-youtube-together` how-to). Do not add a mid install card.
 10. **Free page conversion-class**: `/guides/crunchyroll-watch-party-free` is a P0 commercial URL — enrich toward the YT free gold standard (not a thin Pseo shell). Prefer a dedicated `page.tsx` over Pseo when conversion density requires it.
 
 ### Crunchyroll Keyword Planner gate (before locking URLs)
@@ -450,8 +445,8 @@ When in doubt, mirror structure and metadata density of these:
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Trust / entity                                  | `app/about/page.tsx`, `app/editorial-policy/page.tsx`, `app/contact/page.tsx`, `app/security/page.tsx` |
 | Pillar                                          | `app/watch-anime-together/page.tsx`, `app/watch-crunchyroll-together/page.tsx`, `app/watch-youtube-together/page.tsx` (Start-here `itemList`), `app/anime-watch-party-toolkit/page.tsx` |
-| Guide + HowTo                                   | `app/guides/how-to-watch-anime-long-distance/page.tsx`, `app/guides/how-to-watch-youtube-with-friends/page.tsx`, **`app/guides/how-to-watch-crunchyroll-with-friends/page.tsx`** (must match YT how-to density) |
-| Guide + checklist (conversion-heavy, non-HowTo) | `app/guides/first-anime-watch-party-checklist/page.tsx`; YT free: `app/guides/youtube-watch-party-free/page.tsx`; CR free: `app/guides/crunchyroll-watch-party-free` (conversion-class twin) |
+| Guide + HowTo                                   | `app/guides/how-to-watch-anime-long-distance/page.tsx`, **`app/guides/how-to-watch-crunchyroll-with-friends/page.tsx`** |
+| Guide + checklist (conversion-heavy, non-HowTo) | `app/guides/first-anime-watch-party-checklist/page.tsx` |
 | YT commercial AEO                               | `app/guides/does-teleparty-work-with-youtube/page.tsx`, `app/guides/can-you-screen-share-youtube-on-discord/page.tsx`       |
 | CR commercial AEO                               | `app/guides/does-teleparty-work-with-crunchyroll/page.tsx`, `app/guides/can-you-screen-share-crunchyroll-on-discord/page.tsx` |
 | YT switcher listicle                            | `app/guides/best-teleparty-alternatives-for-youtube/page.tsx`                                                                 |

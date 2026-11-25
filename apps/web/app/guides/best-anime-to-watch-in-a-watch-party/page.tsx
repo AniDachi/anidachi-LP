@@ -126,7 +126,7 @@ export default function BestAnimeToWatchInAWatchPartyPage() {
         Related Guides
       </h2>
       <ul className="space-y-2 text-brand-orange mb-8">
-        <li><Link href="/anime-watch-party" className="hover:underline">Anime watch party — host guide</Link></li>
+        <li><Link href="/watch-anime-together#watch-party" className="hover:underline">Anime watch party — host guide</Link></li>
         <li><Link href="/guides/first-anime-watch-party-checklist" className="hover:underline">First anime watch party checklist</Link></li>
         <li><Link href="/guides/anime-watch-party-ideas" className="hover:underline">Anime watch party ideas</Link></li>
         <li><Link href="/guides/how-to-create-an-anime-watch-party" className="hover:underline">How to create an anime watch party</Link></li>

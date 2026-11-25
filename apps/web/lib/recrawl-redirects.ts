@@ -64,6 +64,36 @@ export const COMPETITOR_PAGE_MERGES: Record<string, readonly string[]> = {
 };
 
 /**
+ * Owner-approved 2026-11-24 (ANI-8, ANI-39): pages that target the same searches as their
+ * hub fold into it. Keys are the destinations. `/anime-watch-party` was the owner's 23 Nov
+ * decision on ANI-8; the YouTube guides are the 10 Nov ANI-39 mapping.
+ */
+export const HUB_PAGE_MERGES: Record<string, readonly string[]> = {
+  "/watch-anime-together": ["/anime-watch-party"],
+  "/watch-youtube-together": [
+    "/guides/best-way-to-watch-youtube-with-friends",
+    "/guides/how-to-watch-youtube-with-friends",
+    "/guides/how-to-sync-youtube-with-friends",
+    "/guides/how-to-host-a-youtube-watch-party",
+    "/guides/youtube-group-watch",
+    "/guides/youtube-watch-party-chrome-extension",
+    "/guides/youtube-watch-party-free",
+    "/guides/how-to-watch-youtube-together-without-screen-share",
+    "/guides/does-youtube-have-watch-party",
+  ],
+};
+
+/** Of HUB_PAGE_MERGES, the URLs Google had indexed (URL Inspection, 24 Nov 2026). */
+const HUB_PAGE_MERGES_INDEXED = [
+  "/anime-watch-party",
+  "/guides/best-way-to-watch-youtube-with-friends",
+  "/guides/how-to-watch-youtube-with-friends",
+  "/guides/how-to-sync-youtube-with-friends",
+  "/guides/youtube-watch-party-chrome-extension",
+  "/guides/how-to-watch-youtube-together-without-screen-share",
+] as const;
+
+/**
  * Temporary recrawl sitemap (owner-approved 2026-11-20, ANI-38). Lists old URLs that
  * now redirect, so Google refetches them and moves their signals to the new page.
  * On 20 Nov several were still indexed under their own address, last crawled before
@@ -89,6 +119,8 @@ export const RECRAWL_REDIRECT_PATHS: readonly string[] = [
   ...Object.values(COMPETITOR_PAGE_MERGES)
     .flat()
     .filter((path) => path !== "/guides/watch2gether-alternatives-for-youtube"),
+  // Anime and YouTube pages folded into their hubs on 2026-11-24 (ANI-8, ANI-39).
+  ...HUB_PAGE_MERGES_INDEXED,
 ];
 
 export const RECRAWL_SITEMAP_PATH = "/sitemap-redirects.xml";

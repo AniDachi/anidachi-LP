@@ -142,7 +142,6 @@ function inferCluster(pathname: string): string {
   if (pathname.startsWith("/guides/best-")) return "listicle";
   if (
     pathname === "/watch-anime-together" ||
-    pathname === "/anime-watch-party" ||
     pathname === "/anime-watch-party-toolkit" ||
     pathname === "/watch-party-app" ||
     pathname === "/anime-tracker" ||

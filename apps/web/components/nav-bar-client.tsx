@@ -89,7 +89,6 @@ function isWatchClusterPath(pathname: string | null): boolean {
     pathname === "/prime-video-watch-party" ||
     pathname === "/discord-watch-party" ||
     pathname === "/anime-watch-party-toolkit" ||
-    pathname === "/anime-watch-party" ||
     pathname.startsWith("/watch-crunchyroll-") ||
     pathname.startsWith("/watch-youtube-") ||
     pathname.startsWith("/watch/")

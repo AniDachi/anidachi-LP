@@ -40,7 +40,7 @@ const faq = [
   {
     question: "Is there a way to watch anime together long distance for free?",
     answer:
-      `Crunchyroll Party is a free Chrome extension that supports live sync on Crunchyroll. Discord screen share is also free for occasional sessions. ${PRICING_LONG_DISTANCE_SNIPPET}`,
+      `Discord screen share is free for occasional sessions, with capped quality and no sync. ${PRICING_LONG_DISTANCE_SNIPPET}`,
   },
   {
     question: "What anime is best for long-distance couples to watch together?",
