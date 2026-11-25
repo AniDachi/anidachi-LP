@@ -480,7 +480,7 @@ export default function DiscordWatchPartyPage() {
 				DRM-protected, at the streamer&apos;s upload quality.
 			</p>
 			<p>
-				For a movie on a streaming service, the setup that works is the same
+				To stream movies on Discord from a streaming service, use the same
 				split as for episodes: everyone stays in the Discord call for voice,
 				each person plays the same movie on their own account in desktop
 				Chrome, and AniDachi keeps the players in sync. It works on Netflix,

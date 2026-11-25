@@ -50,6 +50,26 @@ entry. Check every factual claim, not a sample.
 
 ### 3. On-page SEO
 
+Run the on-page check first (ANI-81; rules in the Linear document
+[On-page SEO rules](https://linear.app/anidachi-seo-machine/document/on-page-seo-rules-2b32c32aca3d)):
+
+```bash
+pnpm --filter @anidachi/web seo:onpage --base http://localhost:3003 --pages <changed path(s)>
+```
+
+- **FAIL** on any new must-fix finding. Fix it, or add an approved exception in
+  `apps/web/lib/seo-onpage/targets.ts` that names the decisions-log entry or ticket.
+- **List** every new warning in the QA comment. Either fix it or say why it stays.
+- **Targets first:** a new page, or a page changing what it targets, gets its entry
+  in `targets.ts` before writing. That entry lists its primary and secondary search
+  groups, the questions it answers, and the searches other pages own.
+- **After release:** run the check against production. Add `--gsc <export>` to see
+  cannibalization and enrichment ideas from Search Console.
+
+The check covers title width, meta, H1, the first 100 words, heading structure and
+question coverage, search coverage and repetition, structured data, phone heading
+length and incoming links. The manual points below still apply:
+
 - Title 60 characters or less, brand at most once (the guard test covers this).
 - Meta description 160 characters or less, different from sibling pages.
 - One H1. Target query in the title, H1 or first paragraph, where it reads

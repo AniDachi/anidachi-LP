@@ -125,12 +125,12 @@ export default function BestAppsToWatchYoutubeTogetherPage() {
           Chrome from the official Store listing, then host watchrooms with live
           sync, chat, and personal history on full YouTube videos.
         </strong>{" "}
-        {PRICING_COMPARE_OVERVIEW} Hub:{" "}
+        {PRICING_COMPARE_OVERVIEW} Step-by-step: how to{" "}
         <Link
           href="/watch-youtube-together"
           className="text-brand-orange hover:underline"
         >
-          YouTube watch party
+          watch YouTube together
         </Link>
         .
       </p>
