@@ -86,6 +86,7 @@
 .host { margin: 0 0 clamp(15px, 1.6vw, 25px); color: #62351a; font-size: clamp(15px, 1.35vw, 21px); line-height: 1.35; }
 .host strong { color: #30190b; font-weight: 650; }
 .title { margin: 0; font: 700 clamp(38px, 5vw, 77px)/1.02 Georgia, "Times New Roman", serif; letter-spacing: -.055em; text-wrap: balance; }
+.title[data-fitted] { line-height: 1.12; letter-spacing: -.035em; }
 .episode { margin: clamp(7px, .8vw, 13px) 0 0; color: #532b14; font-size: clamp(17px, 1.5vw, 23px); line-height: 1.4; }
 .platform {
   display: flex; align-items: center;

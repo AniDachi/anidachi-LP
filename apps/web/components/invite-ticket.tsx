@@ -4,6 +4,7 @@ import { ANIDACHI_LOGO_SRC } from "@/lib/brand";
 import type { RoomSourceProvider } from "@anidachi/protocol";
 import { ProviderLogo } from "../../extension/src/provider-logo";
 import { InviteTicketMotion } from "./invite-ticket-motion";
+import { InviteTicketTitle } from "./invite-ticket-title";
 import styles from "./invite-ticket.module.css";
 
 const platforms = {
@@ -69,7 +70,7 @@ export function InviteTicket({ details, children, footer }: { details: InviteTic
             <p className={styles.host}>
               {host ? <><strong>{host}</strong> invited you to watch together</> : "You’re invited to watch together"}
             </p>
-            <h1 id="ticket-title" className={styles.title}>{title}</h1>
+            <InviteTicketTitle title={title} />
             {episode && <p className={styles.episode}>{episode}</p>}
             {provider && <WatchPlatform provider={provider} />}
         </>}>
