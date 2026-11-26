@@ -108,6 +108,7 @@ export function attachCatalogPillDrag(
     window.addEventListener("pointerup", finish, track);
     window.addEventListener("pointercancel", finish, track);
     window.addEventListener("blur", finishAtLastPoint, { signal: tracking.signal });
+    window.addEventListener("pagehide", finishAtLastPoint, { signal: tracking.signal });
     pill.setPointerCapture(e.pointerId);
   }
   function move(e: PointerEvent) {
@@ -166,24 +167,21 @@ export function attachCatalogPillDrag(
   }
   function finish(e: PointerEvent) {
     if (!gesture || gesture.id !== e.pointerId) return;
+    // Only a normal release carries a final pointer position. On cancellation, keep the last rendered one.
     if (e.type === "pointerup") move(e);
-    endGesture(e.type === "pointerup");
+    finishAtLastPoint();
   }
   function finishAtLastPoint() {
-    endGesture(true);
-  }
-  function endGesture(commit: boolean) {
     if (!gesture) return;
     const { id, moved, changedPlacement } = gesture;
     gesture = null;
     tracking?.abort();
     suppressClick = moved;
-    if (commit && changedPlacement) {
+    if (changedPlacement) {
       dropped = true;
       restingPosition = position;
       void placement.write(position).catch(() => {});
     } else {
-      if (!commit) pull?.cancel();
       place(restingPosition);
     }
     root.removeAttribute("data-catalog-dragging");
@@ -205,10 +203,9 @@ export function attachCatalogPillDrag(
   resize?.observe(root);
   resize?.observe(pill);
   return () => {
+    finishAtLastPoint();
     events.abort();
-    tracking?.abort();
     resize?.disconnect();
-    if (gesture && pill.hasPointerCapture(gesture.id)) pill.releasePointerCapture(gesture.id);
     pull?.cancel();
     pill.style.removeProperty("translate");
     for (const key of ["dragging", "floating", "panel-above", "return-right"]) root.removeAttribute("data-catalog-" + key);

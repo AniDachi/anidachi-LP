@@ -95,8 +95,29 @@ it("does not replace a new drop with a late read, and restores the saved drop on
   await Promise.resolve();
   next.pointer("pointerdown", homeX - 120);
   next.pointer("pointermove", homeX - 180);
-  next.pointer("pointercancel", homeX - 180);
-  expect(next.origin().x).toBeCloseTo(homeX - 120);
+  next.pointer("pointerup", homeX - 180);
+  expect(next.origin().x).toBeCloseTo(homeX - 180);
+  next.dispose();
+});
+
+it.each(["pointercancel", "pagehide", "unmount"])("keeps the second floating position on %s", async interruption => {
+  const first = mount();
+  first.pointer("pointerdown", homeX);
+  first.pointer("pointerup", 120);
+  first.pointer("pointerdown", 120);
+  first.pointer("pointermove", 235);
+  if (interruption === "pointercancel") first.pointer("pointercancel", 0);
+  if (interruption === "pagehide") window.dispatchEvent(new Event("pagehide"));
+  if (interruption !== "unmount") expect(first.origin().x).toBeCloseTo(235);
+  first.dispose();
+  expect(first.write).toHaveBeenCalledTimes(2);
+  const lastSaved = first.write.mock.calls[1]![0];
+  const next = mount(async () => lastSaved);
+  await Promise.resolve();
+  expect(next.origin().x).toBeCloseTo(235);
+  next.pointer("pointerdown", 235);
+  next.pointer("pointercancel", 0);
+  expect(next.origin().x).toBeCloseTo(235);
   expect(next.write).not.toHaveBeenCalled();
   next.dispose();
 });
