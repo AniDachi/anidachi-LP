@@ -203,7 +203,7 @@ describe("Popup Watch History v3", () => {
     } finally { await unmount(view.root); }
   });
 
-  it("keeps title positions and default disclosures when latest activity changes", async () => {
+  it("moves a newly watched title to the top and preserves open titles and their selected seasons", async () => {
     const history = multiSeasonHistoryFixture();
     let publish!: (snapshot: PopupWatchHistorySnapshot) => void;
     const client = {
@@ -216,15 +216,12 @@ describe("Popup Watch History v3", () => {
       expect((await findButton(view.container, "Season for Frieren: Season 2")).textContent).toBe("Season 2");
       const updated = structuredClone(history);
       updated.items[0]!.latestActivity.episodeKey = updated.items[0]!.seasons[0]!.episodes[0]!.episodeKey;
-      updated.items.reverse();
+      updated.items[1]!.lastWatchedAt = "2026-08-15T03:09:00.000Z";
       await act(async () => publish(snapshotFixture(updated)));
-      expect([...view.container.querySelectorAll(".popup-watch-item")]).toEqual(titles);
+      expect([...view.container.querySelectorAll(".popup-watch-item")]).toEqual([titles[1], titles[0]]);
       expect((await findButton(view.container, "Season for Frieren: Season 2")).textContent).toBe("Season 2");
       expect(view.container.querySelector(".popup-selected-episode-title")?.textContent).toBe("A New Beginning");
       expect((await findButton(view.container, "Toggle Another title history")).getAttribute("aria-expanded")).toBe("false");
-      await click(await findButton(view.container, "Toggle Crunchyroll history"));
-      await click(await findButton(view.container, "Toggle Crunchyroll history"));
-      expect((await findButton(view.container, "Season for Frieren: Season 2")).textContent).toBe("Season 2");
     } finally { await unmount(view.root); }
   });
 
@@ -1391,7 +1388,6 @@ describe("Popup Watch History v3", () => {
     const history = multiSeasonHistoryFixture();
     const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
     await click(await findButton(view.container, "Toggle Frieren history"));
-    await click(await findButton(view.container, "Toggle Crunchyroll history"));
     const search = await findInput(view.container, "Search watch history");
     await setInputValue(search, "Journey");
     expect(view.container.textContent).toContain("Episode 1 - The Journey");
@@ -1402,9 +1398,6 @@ describe("Popup Watch History v3", () => {
     await setInputValue(search, "Beginning");
     expect(view.container.textContent).toContain("A New Beginning");
     await click(await findButton(view.container, "Clear watch history search"));
-    const provider = await findButton(view.container, "Toggle Crunchyroll history");
-    expect(provider.getAttribute("aria-expanded")).toBe("false");
-    await click(provider);
     expect((await findButton(view.container, "Toggle Frieren history")).getAttribute("aria-expanded"))
       .toBe("false");
     expect(history.items[0]?.seasons).toHaveLength(2);
@@ -1427,7 +1420,7 @@ describe("Popup Watch History v3", () => {
     const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(mixedSessionHistoryFixture()) }));
     expect(view.container.querySelectorAll(".popup-episode-cell")).toHaveLength(2);
     expect(view.container.querySelector('[aria-label="Watch history mode"]')).toBeNull();
-    expect(view.container.querySelector(".resource-provider-logo.crunchyroll svg")).not.toBeNull();
+    expect(view.container.querySelector(".popup-watch-meta")?.textContent).toContain("Crunchyroll");
     await unmount(view.root);
   });
   it("keeps canonical sessionless personal progress", async () => {
@@ -1589,17 +1582,11 @@ describe("Popup Watch History v3", () => {
     await unmount(view.root);
   });
 
-  it("keeps each redesigned provider section independently collapsible", async () => {
-    const view = await renderPanel(
-      clientFixture({ cached: null, request: requestForHistory(historyFixture()) }),
-    );
-    const provider = await findButton(view.container, "Toggle Crunchyroll history");
-
-    expect(provider.getAttribute("aria-expanded")).toBe("true");
+  it("shows titles directly when only one platform has history", async () => {
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(historyFixture()) }));
+    await findButton(view.container, "Toggle Frieren history");
+    expect(view.container.querySelector(".popup-platform-carousel")).toBeNull();
     expect(view.container.textContent).toContain("Episode 1 - The Journey");
-    await click(provider);
-    expect(provider.getAttribute("aria-expanded")).toBe("false");
-    expect(provider.parentElement?.querySelector(".popup-provider-body")?.hasAttribute("hidden")).toBe(true);
     await unmount(view.root);
   });
 });
@@ -1690,8 +1677,8 @@ async function renderSettings(client: PopupWatchHistoryClient) {
   document.body.append(container);
   const root = createRoot(container);
   await act(async () => root.render(<PopupHistorySettings ownerUserId={OWNER_ID} client={client} />));
-  for (const provider of container.querySelectorAll(".popup-provider")) {
-    const title = provider.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
+  {
+    const title = container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
     if (title) await act(async () => title.click());
   }
   return { container, root };
@@ -2117,8 +2104,8 @@ async function renderPanel(client: PopupWatchHistoryClient) {
   await act(async () => {
     root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER_ID} />);
   });
-  for (const provider of container.querySelectorAll(".popup-provider")) {
-    const title = provider.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
+  {
+    const title = container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
     if (title) await act(async () => title.click());
   }
   return { container, root };
