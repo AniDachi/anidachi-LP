@@ -149,6 +149,26 @@ async function main() {
     }
   }
 
+  for (const [view, action] of [
+    ["install", "Install extension"], ["login", "Sign in to join"], ["join", "Join room"],
+  ]) {
+    const ticket = await fetchManual(`/dev/room-invite?view=${view}&platform=netflix`, {
+      headers: { cookie: stagingCookie },
+    });
+    assertStatus(ticket, 200, `Invite ticket ${view}`);
+    assertHeaderIncludes(ticket, "x-robots-tag", "noindex", `Invite ticket ${view}`);
+    const html = await ticket.text();
+    for (const expected of ["Staging preview", "The Queen’s Gambit", action]) {
+      if (!html.includes(expected)) throw new Error(`Invite ticket ${view}: missing ${expected}`);
+    }
+  }
+  const inviteLogin = await fetchManual("/login?next=%2Froom%2F00000000-0000-4000-8000-000000000000", {
+    headers: { cookie: stagingCookie },
+  });
+  assertStatus(inviteLogin, 200, "Guest invitation sign-in");
+  await assertTextIncludes(inviteLogin, 'aria-label="Room invitation"', "Guest invitation sign-in");
+  console.log("Invitation ticket smoke passed: install, sign in, join and guest invite route");
+
   // A guest must keep the chosen plan/period across the protected page and login.
   // Read-only: never start OAuth or create a Stripe session in this smoke.
   for (const [plan, billing] of [["plus", "yearly"], ["pro", "monthly"]]) {

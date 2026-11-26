@@ -274,6 +274,11 @@ Invite flow:
 
 1. Host copies the web invite link.
 2. Guest opens `/room/:roomId` on the website.
+   Anyone with an active invitation can see the host's display name, title,
+   episode and platform on the ticket before signing in. A room created in a
+   catalog shows its platform while the host chooses a title. Member details
+   and the launch destination require authentication. Installing, signing in
+   and joining are actions on the ticket stub.
    On desktop, the invitation and its sign-in screen ask the configured AniDachi
    extension whether it is available. If it does not respond, the guest sees an
    install button and a reminder to return. Returning to the same tab checks
