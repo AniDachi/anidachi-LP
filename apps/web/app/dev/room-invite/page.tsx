@@ -16,8 +16,10 @@ const views = { join: "Join", login: "Sign in", install: "Install" } as const;
 
 export default async function RoomInvitePreviewPage({ searchParams }: { searchParams: Promise<{view?: string; platform?: string}> }) {
   const local = process.env.NODE_ENV === "development";
-  if (!local && !(process.env.VERCEL_ENV === "preview" &&
-    process.env.VERCEL_GIT_COMMIT_REF === "staging" && (await getStagingAccessConfig()).enabled)) notFound();
+  if (!local) {
+    const onStaging = process.env.VERCEL_ENV === "preview" && process.env.VERCEL_GIT_COMMIT_REF === "staging";
+    if (!onStaging || !(await getStagingAccessConfig()).enabled) notFound();
+  }
   const { view, platform } = await searchParams;
   const provider = RoomSourceProviderSchema.safeParse(platform).data ?? sample.provider;
   const ticket = provider === sample.provider ? sample : {
