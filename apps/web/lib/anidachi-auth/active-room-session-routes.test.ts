@@ -606,7 +606,7 @@ test("production create and connect routes admit only through the atomic assignm
   assert.match(main, /const \{ participantSessionId, \.\.\.roomInput \} = input/);
   assert.match(main, /signRoomToken\([\s\S]*participantSessionId/);
   assert.doesNotMatch(main, /createRoom\(\{/);
-  assert.match(connect, /RoomSessionAdmissionInputSchema\.safeParse/);
+  assert.match(connect, /RoomConnectAdmissionInputSchema\.safeParse/);
   const admissionDuration = connect.match(
     /export const maxDuration = (\d+);/,
   );

@@ -1,3 +1,4 @@
+import { roomLobbyDestination } from "@/lib/room-lobby";
 import type { Metadata } from "next";
 import { TrackOnView } from "@/components/track-on-view";
 import { headers } from "next/headers";
@@ -22,7 +23,7 @@ export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ roomId: string }>;
-  searchParams: Promise<{ joined?: string }>;
+  searchParams: Promise<{ joined?: string; lobby?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -35,10 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RoomPage({ params, searchParams }: Props) {
   const { roomId } = await params;
-  const { joined } = await searchParams;
+  const { joined, lobby } = await searchParams;
+  const lobbyQuery = roomLobbyDestination(roomId, lobby) ? `?lobby=${lobby}` : "";
   const initialMobile = isMobileUserAgent((await headers()).get("user-agent"));
 
-  await requireAuth(`/room/${roomId}`);
+  await requireAuth(`/room/${roomId}${lobbyQuery}`);
   const session = await getSession();
 
   const room = await getRoomById(roomId);
@@ -76,7 +78,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
   const source = deriveDurableRoomSource(room);
   const launchUrl = source
     ? buildRoomSourceLaunchUrl(source.source, roomId)
-    : null;
+    : roomLobbyDestination(roomId, room.lobby_provider ?? lobby, room.lobby_marketplace);
   const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
   const justJoined = joined === "1";
 
@@ -131,7 +133,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
         roomSubtitle={roomSubtitle}
         hostName={host?.display_name ?? "Unknown"}
         sourceProvider={source?.source.provider}
-        joinAction={`/api/rooms/${roomId}/join`}
+        joinAction={`/api/rooms/${roomId}/join${lobbyQuery}`}
         isParticipant={isParticipant}
         hasLaunchUrl={Boolean(launchUrl)}
         initialMobile={initialMobile}

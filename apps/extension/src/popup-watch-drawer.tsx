@@ -1,3 +1,5 @@
+import type {PrimeNavigation} from "@anidachi/protocol";
+import {startPrimeResume,findPrimeNavigation} from "./prime-launch-client";
 import { usePopupProviderBrowse } from "./use-popup-provider-browse";
 import { readPopupView, readPopupHistoryView, writePopupHistoryChoice, writePopupQuery } from "./popup-view-state";
 import { parseWatchHistoryBootstrapData, type WatchHistoryMessageResponse } from "./watch-history-client";
@@ -5,6 +7,8 @@ import { canReadWatchHistory } from "./watch-history-access";
 import { youtubeHistoryArtworkUrl } from "./source-adapters/youtube/artwork";
 import { buildPersonalHistoryResumeUrl } from "@anidachi/protocol";
 import {
+	isHboMaxArtworkUrl,
+	isPrimeHistoryPosterKey,
 	type WatchHistoryBrowseQuery,
 	type WatchHistoryBrowseTitleEpisodesResponse,
 	WatchHistoryBrowseTitleEpisodesResponseSchema,
@@ -590,9 +594,12 @@ function WatchDrawer({
 	const remaining = {
 		youtube: 20 * Math.max(1, browsing.providers.youtube.pages.length) - known.filter(item => item.provider === "youtube").length,
 		netflix: 20 * Math.max(1, browsing.providers.netflix.pages.length) - known.filter(item => item.provider === "netflix").length,
+		primevideo: 20 * Math.max(1, browsing.providers.primevideo.pages.length) - known.filter(item => item.provider === "primevideo").length,
+		disneyplus: 20 * Math.max(1, browsing.providers.disneyplus.pages.length) - known.filter(item => item.provider === "disneyplus").length,
+		hbomax: 20 * Math.max(1, browsing.providers.hbomax.pages.length) - known.filter(item => item.provider === "hbomax").length,
 		crunchyroll: 20 * Math.max(1, browsing.providers.crunchyroll.pages.length) - known.filter(item => item.provider === "crunchyroll").length,
 	};
-	const items = projected.filter(item => (item.provider === "youtube" || item.provider === "crunchyroll" || item.provider === "netflix")
+	const items = projected.filter(item => (item.provider === "youtube" || item.provider === "crunchyroll" || item.provider === "netflix" || item.provider === "primevideo" || item.provider === "disneyplus" || item.provider === "hbomax")
 		&& (knownKeys.has(pendingTitleKey(item.provider, item.titleKey)) || remaining[item.provider]-- > 0)).map((item) => {
 		const durable = known.find(
 			(value) =>
@@ -647,17 +654,18 @@ function WatchDrawer({
 		}
 		if (actionGeneration.current === token) setBusy(null);
 	};
-	const openUrl = (url: string, currentTime?: number, provider?: WatchHistoryItem["provider"]) =>
+	const openUrl = (url: string, currentTime?: number, provider?: WatchHistoryItem["provider"], navigation?:PrimeNavigation) =>
 		void runAction("open", async () => {
 			const token = actionGeneration.current;
 			const generation =
 				snapshotRef.current?.accountGeneration ??
 				browsing.pages[0]?.history.meta.accountGeneration;
-			if (currentTime === undefined) {
+			if (currentTime === undefined && provider !== "primevideo" && !url.startsWith("https://www.primevideo.com/detail/")) {
 				await client.openUrl(url);
 				return;
 			}
-			if (provider !== "youtube" && provider !== "crunchyroll" && provider !== "netflix") return;
+			if (url.startsWith("https://www.primevideo.com/detail/")) provider = "primevideo";
+   if (provider !== "youtube" && provider !== "crunchyroll" && provider !== "netflix" && provider !== "primevideo" && provider !== "disneyplus" && provider !== "hbomax") return;
 			const bootstrapped = await requestPopupWatchHistory(client, {
 				type: "ANIDACHI_WATCH_HISTORY_V3",
 				command: "bootstrap",
@@ -678,14 +686,14 @@ function WatchDrawer({
 				accountGeneration: data.accountGeneration,
 				provider,
 				sourceUrl: url,
-				currentTime,
+				currentTime:currentTime ?? 0,
 			});
 			if (
 				actionGeneration.current === token &&
 				(snapshotRef.current?.accountGeneration ??
 					browsing.pages[0]?.history.meta.accountGeneration) === generation
 			)
-				await client.openUrl(launch);
+				await (provider === "primevideo" ? startPrimeResume(launch,navigation ?? findPrimeNavigation([snapshotRef.current,browsing.pages],url),ownerUserId) : client.openUrl(launch));
 		});
 	const refreshHistory = () =>
 		void runAction("refresh", async () => {
@@ -892,7 +900,7 @@ function WatchDrawer({
 			{items.length ? (
 				<div className="popup-resource-list">
 					{groupWatchHistoryItems(items).map((group) => {
-						if (group.provider !== "youtube" && group.provider !== "crunchyroll" && group.provider !== "netflix") return null;
+						if (group.provider !== "youtube" && group.provider !== "crunchyroll" && group.provider !== "netflix" && group.provider !== "primevideo" && group.provider !== "disneyplus" && group.provider !== "hbomax") return null;
 						const stream = browsing.providers[group.provider];
 						const count = stream.pages[0]?.history.totalTitleCount;
 						const branch = JSON.stringify([group.provider]);
@@ -958,7 +966,7 @@ function WatchDrawer({
 													pendingTitleKey(item.provider, item.titleKey),
 												)}
 												busy={busy}
-												onOpen={(url, time) => openUrl(url, time, item.provider)}
+												onOpen={(url, time, navigation) => openUrl(url, time, item.provider,navigation)}
 											/>
 										))}
 										{stream.nextCursor && dates.ok ? (
@@ -1007,28 +1015,49 @@ function WatchDrawer({
 }
 
 function PopupWatchArtwork({
-	url,
-	title,
+	url, item, client, ownerUserId, active,
 }: {
 	url: string | null;
-	title: string;
+	item: WatchHistoryItem;
+	client: PopupWatchHistoryClient;
+	ownerUserId: string;
+	active: boolean;
 }) {
-	const [failed, setFailed] = useState(false);
-	const visible = Boolean(url) && !failed;
+	const [savedStatus, setSavedStatus] = useState<"initial" | "landscape" | "failed">("initial");
+	const [poster, setPoster] = useState<string | null | undefined>(undefined);
+	const hbo = item.provider === "hbomax";
+	const saved = url && hbo && isHboMaxArtworkUrl(url) ? url + "?w=500&f=webp" : url;
+	const canResolve = hbo || (item.provider === "primevideo" && isPrimeHistoryPosterKey(item.titleKey));
+	const needsPoster = canResolve && (!saved || savedStatus !== "initial");
+	useEffect(() => {
+		if (!active || !needsPoster || poster !== undefined) return;
+		let current = true;
+		void requestPopupWatchHistory(client, { type: "ANIDACHI_WATCH_HISTORY_V3", command: "title-poster", expectedOwnerUserId: ownerUserId,
+			titleKey: item.titleKey }).then(result => {
+			if (current) setPoster(result.ok && typeof result.data === "string" ? result.data : null);
+		});
+		return () => { current = false; };
+	}, [active, client, item.titleKey, needsPoster, ownerUserId, poster]);
+	const src = poster ?? (savedStatus === "failed" ? null : saved);
 	return (
-		<span className="popup-watch-artwork" data-has-artwork={visible}>
-			{visible && url ? (
+		<span className="popup-watch-artwork" data-has-artwork={Boolean(src)}>
+			{src ? (
 				<img
+					key={src}
 					alt=""
 					loading="lazy"
 					decoding="async"
-					src={url}
+					src={src}
 					width={44}
 					height={66}
-					onError={() => setFailed(true)}
+					style={item.provider === "primevideo" ? { objectFit: "contain" } : undefined}
+					onLoad={({ currentTarget }) => {
+						if (canResolve && !poster && currentTarget.naturalWidth > currentTarget.naturalHeight) setSavedStatus("landscape");
+					}}
+					onError={() => poster ? setPoster(null) : setSavedStatus("failed")}
 				/>
 			) : (
-				title.slice(0, 1)
+				item.title.slice(0, 1)
 			)}
 		</span>
 	);
@@ -1071,7 +1100,7 @@ function PopupWatchHistoryItem({
 	allowPending: boolean;
 	canonical?: WatchHistoryItem;
 	busy: string | null;
-	onOpen: (url: string, currentTime?: number) => void;
+	onOpen: (url: string, currentTime?: number,navigation?:PrimeNavigation) => void;
 }) {
 	const branch = JSON.stringify([item.provider, item.titleKey]);
 	const open = disclosure.isOpen(branch, initiallyOpen);
@@ -1148,6 +1177,7 @@ function PopupWatchHistoryItem({
 			input: {
 				provider: item.provider,
 				titleKey: item.titleKey,
+				...(item.provider === "primevideo" || item.provider === "disneyplus" || item.provider === "hbomax" ? { includePartial: true } : {}),
 				...(requestedSeason && requestedSeason !== "__unseasoned__"
 					? { seasonKey: requestedSeason }
 					: {}),
@@ -1194,8 +1224,10 @@ function PopupWatchHistoryItem({
 		catalog?.state === "complete" && item.catalogState === "complete"
 			? catalog
 			: undefined;
+	const knownCatalog = exactCatalog ?? ((catalog?.provider === "primevideo" || catalog?.provider === "disneyplus" || catalog?.provider === "hbomax") &&
+		catalog.state === "partial" && catalog.revision ? catalog : undefined);
 	const seasonMetadata =
-		exactCatalog?.seasons ??
+		knownCatalog?.seasons ??
 		page.pages[0]?.detail.catalog.seasons ??
 		item.seasons;
 	const observedSeasons = matchingEpisodes.map((episode) => ({
@@ -1217,7 +1249,7 @@ function PopupWatchHistoryItem({
 		.filter(
 			(season) =>
 				(fullHistory &&
-					exactCatalog?.seasons.some(
+					knownCatalog?.seasons.some(
 						(known) => known.seasonKey === season.seasonKey,
 					)) ||
 				matchingEpisodes.some(
@@ -1294,10 +1326,10 @@ function PopupWatchHistoryItem({
 	};
 	const rosterReady =
 		fullHistory &&
-		exactCatalog &&
-		grid.pages[0]?.state === "complete" &&
+		knownCatalog &&
+		grid.pages[0]?.revision === knownCatalog.revision &&
 		grid.pages[0].seasonKey === selectedSeason?.seasonKey &&
-		exactCatalog.seasons.some(
+		knownCatalog.seasons.some(
 			(season) => season.seasonKey === selectedSeason?.seasonKey,
 		);
 	// Keep Resume attached to the known current episode even when its catalog
@@ -1307,7 +1339,7 @@ function PopupWatchHistoryItem({
 			episode.episodeKey === item.latestActivity.episodeKey &&
 			(episode.seasonKey ?? "__unseasoned__") === selectedSeason?.seasonKey,
 	);
-	const choices: PopupEpisodeChoice[] = rosterReady
+	const catalogChoices: PopupEpisodeChoice[] = rosterReady
 		? mergeBy(
 				grid.pages.flatMap((page) => page.episodes),
 				(episode) => episode.episodeKey,
@@ -1325,6 +1357,7 @@ function PopupWatchHistoryItem({
 				const personal = history
 					? effectiveEpisode({
 							...history,
+       ...(history.sourceUrl===episode.sourceUrl && (history.primeNavigation??episode.primeNavigation) ? {primeNavigation:history.primeNavigation??episode.primeNavigation}:{}),
 							episodeTitle: episode.episodeTitle,
 							episodeNumber: episode.episodeNumber,
 						})
@@ -1338,7 +1371,8 @@ function PopupWatchHistoryItem({
 					pending: personal ? episodePending(personal) : undefined,
 				};
 			})
-		: matchingEpisodes
+		: [];
+	const savedChoices: PopupEpisodeChoice[] = matchingEpisodes
 				.filter(
 					(episode) =>
 						(episode.seasonKey ?? "__unseasoned__") ===
@@ -1363,6 +1397,12 @@ function PopupWatchHistoryItem({
 						pending: episodePending(personal),
 					};
 				});
+	// A partial catalog adds confirmed episodes; it cannot replace saved history.
+	const choices = !rosterReady ? savedChoices : exactCatalog ? catalogChoices :
+		mergeBy([...savedChoices, ...catalogChoices], (episode) => episode.key).sort(
+			(a, b) => (a.number ?? Infinity) - (b.number ?? Infinity) || a.key.localeCompare(b.key),
+		);
+	const includeSavedPages = !rosterReady || !exactCatalog;
 
 	const renderEpisode = (episode: Episode, detail = false) => (
 		<PopupEpisode
@@ -1410,7 +1450,10 @@ function PopupWatchHistoryItem({
 					<PopupWatchArtwork
 						key={artworkUrl}
 						url={artworkUrl}
-						title={item.title}
+						item={item}
+						client={client}
+						ownerUserId={ownerUserId}
+						active={providerOpen}
 					/>
 					<span className="popup-watch-main">
 						<strong className="popup-watch-title" dir="auto">
@@ -1463,12 +1506,13 @@ function PopupWatchHistoryItem({
 			{hasOpened.current ? (
 				<div
 					hidden={!open}
+					aria-busy={page.loading || (isSeries && fullHistory && grid.loading)}
 					className={
 						isSeries ? "popup-watch-grid-view" : "popup-watch-video-list"
 					}
 					id={bodyId}
 				>
-					{page.loading && !page.pages.length && !ownPending.length ? (
+					{!isSeries && page.loading && !page.pages.length && !ownPending.length ? (
 						<p className="popup-watch-slice-note" role="status">
 							Loading matching episodes...
 						</p>
@@ -1490,17 +1534,16 @@ function PopupWatchHistoryItem({
 									onSelect={chooseSeason}
 									title={item.title}
 								/>
-								<span className="popup-season-counter">
-									{selectedAggregate?.availableEpisodes != null &&
-									selectedAggregate.availableEpisodes > 0
-										? `${selectedAggregate.completedEpisodes} / ${selectedAggregate.availableEpisodes} watched`
-										: `${choices.length} known`}
-								</span>
+								{selectedAggregate?.availableEpisodes != null && selectedAggregate.availableEpisodes > 0 ? (
+									<span className="popup-season-counter">
+										{selectedAggregate.completedEpisodes} / {selectedAggregate.availableEpisodes} watched
+									</span>
+								) : null}
 							</div>
 							<PopupEpisodePicker
 								pending={
 									fullHistory &&
-									Boolean(exactCatalog) &&
+									Boolean(knownCatalog) &&
 									!rosterReady &&
 									grid.loading
 								}
@@ -1525,14 +1568,16 @@ function PopupWatchHistoryItem({
 									selectedSeason.seasonKey === "__unseasoned__"
 								}
 								loading={
-									rosterReady || (fullHistory && exactCatalog)
-										? grid.loading
-										: page.loading
+									Boolean((fullHistory && knownCatalog && grid.loading) ||
+										(includeSavedPages && page.loading))
 								}
 								hasMore={Boolean(
-									rosterReady ? grid.nextCursor : page.nextCursor,
+									(rosterReady && grid.nextCursor) || (includeSavedPages && page.nextCursor),
 								)}
-								loadMore={rosterReady ? grid.loadMore : page.loadMore}
+								loadMore={() => {
+									if (rosterReady) grid.loadMore();
+									if (includeSavedPages) page.loadMore();
+								}}
 								renderSelected={(entry) =>
 									entry.history ? (
 										renderEpisode(entry.history, true)
@@ -1545,37 +1590,6 @@ function PopupWatchHistoryItem({
 									)
 								}
 							/>
-							{fullHistory && !rosterReady ? (
-								<p
-									className="popup-catalog-note"
-									role={grid.loading ? "status" : undefined}
-									hidden={Boolean(exactCatalog) && grid.loading}
-								>
-									{grid.loading
-										? "Loading episode catalog..."
-										: "Known episodes only · full catalog unavailable"}
-									{grid.error ? (
-										<>
-											{" "}
-											<button type="button" onClick={grid.reload}>
-												Retry catalog
-											</button>
-										</>
-									) : null}
-								</p>
-							) : !fullHistory ? (
-								<p className="popup-catalog-note">
-									Episodes matching your filters
-								</p>
-							) : null}
-							{rosterReady && grid.error ? (
-								<p className="popup-catalog-note" role="alert">
-									Could not load more episodes.{" "}
-									<button type="button" onClick={grid.reload}>
-										Retry catalog
-									</button>
-								</p>
-							) : null}
 						</>
 					) : isSeries ? null : item.itemKind === "movie" && item.provider !== "youtube" ? (
 						(() => {
@@ -1589,6 +1603,14 @@ function PopupWatchHistoryItem({
 					) : (
 						matchingEpisodes.map((episode) => renderEpisode(episode))
 					)}
+					{isSeries && fullHistory && grid.error ? (
+						<p className="popup-watch-slice-note" role="alert">
+							Could not load the episode catalog.{" "}
+							<button type="button" onClick={grid.reload}>
+								Retry catalog
+							</button>
+						</p>
+					) : null}
 					{page.nextCursor && (!isSeries || !selectedSeason) ? (
 						<button
 							className="popup-watch-load-more"
@@ -1642,7 +1664,7 @@ function PopupEpisode({
 	refresh: number;
 	generation?: number;
 	busy: string | null;
-	onOpen: (url: string, currentTime?: number) => void;
+	onOpen: (url: string, currentTime?: number,navigation?:PrimeNavigation) => void;
 }) {
 	const completed = Boolean(episode.completedAt);
 	const currentTime = pending?.currentTime ?? episode.currentTime;
@@ -1696,7 +1718,7 @@ function PopupEpisode({
 							action={`${completed ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}${!completed && item.itemKind !== "movie" && episode.episodeNumber !== null ? ` E${episode.episodeNumber}` : ""}`}
 							actionLabel={`Resume ${episode.episodeTitle}`}
 							disabled={busy === "open"}
-							onOpen={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, resumeTime)}
+							onOpen={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, resumeTime,episode.primeNavigation)}
 						/>
 					</>
 				) : (
@@ -1716,7 +1738,7 @@ function PopupEpisode({
 								aria-label={`Resume ${episode.episodeTitle}`}
 								title="Resume"
 								disabled={busy === "open"}
-								onClick={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, resumeTime)}
+								onClick={() => onOpen(pending?.sourceUrl ?? episode.sourceUrl, resumeTime,episode.primeNavigation)}
 							>
 								<Play size={14} fill="currentColor" aria-hidden="true" />
 							</button>

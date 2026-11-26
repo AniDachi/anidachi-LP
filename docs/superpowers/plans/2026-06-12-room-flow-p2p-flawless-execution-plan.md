@@ -1,5 +1,77 @@
 # Room Flow And P2P Flawless Execution Plan
 
+## YouTube catalog rooms on staging
+
+The Room tab opens YouTube Home or reuses a supported catalog. Guests can join before playback through a copied link or an Inbox invitation. Validate first playback on a regular watch video, then return from browsing through **Back to video**. Google sign-in is optional for public videos. AniDachi still verifies room admission.
+
+## Crunchyroll catalog rooms on staging
+
+The Room tab uses the signed-in Crunchyroll catalog. Both copied links and Inbox invitations open Discover before playback. Once the host starts an episode, the existing adapter follows its watch ID in the guest’s site language. Acceptance covers two profiles, first playback and Back to video while the host is paused.
+
+## HBO Max catalog rooms on staging
+
+The Room tab can create a room in the signed-in HBO Max catalog before a title starts. A copied link or Inbox invitation opens the catalog for the guest. After playback starts, the existing HBO adapter follows the host’s playable video ID. Verify guest return while the host is paused.
+
+## Prime Video catalog room creation on staging
+
+The Room tab uses the active Prime Video storefront or opens the standalone catalog. Catalog creation records the supported marketplace with room admission. Copied links and Inbox invitations can therefore land in the host's storefront before playback. When the host plays an episode, the existing Prime navigation descriptor supplies the playable edition. The guest's Back to video action uses the live room's current episode, including while the host is paused.
+
+## Netflix catalog room creation on staging
+
+Verify the Room tab on two Netflix profiles. Create before playback, join from the catalog by copied link or Inbox, then start a title and check that the guest reaches the same watch ID. Returning to an active room must preserve its membership. See [Netflix adapter notes](../../netflix-adapter-notes.md).
+
+## YouTube catalog continuity — November 21, 2026
+
+YouTube reuses the catalog room and offscreen media owner. Its automatic follow reservation uses the canonical watch URL’s `v` parameter. The Chromium transport harness supports `--youtube` for a host leaving the player for Home, loading search, returning to playback and leaving the supported site. The adapter lifecycle test covers a native mini-player remaining in the DOM on Home.
+
+## Crunchyroll catalog continuity — November 20, 2026
+
+The Crunchyroll staging candidate reuses the catalog room connection and media
+owner for watch pages and localized streaming catalogs. The isolated Chromium
+transport check covers device consent in the current tab, moving camera frames,
+a single room connection across full page loads, and cleanup on leave, room end,
+account change, and navigation outside the catalog. Repeat player → catalog →
+new episode with two signed-in profiles for live provider acceptance.
+
+## Prime catalog continuity — November 19, 2026
+
+The [Prime catalog task](2026-11-16-prime-video-adapter.md#rooms-in-the-prime-catalog)
+moves the extension's Prime room connection and media owner into an offscreen
+document for the lifetime of a confirmed room. A tab's overlay can detach during
+navigation and return to the same call. Real-browser checks cover media across
+document replacement and stopping capture when the room or account changes.
+The two-account Amazon staging check is a separate acceptance step.
+
+November 20 regression coverage follows a guest from the player through Home and
+My Stuff → Watchlist, including a full document load. The catalog overlay
+measures its own bounds when there is no player. A camera tile requests a fresh
+binding during handoff and reveals the image after its first video frame.
+Check both room membership and advancing, visible frames before accepting the
+loaded staging build.
+
+The first camera or microphone request now uses the room’s current Prime tab.
+The Chromium transport harness covers a declined first camera request, a retry
+with an existing grant, and frame continuity across catalog navigation.
+
+## Prime Amazon readiness follow-up — 2026-11-18
+
+[Task 21](2026-11-16-prime-video-adapter.md#task-21-amazon-spa-identity-and-provider-intro-recovery)
+corrects native Amazon ASIN readiness, single-season catalog and intro barriers.
+Exact room identity, invitation validation and server/media contracts stay
+unchanged. Candidate inspection on the reported page passes without reload;
+tests, review, staging packaging and loaded two-account acceptance are recorded
+separately in its delivery receipt. No production promotion is included.
+
+## Prime player-close follow-up — 2026-11-17
+
+Owner approved explicit player close as room departure (host ends, guest leaves),
+preserving native episode/season changes and reconnect grace. The extension-only
+[Task 20](2026-11-16-prime-video-adapter.md#task-20--intentional-player-close-leaves-the-room-november-17)
+reuses exact departure and durable retries; Worker/Web/SQL/P2P protocol unchanged.
+Provider intent, admission races and offline cleanup have focused regressions.
+Final extension checks, room harness, review and loaded acceptance are tracked
+in that task's delivery receipt; no production promotion is included.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` for implementation tasks and update this file after every completed step. Use `superpowers:systematic-debugging` for regressions. This plan is the execution program for the room/realtime/P2P goals in `docs/superpowers/plans/2026-06-07-production-room-p2p-hardening-roadmap.md`. The roadmap stays authoritative for protocol contracts and task ordering; this plan adds measurable targets, an automated test harness, verified-bug fixes, and concrete media-engine work. When the two documents conflict on ordering or contracts, the roadmap wins unless the Progress Log here records an agreed exception.
 
 **Goal:** Make the complete commercial flow — sign-in, room creation, invite, join, live sync, P2P camera/audio, reconnect, room end — work reliably at the level of mature realtime products, with every claim verified by metrics and automated two-browser tests instead of ad-hoc manual checks.
@@ -211,7 +283,7 @@ Minimum startup for the next room/P2P PR:
 
 - [x] 2.1 Migration applied + verified on staging: `client_request_id`, `last_active_at`, `ended_at`, `host_connected_at`; partial unique index `uniq_rooms_host_client_request`; `(host_user_id, status, last_active_at)` index; `usage_daily` table + `increment_host_usage` RPC.
 - [x] 2.2 Idempotent create: per-click `clientRequestId` from the extension; conflict returns the existing non-ended room (`reused=true`). Verified 14/14 on staging.
-- [x] 2.3 Lifecycle transitions: `/connect` bumps `last_active_at` and promotes `lobby -> live` on first host connect; old active-room-count limit removed. Verified on staging.
+- [x] 2.3 Lifecycle transitions: `/connect` bumps `last_active_at` and originally promoted `lobby -> live` on first host connect (superseded by the host JOIN confirmation below); old active-room-count limit removed. Verified on staging.
 - [x] 2.4 `POST /api/rooms/:roomId/end` (host only) sets `ended`/`ended_at`, settles the segment, idempotent; ended rooms 404 on connect; overlay has a host "End room" control. Verified on staging.
 - [x] 2.5 PD2 quota v1 (web-side): create and `/connect` return `QUOTA_EXHAUSTED` + `resetAt` at zero quota; free-host tokens capped to remaining quota. Verified on staging.
 - [~] 2.6 Quota UX: overlay shows remaining free minutes and a graceful exhausted message with reset time. REMAINING: distinct <=5-minute warning state and explicit upgrade-prompt CTA (final cut still enforced by Block 6 DO alarm).
@@ -340,6 +412,18 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
 - Roadmap Progress Log and `current-development-state.md` reflect reality.
 
 ## Progress Log
+
+- 2026-11-20 — Netflix catalog-room candidate reuses the offscreen socket and media
+  session on the Prime staging revision. The tab's provider, room and participant
+  session bind camera tile and device access. Check independent browsing, guest
+  follow, explicit departure and same-tab consent before release.
+  In two Chrome profiles the guest lost the capsule on returning to Browse.
+  A regression test now covers the guest receiving a membership snapshot before
+  the first playback source. Only a connected participant in the admitted tab
+  session can keep the room in that case. Host playback still drives navigation.
+  The Netflix guest return action uses the host's optional playback surface to
+  distinguish a paused episode from the catalog. Check manual return in both
+  playback states, catalog exit after pause and automatic next-episode follow.
 
 - 2026-10-31 — `codex/daily-free20-admission`: approved default-off SQL/Web/Worker
   create/rejoin/renewal candidate pins a daily room mode and reuses account locks,
@@ -631,3 +715,14 @@ Rules: Block 6 never starts before Block 4 is merged (roadmap order). Block 5 pa
   1426/1426, API runtime tests 27/27, room harness 39/39, and real-WebRTC
   harness 26/26. Remaining: final staging artifact build/validation, CI, and
   loaded two-profile acceptance before promotion to `main`.
+
+### Host admission and failed first connections
+
+Issuing a host ticket reserves the account in a lobby. On the first host JOIN,
+the Worker confirms the exact room, account and participant session through
+`POST /api/internal/rooms/{roomId}/host-joined` before sending the first
+snapshot. A matching departure releases an unjoined lobby immediately. If the
+browser disappears, the database sweeps unconfirmed host reservations every
+minute after 60 seconds of inactivity. Joined rooms keep the existing Worker
+disconnect grace. For a rolling release, deploy the compatible Worker and its
+Web callback before activating the database and ticket changes.

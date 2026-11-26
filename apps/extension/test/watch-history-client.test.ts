@@ -13,6 +13,7 @@ import {
   createWatchHistoryContentReconnectMessage,
   createListWatchHistoryMessage,
   createWatchHistoryClient,
+  authorizeWatchHistorySender,
   bestEffortFlushWatchHistoryBeforeSignOut,
   flushWatchHistoryInBackground,
   handleWatchHistoryAuthSessionChange,
@@ -101,6 +102,28 @@ function readyPartition(ownerUserId: string, youtubeHistoryEnabled: boolean) {
 }
 
 describe("watch history v2 client", () => {
+  it("resolves only the requested HBO title with extension credentials on the website origin", async () => {
+    const owner = session.user.id;
+    const id = "1fbc488d-c7b5-4d38-aad4-f60dcbd85d23";
+    const message = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "title-poster", expectedOwnerUserId: owner, titleKey: "hbomax:series:" + id } as const;
+    const poster = "https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/" + id + "/poster.jpeg";
+    let artwork = poster;
+    const http = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => Response.json({ url: artwork }));
+    const root: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 },
+      partitions: { [watchHistoryPartitionKey(owner, 1)]: readyPartition(owner, false) } };
+    const storage = createWatchHistoryStorage({ item: { getValue: async () => root, setValue: async () => {} }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 });
+    const client = createWatchHistoryClient({ storage, getCurrentSession: async () => session, fetch: http });
+    expect(await client.handle({ ...message, expectedOwnerUserId: "00000000-0000-4000-8000-000000000097" })).toMatchObject({ ok: false });
+    expect(await client.handle({ ...message, titleKey: "hbomax:series:invalid" })).toMatchObject({ ok: false });
+    expect(http).not.toHaveBeenCalled();
+    expect(await client.handle(message)).toMatchObject({ ok: true, data: poster });
+    const [target, init] = http.mock.calls[0]!;
+    expect(new URL(String(target)).pathname).toBe("/api/watch-history/poster");
+    expect(new URL(String(target)).searchParams.get("format")).toBe("json");
+    expect(init).toMatchObject({ credentials: "omit", redirect: "error", headers: { Authorization: "Bearer " + session.accessToken } });
+    artwork = poster.replace(id, owner);
+    expect(await client.handle(message)).toMatchObject({ ok: false, status: "invalid-response" });
+  });
   it.each(["same event", "new work", "signed out", "retry after offline", "stalled request"])("serializes concurrent clients: %s", async scenario => {
     const owner = session.user.id;
     const key = watchHistoryPartitionKey(owner, 1);
@@ -227,7 +250,7 @@ describe("watch history v2 client", () => {
       getCurrentSession: async () => currentSession,
       storage: createWatchHistoryStorage({ item: { getValue: async () => structuredClone(stored), setValue: async value => { stored = structuredClone(value); } }, getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
       fetch: async (input) => {
-        expect(String(input)).toContain("/api/watch-history/v3/capacity?capacityVersion=2");
+        expect(String(input)).toContain("/api/watch-history/v3/capacity?capacityVersion=4");
         if (variant === "session") currentSession = { ...session, user: { ...session.user, id: other } };
         return Response.json({ capacityVersion: 1, ownerUserId: variant === "owner" ? other : owner,
           accountGeneration: variant === "generation" ? 2 : 1, serverTime: "2026-09-09T00:00:00.000Z",
@@ -239,6 +262,33 @@ describe("watch history v2 client", () => {
     expect(stored.partitions[key]!.cache).toBeNull();
     expect(stored.partitions[key]!.outbox.entries).toEqual([]);
     expect(stored.partitions[key]!.accessLease?.access.state).toBe("allowed");
+  });
+
+  it("negotiates v5 for staging list, capacity, browse and social options requests", async () => {
+    vi.stubEnv("WXT_EXTENSION_CHANNEL", "staging");
+    try {
+      const owner = session.user.id;
+      const key = watchHistoryPartitionKey(owner, 1);
+      let root: WatchHistoryStorageRoot = { schemaVersion: 3, activeGenerations: { [owner]: 1 }, partitions: { [key]: readyPartition(owner, false) } };
+      const urls: URL[] = [];
+      const client = createWatchHistoryClient({
+        getCurrentSession: async () => session,
+        storage: createWatchHistoryStorage({ item: { getValue: async () => structuredClone(root), setValue: async value => { root = structuredClone(value); } },
+          getBytesInUse: async () => 0, quotaBytes: 1_000_000 }),
+        fetch: async input => { urls.push(new URL(String(input))); return new Response("offline", { status: 503 }); },
+      });
+      const common = { type: "ANIDACHI_WATCH_HISTORY_V3" as const, expectedOwnerUserId: owner };
+      await client.handle(createListWatchHistoryMessage({ limit: 20 }));
+      await client.handle({ ...common, command: "capacity" });
+      await client.handle({ ...common, command: "browse", input: { mode: "personal", provider: "hbomax" } });
+      await client.handle({ ...common, command: "browse-options", input: { mode: "shared" } });
+      expect(urls.map(url => [url.pathname, url.searchParams.get("capacityVersion") ?? url.searchParams.get("providerVersion")])).toEqual([
+        ["/api/watch-history/v3", "5"], ["/api/watch-history/v3/capacity", "5"], ["/api/watch-history/v3/browse", "5"],
+        ["/api/watch-history/v3/browse/options", "5"],
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it("retries a canonical read retired by a new Free recording epoch", async () => {
@@ -1479,7 +1529,7 @@ describe("watch history v2 client", () => {
     expect(message).not.toHaveProperty("ownerUserId");
     await expect(client.handle(message)).resolves.toEqual({ ok: false, status: "retryable" });
     expect(fetchImpl).toHaveBeenCalledWith(
-      "http://localhost:3003/api/watch-history/v3?providerVersion=2&limit=20",
+      "http://localhost:3003/api/watch-history/v3?providerVersion=4&limit=20",
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: "Bearer access-token", "x-anidachi-history-owner": session.user.id }),
       }),
@@ -3075,4 +3125,71 @@ it("allows Netflix's final history write and catalog cleanup after returning to 
       expect(isWatchHistorySenderAllowed(message, { ...sender, url: "https://www.netflix.com/browse" })).toBe(true);
     }
   } finally { vi.unstubAllGlobals(); }
+});
+
+it("finishes history after the Prime player returns to browse using only the browser-session receipt", async () => {
+  const stored: Record<string, unknown> = {};
+  vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" },
+    storage: { session: { get: async (key: string) => ({ [key]: stored[key] }), set: async (v: object) => Object.assign(stored, v) } } });
+  try {
+    const origin = "https://www.primevideo.com", id = "A".repeat(26), sourceUrl = origin + "/detail/" + id;
+    const sender = { id: "test-extension", frameId: 0, documentId: "prime-fixture", origin,
+      url: origin + "/region/na/storefront", tab: { id: 208, url: sourceUrl } } as chrome.runtime.MessageSender;
+    const returned = { ...sender, tab: { ...sender.tab!, url: sender.url } };
+    const bootstrap = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: session.user.id } as const;
+    const { crunchyrollIdentity, ...base } = progressEvent();
+    const event = { ...base, provider: "primevideo", sourceUrl, titleKey: "primevideo:movie:" + id, episodeKey: "primevideo:movie:" + id,
+      itemKind: "movie", seasonKey: null, episodeTitle: "Movie", primevideoIdentity: { kind: "movie", providerMovieId: id }, kind: "source_change" };
+    const final = { ...bootstrap, command: "observe-progress", event } as const;
+    expect(await authorizeWatchHistorySender(final, returned)).toBe(false);
+    expect(await authorizeWatchHistorySender(bootstrap, sender)).toBe(true);
+    expect(await authorizeWatchHistorySender(final, returned)).toBe(true);
+    expect(await authorizeWatchHistorySender(final, { ...returned, documentId: "new-document" })).toBe(false);
+    expect(await authorizeWatchHistorySender({ ...final, event: { ...event, kind: "heartbeat" } }, returned)).toBe(false);
+    expect(await authorizeWatchHistorySender(bootstrap, returned)).toBe(false);
+    expect(await authorizeWatchHistorySender({ ...bootstrap, command: "catalog-release", accountGeneration: 1, revision: 1, titleKey: event.titleKey, pageId: "previous" }, returned)).toBe(true);
+  } finally { vi.unstubAllGlobals(); }
+});
+
+it("accepts Prime history only from a valid official-detail document boundary", () => {
+  vi.stubGlobal("chrome", { runtime: { id: "test-extension", getURL: () => "chrome-extension://test-extension/" } });
+  try {
+    const source = `https://www.primevideo.com/detail/${"A".repeat(26)}`;
+    const message = { type: "ANIDACHI_WATCH_HISTORY_V3", command: "bootstrap-cache", expectedOwnerUserId: session.user.id } as const;
+    const sender = { id: "test-extension", url: source, tab: { id: 8 }, frameId: 0 } as chrome.runtime.MessageSender;
+    const fromCatalog = { ...sender, url: "https://www.primevideo.com/region/na/storefront", tab: { ...sender.tab!, url: source } };
+    expect(isWatchHistorySenderAllowed(message, fromCatalog)).toBe(true);
+    expect(isWatchHistorySenderAllowed(message, { ...fromCatalog, origin: "https://www.amazon.com" })).toBe(false);
+    expect(isWatchHistorySenderAllowed({ ...message, command: "list" }, fromCatalog)).toBe(false);
+    expect(isWatchHistorySenderAllowed(message, sender)).toBe(true);
+    expect(isWatchHistorySenderAllowed(message, { ...sender, url: `${source}?autoplay=1#local` })).toBe(true);
+    for (const url of [
+      source.replace("www.primevideo.com", "www.primevideo.com.evil"),
+      source.replace("www.primevideo.com", "user@www.primevideo.com"),
+      source.replace("www.primevideo.com", "www.primevideo.com:443"),
+      source.replace("www.primevideo.com", "www.primevideo.com:8443"),
+      source.replace("https:", "http:"), source.replace("/detail/", "/watch/"),
+      source.toLowerCase(), `${source}/extra`, source.slice(0, -1),
+      source.replace("www.primevideo.com", "www.amazon.com"),
+      source.replace("/detail/", "/x/../detail/"),
+    ]) expect(isWatchHistorySenderAllowed(message, { ...sender, url }), url).toBe(false);
+    expect(isWatchHistorySenderAllowed(message, { ...sender, frameId: 1 })).toBe(false);
+    expect(isWatchHistorySenderAllowed(message, { ...sender, id: "foreign-extension" })).toBe(false);
+    expect(isWatchHistorySenderAllowed(message, { ...sender, tab: undefined })).toBe(false);
+    expect(isWatchHistorySenderAllowed({ ...message, command: "list" }, sender)).toBe(false);
+  } finally { vi.unstubAllGlobals(); }
+});
+
+it.each(["https://primevideo.com/detail/0GS9E1N0I97ENRMJPEH38ZYO1J", "https://synthetic-2.edge3.primevideo.com/region/na/detail/0GS9E1N0I97ENRMJPEH38ZYO1J", "https://synthetic-2.edge3.amazon.co.uk/gp/video/detail/B0FX33MPNX", "https://www.primevideo.com/region/na/detail/0GS9E1N0I97ENRMJPEH38ZYO1J", "https://www.amazon.com/gp/video/detail/B0FX33MPNX", "https://www.amazon.de/Hunting-Season/dp/B0FX33MPNX/ref=x"])("allows a scoped Prime history sender from %s", url => {
+ vi.stubGlobal("chrome", {runtime:{id:"test-extension",getURL:()=>"chrome-extension://test-extension/"}});
+ try {
+  const message = {type:"ANIDACHI_WATCH_HISTORY_V3",command:"bootstrap-cache",expectedOwnerUserId:session.user.id} as const;
+  const sender = {id:"test-extension",url,tab:{id:8},frameId:0} as chrome.runtime.MessageSender;
+  expect(isWatchHistorySenderAllowed(message,sender)).toBe(true);
+  expect(isWatchHistorySenderAllowed(message, {...sender, id: "foreign-extension"})).toBe(false);
+  expect(isWatchHistorySenderAllowed(message, {...sender, frameId: 1})).toBe(false);
+  expect(isWatchHistorySenderAllowed(message, {...sender, tab: undefined})).toBe(false);
+  expect(isWatchHistorySenderAllowed(message, {...sender, url: url.replace(new URL(url).hostname, `${new URL(url).hostname}.evil`)})).toBe(false);
+  expect(isWatchHistorySenderAllowed(message,{...sender,url:"https://www.amazon.com/product-reviews/B0FX33MPNX"})).toBe(false);
+ } finally {vi.unstubAllGlobals();}
 });

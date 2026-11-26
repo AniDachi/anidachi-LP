@@ -1,6 +1,11 @@
+import { watchHistoryProviderVersion } from "./watch-history-provider-version";
+import { hasPrimeBrowserHost, isPrimePlayerPageSender } from "./source-adapters/primevideo/url";
 import { canReadWatchHistory, canCaptureWatchHistory, createWatchHistoryLease, parseWatchHistoryLease, personalEnvelopeEligible, type WatchHistoryLease } from "./watch-history-access";
 import {
   WatchHistoryCapacityCompatibleSchema,
+  canonicalizeRoomSourceUrl,
+  isHboMaxOrigin,
+  isHboMaxHistoryKey, isPrimeHistoryPosterKey, isPrimeHistoryPosterUrl,
   PersonalHistoryResumeSchema,
   personalHistoryResumeOwnerBinding,
   PersonalWatchProgressRequestSchema,
@@ -56,6 +61,7 @@ import {
   type WatchHistoryObservationDisplayMode,
   type WatchHistoryAccountPartition,
 } from "./watch-history-storage";
+import { syncDisneyPortraits } from "./disney-portrait-sync";
 import { createWatchHistoryCatalogCoordinator } from "./watch-history-catalog";
 import { createWatchHistoryBrowseCache, watchBrowseCacheKey } from "./watch-history-browse-cache";
 
@@ -84,6 +90,7 @@ export type WatchHistoryLocalStatus =
   | "rejected";
 
 export type WatchHistoryMessage =
+  | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "title-poster"; expectedOwnerUserId: string; titleKey: string }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "capacity"; expectedOwnerUserId: string }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "resume-claim"; expectedOwnerUserId: string; input: unknown }
   | { type: typeof WATCH_HISTORY_MESSAGE_TYPE; command: "catalog-release"; expectedOwnerUserId: string;
@@ -245,6 +252,9 @@ export function isWatchHistoryMessage(value: unknown): value is WatchHistoryMess
   if (!isRecord(value) || value.type !== WATCH_HISTORY_MESSAGE_TYPE) return false;
   if ("accessToken" in value) return false;
   switch (value.command) {
+    case "title-poster":
+      return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "titleKey"]) && isExpectedOwnerUserId(value.expectedOwnerUserId) &&
+        typeof value.titleKey === "string" && (isHboMaxHistoryKey(value.titleKey, "series") || isHboMaxHistoryKey(value.titleKey, "movie") || isPrimeHistoryPosterKey(value.titleKey));
     case "capacity": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId"]) && isExpectedOwnerUserId(value.expectedOwnerUserId);
     case "resume-claim": return hasExactKeys(value, ["type", "command", "expectedOwnerUserId", "input"]) && isExpectedOwnerUserId(value.expectedOwnerUserId) && PersonalHistoryResumeSchema.safeParse(value.input).success;
     case "catalog-release":
@@ -503,7 +513,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const session = await dependencies.getCurrentSession();
     if (!session) return { ok: false, status: "unauthenticated" };
 
-    if ((message.command === "capacity" || message.command === "browse" ||
+    if ((message.command === "capacity" || message.command === "title-poster" || message.command === "browse" ||
       message.command === "browse-title-episodes" ||
       message.command === "browse-sessions" ||
       message.command === "browse-options" ||
@@ -556,16 +566,25 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         return { ok: false, status: "invalid-request" };
       }
     }
-    if (["capacity", "list", "browse", "browse-title-episodes", "browse-sessions", "browse-options", "browse-catalog", "create-room"].includes(message.command)) {
+    if (["capacity", "title-poster", "list", "browse", "browse-title-episodes", "browse-sessions", "browse-options", "browse-catalog", "create-room"].includes(message.command)) {
       const denied = await requireAccess(session, "read"); if (denied) return denied;
     }
     if (["pending-identities", "catalog-begin", "catalog-commit", "resolve-identity"].includes(message.command)) {
       const denied = await requireAccess(session); if (denied) return denied;
     }
     if (message.command === "list") return refresh(session, message);
+    if (message.command === "title-poster") {
+      const params = new URLSearchParams({ titleKey: message.titleKey, format: "json" });
+      const response = await authenticatedRequest(session, "/api/watch-history/poster?" + params, { redirect: "error", credentials: "omit" });
+      if (!response.ok) return response.error;
+      const poster = isRecord(response.body) ? response.body.url : null;
+      const id = message.titleKey.split(":")[2];
+      return typeof poster === "string" && (isPrimeHistoryPosterKey(message.titleKey) ? isPrimeHistoryPosterUrl(poster) : poster.startsWith(`https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/${id}/`))
+        ? { ok: true, data: poster } : { ok: false, status: "invalid-response" };
+    }
     if (message.command === "capacity") {
       const lease = await readLease(session);
-      const response = await authenticatedRequest(session, "/api/watch-history/v3/capacity?capacityVersion=2");
+      const response = await authenticatedRequest(session, `/api/watch-history/v3/capacity?capacityVersion=${watchHistoryProviderVersion()}`);
       if (!response.ok) return response.error;
       const parsed = WatchHistoryCapacityCompatibleSchema.safeParse(response.body);
       if (!parsed.success || parsed.data.ownerUserId !== session.user.id) return { ok: false, status: "invalid-response" };
@@ -682,7 +701,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     const startedRoot = await storage.readRoot();
     const startedGeneration = startedRoot.activeGenerations?.[session.user.id];
     const revision = startedGeneration === undefined ? 0 : startedRoot.partitions[watchHistoryPartitionKey(session.user.id, startedGeneration)]?.invalidationRevision ?? 0;
-    const query = new URLSearchParams({ providerVersion: "2" });
+    const query = new URLSearchParams({ providerVersion: String(watchHistoryProviderVersion()) });
     if (message.limit !== undefined) query.set("limit", String(message.limit));
     if (message.cursor) query.set("cursor", message.cursor);
     const response = await authenticatedRequest(session, `/api/watch-history/v3${query.size ? `?${query}` : ""}`);
@@ -785,6 +804,9 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
       }
       const failure = await validateCurrent(response.session);
       if (failure) return failure;
+      if (message.command === "browse" && isRecord(parsed) && isRecord(parsed.history) && Array.isArray(parsed.history.items)) {
+        void syncDisneyPortraits(response.session, generation, parsed.history.items.map(item => item.titleKey));
+      }
       await browseCache.write(cacheKey, parsed, revision);
       const afterSave = await validateCurrent(response.session);
       return afterSave ?? { ok: true, data: parsed };
@@ -1011,6 +1033,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
         if (!ack.data.duplicate) {
           mutated = true;
           changedTitles.add(JSON.stringify([entry.event.provider, entry.event.titleKey]));
+          if (entry.event.titleKey.startsWith("disneyplus:")) void syncDisneyPortraits(activeSession, generation, [entry.event.titleKey]);
         }
         await clearUnpersistedPauseIfReady(activeSession, generation);
         flushed += 1;
@@ -1436,7 +1459,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
     try {
       response = await request(new URL(path, WEB_HTTP_BASE).toString(), {
         ...init,
-        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json", "x-anidachi-history-owner": session.user.id },
+        headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json", "x-anidachi-prime-navigation":"1", "x-anidachi-history-owner": session.user.id },
       });
     } catch {
       return { ok: false, error: { ok: false, status: "retryable" }, session };
@@ -1469,7 +1492,7 @@ export function createWatchHistoryClient(dependencies: WatchHistoryClientDepende
           headers: {
             Authorization: `Bearer ${refreshed.accessToken}`,
             "Content-Type": "application/json",
-            "x-anidachi-history-owner": session.user.id,
+            "x-anidachi-prime-navigation":"1", "x-anidachi-history-owner": session.user.id,
           },
         });
       } catch {
@@ -1924,9 +1947,9 @@ function parseBrowseInput(
         ? WatchHistoryBrowseSessionsQuerySchema
         : WatchHistoryBrowseOptionsQuerySchema;
   const parsed = schema.safeParse(message.input);
-  if (!parsed.success) return null;
+  if (!parsed.success || ("provider" in parsed.data && parsed.data.provider === "hbomax" && watchHistoryProviderVersion() < 5)) return null;
   return message.command === "browse" || message.command === "browse-sessions" || message.command === "browse-options"
-    ? { ...parsed.data, providerVersion: 2 }
+    ? { ...parsed.data, providerVersion: watchHistoryProviderVersion() }
     : parsed.data;
 }
 
@@ -1962,6 +1985,8 @@ function browsePath(command: BrowseCommand, input: BrowseInput): string {
     if (typeof value === "string" || typeof value === "number") query.set(key, String(value));
   }
   if (command === "browse") query.set("includeEpisodePreviews", "true");
+  if (command === "browse-catalog" && typeof values.includePartial === "boolean")
+    query.set("includePartial", String(values.includePartial));
   const suffix = command === "browse-catalog" ? "/catalog" : command === "browse"
     ? ""
     : command === "browse-title-episodes"
@@ -2020,6 +2045,12 @@ function inferredObservationDisplayMode(
 
 let backgroundWatchHistoryClient: ReturnType<typeof createWatchHistoryClient> | undefined;
 const historyPageTabs = new Map<string, { tabId: number }>();
+const primeHistoryDocumentKey = (tabId: number) => `anidachi.primeHistoryDocument.${tabId}`;
+
+export function forgetWatchHistoryTab(tabId: number): void {
+  void chrome.storage.session.remove(primeHistoryDocumentKey(tabId)).catch(() => undefined);
+  cancelWatchHistoryCatalogForTab(tabId);
+}
 
 /** Trusted browser tab lifecycle: the document cannot send a final release after destruction. */
 export function cancelWatchHistoryCatalogForTab(tabId: number): void {
@@ -2033,7 +2064,7 @@ export async function handleWatchHistoryHttpMessage(
   message: WatchHistoryMessage,
   sender?: chrome.runtime.MessageSender,
 ): Promise<WatchHistoryMessageResponse> {
-  if (sender && !isWatchHistorySenderAllowed(message, sender)) return { ok: false, status: "rejected" };
+  if (sender && !await authorizeWatchHistorySender(message, sender)) return { ok: false, status: "rejected" };
   const releasingRegistration = message.command === "catalog-release" ? historyPageTabs.get(message.pageId) : undefined;
   if (message.command === "catalog-release" && sender?.tab?.id !== undefined && releasingRegistration?.tabId !== sender.tab.id) return { ok: false, status: "rejected" };
   if ((message.command === "catalog-begin" || message.command === "catalog-commit") && sender?.tab?.id !== undefined) historyPageTabs.set(message.pageId, { tabId: sender.tab.id });
@@ -2054,20 +2085,50 @@ export async function handleWatchHistoryHttpMessage(
   return response;
 }
 
+// The sender's document can outlive the MV3 worker. Remember it on history startup
+// so it can finish its own progress and catalog release after navigating back to browse.
+export async function authorizeWatchHistorySender(message: WatchHistoryMessage, sender: chrome.runtime.MessageSender): Promise<boolean> {
+  if (isWatchHistorySenderAllowed(message, sender)) {
+    if ((message.command === "bootstrap-cache" || message.command === "bootstrap" || message.command === "catalog-begin") &&
+        sender.documentId && sender.tab?.id !== undefined && isPrimePlayerPageSender(sender)) {
+      await chrome.storage.session.set({ [primeHistoryDocumentKey(sender.tab.id)]: sender.documentId }).catch(() => undefined);
+    }
+    return true;
+  }
+  if ((message.command !== "catalog-release" && message.command !== "observe-progress") ||
+      !sender.documentId || sender.tab?.id === undefined || !sender.url || !hasPrimeBrowserHost(sender.url) ||
+      sender.id !== chrome.runtime.id || sender.frameId !== 0) return false;
+  const origin = new URL(sender.url).origin;
+  if (!origin.startsWith("https://") || !sender.url.startsWith(origin + "/") || !sender.tab.url?.startsWith(origin + "/") ||
+      (sender.origin !== undefined && sender.origin !== origin)) return false;
+  if (message.command === "observe-progress") {
+    const parsed = parseWatchHistoryLocalEvent(message.event);
+    if (!parsed.success || parsed.data.provider !== "primevideo" || inferredObservationDisplayMode(parsed.data) !== null) return false;
+  }
+  const key = primeHistoryDocumentKey(sender.tab.id);
+  return chrome.storage.session.get(key).then(value => value[key] === sender.documentId, () => false);
+}
+
 export function isWatchHistorySenderAllowed(message: WatchHistoryMessage, sender: chrome.runtime.MessageSender): boolean {
   if (sender.id !== chrome.runtime.id || !sender.url) return false;
   if (sender.url.startsWith(chrome.runtime.getURL(""))) return true;
   if (sender.tab?.id === undefined || sender.frameId !== undefined && sender.frameId !== 0) return false;
   let url: URL;
   try { url = new URL(sender.url); } catch { return false; }
-  if (url.protocol !== "https:" || !["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com"].includes(url.hostname)) return false;
+  if (url.protocol !== "https:") return false;
+  if (!["resume-claim", "bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command)) return false;
+  if (hasPrimeBrowserHost(sender.url)) return isPrimePlayerPageSender(sender);
+  if (url.hostname === "www.disneyplus.com" || isHboMaxOrigin(url.origin))
+    return url.origin === "https://" + url.hostname && !url.username && !url.password &&
+      (sender.origin === undefined || sender.origin === url.origin) &&
+      (sender.tab.url === undefined || sender.tab.url.startsWith(url.origin + "/"));
   if (url.hostname === "www.netflix.com") {
     if (url.origin !== "https://www.netflix.com" || url.username || url.password) return false;
     // Trust the document origin, not its initial route: Netflix opens players
     // from /browse without reloading. The adapter/schema validate watch content;
     // final progress and catalog cleanup can arrive after returning to /browse.
   }
-  return ["resume-claim", "bootstrap", "bootstrap-cache", "pending-identities", "observe-progress", "enqueue-progress", "resolve-identity", "catalog-begin", "catalog-commit", "catalog-release", "content-reconnect", "recover-storage", "flush"].includes(message.command);
+  return ["crunchyroll.com", "www.crunchyroll.com", "youtube.com", "www.youtube.com", "m.youtube.com", "www.netflix.com"].includes(url.hostname);
 }
 
 export function usesStoredWatchHistorySession(

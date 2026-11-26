@@ -71,6 +71,7 @@ export const popupWatchHistoryStyles = `
   .popup-watch-title-toggle { display: grid; grid-template-columns: var(--popup-watch-artwork-width) minmax(0,1fr) 24px; align-items: start; gap: 10px; min-width: 0; width: 100%; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--ad-text); text-align: left; cursor: pointer; }
   .popup-watch-screen .popup-watch-artwork { width: var(--popup-watch-artwork-width); height: 78px; aspect-ratio: 2 / 3; border-radius: 6px; background: var(--ad-surface); border: 1px solid rgba(255,255,255,.08); box-shadow: none; font-size: 18px; font-weight: 600; color: var(--ad-muted); align-self: start; box-sizing: border-box; }
   .popup-watch-screen .popup-watch-artwork img { width: 100%; height: 100%; object-fit: cover; }
+  .popup-watch-screen .popup-watch-item:is([data-provider="netflix"],[data-provider="disneyplus"]) .popup-watch-artwork img { object-fit: contain; }
   .popup-watch-screen .popup-watch-main { display: flex; flex-direction: column; min-width: 0; gap: 6px; padding: 0; }
   .popup-watch-screen .popup-watch-title { display: block; min-width: 0; overflow-wrap: anywhere; white-space: normal; text-overflow: clip; font-size: 14px; line-height: 1.4; font-weight: 600; }
   .popup-watch-screen .popup-watch-meta { min-width: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; font-size: 11px; line-height: 1.35; font-weight: 450; color: var(--ad-muted); }
@@ -162,7 +163,6 @@ export const popupWatchHistoryStyles = `
   .popup-episode-picker { position: relative; min-width: 0; }
   .popup-episode-picker[data-loading="true"] { min-height: 150px; }
   .popup-episode-picker[data-loading="true"] > .popup-episode-picker-content { visibility: hidden; }
-  .popup-episode-picker-loading { position: absolute; top: 8px; left: 2px; margin: 0; color: var(--ad-muted); font-size: 10px; }
   .popup-episode-grid-scroll { --episode-cell-height: 39px; --episode-grid-gap: 6px; --episode-grid-rows: 5; box-sizing: border-box; max-height: calc(var(--episode-cell-height) * var(--episode-grid-rows) + var(--episode-grid-gap) * (var(--episode-grid-rows) - 1) + 4px); padding: 2px; margin: 0; min-width: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: contain; scrollbar-width: thin; scrollbar-color: rgba(238,230,220,.25) transparent; scroll-padding: 2px; }
   .popup-episode-grid { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: var(--episode-grid-gap); }
   .popup-episode-cell { position: relative; display: flex; align-items: center; justify-content: center; gap: 4px; box-sizing: border-box; height: var(--episode-cell-height); min-width: 0; overflow: hidden; padding: 0 3px; border: 1px solid rgba(255,255,255,.1); border-radius: 9px; background: rgba(255,255,255,.015); color: rgba(238,230,220,.64); font: inherit; font-size: 11px; font-weight: 550; font-variant-numeric: tabular-nums; cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease; }
@@ -195,8 +195,6 @@ export const popupWatchHistoryStyles = `
   .popup-watch-screen .popup-selected-episode .popup-episode-actions { margin-left: 0; }
   .popup-watch-video-list > .popup-selected-episode { margin: 0; border-top: 0; padding-top: 0; }
   .popup-watch-screen .popup-watch-video-list > .popup-episode-row:not(.popup-selected-episode) { padding-left: 0; }
-  .popup-catalog-note { margin: 9px 0 0; color: rgba(255,255,255,.44); font-size: 9px; line-height: 1.6; }
-  .popup-catalog-note button { padding: 0; border: 0; background: transparent; color: var(--ad-muted); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
   @media (max-width: 350px) { .popup-episode-grid { grid-template-columns: repeat(5, minmax(0,1fr)); } }
   @media (max-height: 650px) { .popup-episode-grid-scroll { --episode-grid-rows: 4; } }
   @media (pointer: coarse) { .popup-episode-grid-scroll { --episode-cell-height: 44px; } .popup-season-trigger, .popup-season-menu > button, .popup-selected-resume { min-height: 44px; } }

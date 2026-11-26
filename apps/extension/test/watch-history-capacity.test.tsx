@@ -52,3 +52,30 @@ describe("history capacity notice", () => {
     expect(container.textContent).toBe("");
   });
 });
+
+it.each([1, 2, 3, 4] as const)("retains exact version %s capacity without inventing a missing Prime bucket", async version => {
+  const data = { ...capacity(0), capacityVersion: version, providers: {
+    ...capacity(0).providers,
+    ...(version >= 2 ? { netflix: { used: 199, limit: 200 } } : {}),
+    ...(version === 4 ? { disneyplus: { used: 199, limit: 200 } } : {}),
+    ...(version >= 3 ? { primevideo: { used: 199, limit: 200 } } : {}),
+  } };
+  await render(client(async () => ({ ok: true, data })));
+  if (version === 4) expect(container.textContent).toBe("");
+  else expect(container.textContent).toContain("Disney+ storage unavailable");
+  if (version >= 3) expect(container.textContent).not.toContain("Prime Video storage unavailable");
+  else expect(container.textContent).toContain("Prime Video storage unavailable");
+  expect(container.textContent).not.toContain("Prime Video 0/200");
+  expect(container.textContent).not.toContain("history full");
+  if (version === 1) expect(container.textContent).toContain("Netflix storage unavailable");
+  else expect(container.textContent).not.toContain("Netflix storage unavailable");
+});
+
+it("warns only for actual full v3 buckets and keeps Prime independent", async () => {
+  await render(client(async () => ({ ok: true, data: { ...capacity(0), capacityVersion: 3, providers: {
+    ...capacity(0).providers, netflix: { used: 1, limit: 200 }, primevideo: { used: 200, limit: 200 },
+  } } })));
+  expect(container.textContent).toContain("Prime Video 200/200 — history full");
+  expect(container.textContent).toContain("Disney+ storage unavailable");
+  expect(container.textContent).not.toContain("Netflix");
+});

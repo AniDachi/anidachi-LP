@@ -33,6 +33,30 @@ export const WatchHistoryCapacityV2Schema = WatchHistoryCapacityV1Schema.extend(
     netflix: z.strictObject({ used: z.number().int().nonnegative(), limit: z.literal(WATCH_HISTORY_PROVIDER_LIMITS_V2.netflix) }),
   }),
 });
-export const WatchHistoryCapacityCompatibleSchema = z.discriminatedUnion("capacityVersion", [WatchHistoryCapacityV1Schema, WatchHistoryCapacityV2Schema]);
+export const WATCH_HISTORY_PROVIDER_LIMITS_V3 = { ...WATCH_HISTORY_PROVIDER_LIMITS_V2, primevideo: 200 } as const;
+export const WatchHistoryCapacityV3Schema = WatchHistoryCapacityV2Schema.extend({
+  capacityVersion: z.literal(3),
+  providers: WatchHistoryCapacityV2Schema.shape.providers.extend({
+    primevideo: z.strictObject({ used: z.number().int().nonnegative(), limit: z.literal(WATCH_HISTORY_PROVIDER_LIMITS_V3.primevideo) }),
+  }),
+});
+export const WATCH_HISTORY_PROVIDER_LIMITS_V4 = { ...WATCH_HISTORY_PROVIDER_LIMITS_V3, disneyplus: 200 } as const;
+export const WatchHistoryCapacityV4Schema = WatchHistoryCapacityV3Schema.extend({
+  capacityVersion: z.literal(4),
+  providers: WatchHistoryCapacityV3Schema.shape.providers.extend({
+    disneyplus: z.strictObject({ used: z.number().int().nonnegative(), limit: z.literal(WATCH_HISTORY_PROVIDER_LIMITS_V4.disneyplus) }),
+  }),
+});
+export type WatchHistoryCapacityV4 = z.infer<typeof WatchHistoryCapacityV4Schema>;
+export const WATCH_HISTORY_PROVIDER_LIMITS_V5 = { ...WATCH_HISTORY_PROVIDER_LIMITS_V4, hbomax: 200 } as const;
+export const WatchHistoryCapacityV5Schema = WatchHistoryCapacityV4Schema.extend({
+  capacityVersion: z.literal(5),
+  providers: WatchHistoryCapacityV4Schema.shape.providers.extend({
+    hbomax: z.strictObject({ used: z.number().int().nonnegative(), limit: z.literal(WATCH_HISTORY_PROVIDER_LIMITS_V5.hbomax) }),
+  }),
+});
+export type WatchHistoryCapacityV5 = z.infer<typeof WatchHistoryCapacityV5Schema>;
+export type WatchHistoryCapacityV3 = z.infer<typeof WatchHistoryCapacityV3Schema>;
+export const WatchHistoryCapacityCompatibleSchema = z.discriminatedUnion("capacityVersion", [WatchHistoryCapacityV1Schema, WatchHistoryCapacityV2Schema, WatchHistoryCapacityV3Schema, WatchHistoryCapacityV4Schema, WatchHistoryCapacityV5Schema]);
 export type WatchHistoryCapacityV2 = z.infer<typeof WatchHistoryCapacityV2Schema>;
 export type WatchHistoryCapacityCompatible = z.infer<typeof WatchHistoryCapacityCompatibleSchema>;

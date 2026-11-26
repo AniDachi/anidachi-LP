@@ -13,11 +13,11 @@ import { signAccessToken } from "./jwt";
 const owner = "11111111-1111-4111-8111-111111111111";
 const path = "/api/rooms/room-one/connect";
 
-async function connect() {
+async function connect(expectedLobby?: "primevideo") {
   const cookie = await signAccessToken({ sub: owner, email: "viewer@example.test", plan: "free" });
   const request = new NextRequest(`https://web.example.test${path}`, {
     method: "POST", headers: { "content-type": "application/json", cookie: `${ACCESS_TOKEN_COOKIE}=${cookie}` },
-    body: JSON.stringify({ participantSessionId: "session-one" }),
+    body: JSON.stringify({ participantSessionId: "session-one", expectedLobby }),
   });
   const store = createRequestStoreForAPI(request, request.nextUrl,
     { tags: [], expirationsByCacheKind: new Map() }, undefined, undefined);
@@ -94,11 +94,12 @@ test("delayed host connect cannot reopen a room finalized after admission", asyn
     assert.equal("roomToken" in await response.json(), false);
   });
 });
-test("ordinary pre-cutover lobby connect still activates the room and issues a token", async () => {
+test("issuing a host ticket leaves the lobby available for failed-admission cleanup", async () => {
   await fixture({}, async state => {
     const response = await connect();
     assert.equal(response.status, 200);
-    assert.equal(state.status, "live");
+    assert.equal(state.status, "lobby");
+    assert.equal(state.host_connected_at, null);
     assert.equal(typeof (await response.json()).roomToken, "string");
   });
 });
@@ -121,6 +122,13 @@ test("unavailable room authority cannot turn into a quota or subscription denial
     assert.equal(response.status, 503);
     assert.deepEqual(await response.json(), { code: "ROOM_AUTHORITY_UNAVAILABLE" });
     assert.equal(state.quotaReads, 0);
+    assert.equal(state.claims, 0);
+  });
+});
+
+test("a Prime catalog invite cannot attach another platform's room", async () => {
+  await fixture({}, async state => {
+    assert.equal((await connect("primevideo")).status, 409);
     assert.equal(state.claims, 0);
   });
 });

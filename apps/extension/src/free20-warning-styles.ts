@@ -17,7 +17,7 @@ export const free20WarningStyles = `
   }
   .free20-notice-sleeve {
     position: absolute; inset: 0;
-    clip-path: inset(0 0 0 calc(100% - var(--free20-capsule-width, 78px)) round 16px);
+    clip-path: inset(0 0 0 calc(100% - var(--capsule-width, 78px)) round 16px);
     transition: clip-path 330ms cubic-bezier(.4, 0, .25, 1);
   }
   .free20-notice-sleeve::before {
@@ -30,7 +30,7 @@ export const free20WarningStyles = `
     transition: clip-path 560ms cubic-bezier(.22, 1, .36, 1);
   }
   .free20-notice-message-clip {
-    position: absolute; inset: 0 var(--free20-capsule-width, 78px) 0 var(--dismiss-width);
+    position: absolute; inset: 0 var(--capsule-width, 78px) 0 var(--dismiss-width);
     overflow: hidden; clip-path: inset(0 0 0 100%);
     transition: clip-path 330ms cubic-bezier(.4, 0, .25, 1); pointer-events: none;
   }

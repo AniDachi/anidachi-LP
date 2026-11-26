@@ -1,3 +1,4 @@
+import type { PrimeMarketplace, RoomLobbyProvider } from "@anidachi/protocol";
 import { type Free20AbuseContext, Free20ContextError } from "./free20-abuse";
 import { buildFree20ContextTransfer, transferFree20RoomContext } from "./free20-abuse-transfer";
 import { RoomUpdateRequiredError } from "./room-update-required";
@@ -116,6 +117,8 @@ export type SubscriptionRow = {
 };
 
 export type RoomRow = {
+  lobby_provider?: RoomLobbyProvider | null;
+  lobby_marketplace?: PrimeMarketplace | null;
 	hosting_time_mode?: "daily_free20" | null;
 	free20_abuse_protected?: boolean;
 	media_lease?: unknown;
@@ -126,6 +129,7 @@ export type RoomRow = {
   show_id: string | null;
   episode_id: string | null;
   source_provider: RoomSourceProvider | null;
+  prime_navigation?: import("@anidachi/protocol").PrimeNavigation|null;
   source_url: string | null;
   video_fingerprint: string | null;
   source_generation: number | null;
@@ -677,6 +681,8 @@ export type ActiveRoomClaimResult =
   | { outcome: "conflict"; activeRoom: ActiveRoomSummary };
 
 export async function createRoomWithActiveSession(params: {
+	lobbyProvider?: RoomLobbyProvider;
+	lobbyMarketplace?: PrimeMarketplace;
 	hostUserId: string;
 	participantSessionId: string;
 	capabilities: RoomCapabilities;
@@ -687,6 +693,7 @@ export async function createRoomWithActiveSession(params: {
 	episodeId?: string;
 	sourceProvider?: unknown;
 	sourceUrl?: unknown;
+ primeNavigation?:unknown;
 	videoFingerprint?: unknown;
 	title?: string;
 	clientRequestId?: string;
@@ -694,22 +701,16 @@ export async function createRoomWithActiveSession(params: {
 	const sourceColumns = roomSourceCreationColumns({
 		sourceProvider: params.sourceProvider,
 		sourceUrl: params.sourceUrl,
+  primeNavigation:params.primeNavigation,
 		videoFingerprint: params.videoFingerprint,
 	});
 	const abuseEnabled = process.env.ANIDACHI_FREE20_ABUSE_ENABLED === "true";
 	const admit = () =>
 		db().rpc(
-			abuseEnabled
-				? "create_room_with_active_session_v5"
-				: "create_room_with_active_session_v4",
+			sourceColumns.prime_navigation ? "create_room_with_prime_navigation_v1" : abuseEnabled ? "create_room_with_active_session_v5" : "create_room_with_active_session_v4",
 			{
-				...(abuseEnabled
-					? {
-							p_free20_browser_hash: params.free20Context?.browser ?? null,
-							p_free20_installation_hash:
-								params.free20Context?.installation ?? null,
-						}
-					: {}),
+                ...(sourceColumns.prime_navigation ? {p_prime_navigation:sourceColumns.prime_navigation,p_abuse_enabled:abuseEnabled} : {}),
+                ...((abuseEnabled || sourceColumns.prime_navigation) ? {p_free20_browser_hash:params.free20Context?.browser??null,p_free20_installation_hash:params.free20Context?.installation??null} : {}),
 				p_media_protocol_version: params.mediaProtocolVersion ?? 1,
 				p_free20_client_version: params.free20ClientVersion ?? null,
 				p_host_user_id: params.hostUserId,
@@ -729,7 +730,27 @@ export async function createRoomWithActiveSession(params: {
 				p_can_send_push_invites: params.capabilities.canSendPushInvites,
 			},
 		);
-	let result = await admit();
+	const admitRoom = params.lobbyProvider
+		? () => db().rpc("create_catalog_room_v2", {
+			p_lobby_marketplace: params.lobbyMarketplace ?? null,
+			p_lobby_provider: params.lobbyProvider,
+			p_host_user_id: params.hostUserId,
+			p_participant_session_id: params.participantSessionId,
+			p_title: params.title ?? null,
+			p_client_request_id: params.clientRequestId ?? null,
+			p_host_plan_code: params.capabilities.hostPlanCode,
+			p_max_participants: params.capabilities.maxParticipants,
+			p_max_media_seats: params.capabilities.maxMediaSeats,
+			p_can_name_room: params.capabilities.canNameRoom,
+			p_can_send_push_invites: params.capabilities.canSendPushInvites,
+			p_media_protocol_version: params.mediaProtocolVersion ?? 1,
+			p_free20_client_version: params.free20ClientVersion ?? null,
+			p_abuse_enabled: abuseEnabled,
+			p_free20_browser_hash: params.free20Context?.browser ?? null,
+			p_free20_installation_hash: params.free20Context?.installation ?? null,
+		})
+		: admit;
+	let result = await admitRoom();
 	if (
 		abuseEnabled &&
 		result.error?.message.includes("FREE20_CONTEXT_ATTACH_REQUIRED")
@@ -754,7 +775,7 @@ export async function createRoomWithActiveSession(params: {
 				params.free20Context,
 			),
 		);
-		result = await admit(); // Exactly one admission retry after durable applied receipt.
+		result = await admitRoom(); // Exactly one admission retry after durable applied receipt.
 	}
 	if (result.error) {
 		if (result.error.message.includes("FREE20_CONTEXT_BUSY"))
@@ -937,6 +958,7 @@ export async function createRoom(params: {
   episodeId?: string;
   sourceProvider?: unknown;
   sourceUrl?: unknown;
+ primeNavigation?:unknown;
   videoFingerprint?: unknown;
   title?: string;
   clientRequestId?: string;
@@ -944,6 +966,7 @@ export async function createRoom(params: {
   const sourceColumns = roomSourceCreationColumns({
     sourceProvider: params.sourceProvider,
     sourceUrl: params.sourceUrl,
+  primeNavigation:params.primeNavigation,
     videoFingerprint: params.videoFingerprint,
   });
   const { data, error } = await db()
@@ -955,7 +978,6 @@ export async function createRoom(params: {
       ...sourceColumns,
       title: params.title ?? null,
       client_request_id: params.clientRequestId ?? null,
-      host_connected_at: new Date().toISOString(),
       host_plan_code: params.capabilities.hostPlanCode,
       max_participants: params.capabilities.maxParticipants,
       max_media_seats: params.capabilities.maxMediaSeats,
@@ -982,7 +1004,7 @@ export async function persistRoomSource(
   callback: RoomSourcePersistenceCallback,
 ): Promise<RoomSourcePersistenceAcknowledgement> {
   const result = await db().rpc(
-    "persist_room_source_v1",
+    callback.source.primeNavigation ? "persist_room_source_v2" : "persist_room_source_v1",
     roomSourcePersistenceRpcArguments(callback),
   );
   if (result.error) {
@@ -998,7 +1020,7 @@ export async function getPersistedRoomSourceProof(
   roomId: string,
 ): Promise<PersistedRoomSourceProof | null> {
   const result = await db().from("rooms")
-    .select("room_id,status,source_provider,source_url,video_fingerprint,source_generation")
+    .select("room_id,status,source_provider,source_url,video_fingerprint,source_generation,prime_navigation")
     .eq("room_id", roomId)
     .maybeSingle();
   if (result.error) throw new Error("Unable to read persisted room source");

@@ -1,3 +1,4 @@
+import { isPrimeVideoArtworkUrl } from "./prime-video-artwork";
 import { isNetflixArtworkUrl } from "./netflix-artwork";
 import {
 	PersonalWatchProgressRequestSchema,
@@ -16,7 +17,7 @@ export type PersonalWatchHistoryStore = {
 const productionStore: PersonalWatchHistoryStore = {
 	async apply(userId, input) {
 		const result = await db()
-			.rpc("apply_personal_watch_progress_v1", {
+			.rpc(input.event.provider === "primevideo" ? "apply_personal_watch_progress_prime_navigation_v1" : "apply_personal_watch_progress_v1", {
 				p_user_id: userId,
 				p_input: input,
 			})
@@ -41,7 +42,11 @@ export async function applyPersonalWatchProgress(params: {
 			"Update the extension to continue personal history",
 		);
 	const parsed = PersonalWatchProgressRequestSchema.safeParse(params.input);
-	if (!parsed.success || (parsed.data.event.provider === "netflix" && !isNetflixArtworkUrl(parsed.data.event.artworkUrl)))
+	if (
+		!parsed.success ||
+		(parsed.data.event.provider === "netflix" && !isNetflixArtworkUrl(parsed.data.event.artworkUrl)) ||
+		(parsed.data.event.provider === "primevideo" && !isPrimeVideoArtworkUrl(parsed.data.event.artworkUrl))
+	)
 		throw new WatchHistoryV3ApiError(
 			400,
 			"INVALID_REQUEST",

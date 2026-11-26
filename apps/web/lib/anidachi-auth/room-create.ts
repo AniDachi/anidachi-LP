@@ -1,5 +1,5 @@
 import { Free20ContextError } from "./free20-abuse";
-import { RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
+import { PrimeMarketplaceSchema, type PrimeMarketplace, type RoomLobbyProvider, RoomLobbyProviderSchema, RoomSessionAdmissionInputSchema } from "@anidachi/protocol";
 import {
 	RoomUpdateRequiredError,
 	roomUpdateRequiredBody,
@@ -8,11 +8,14 @@ import { RoomSourcePersistenceError } from "./room-source";
 import { hostingDeniedResponse } from "./hosting-denial";
 
 export type RoomCreateRequestInput = {
+	lobbyProvider?: RoomLobbyProvider;
+	lobbyMarketplace?: PrimeMarketplace;
 	participantSessionId: string;
 	showId?: string;
 	episodeId?: string;
 	sourceProvider?: unknown;
 	sourceUrl?: unknown;
+ primeNavigation?:unknown;
 	videoFingerprint?: unknown;
 	title?: string;
 	clientRequestId?: string;
@@ -147,12 +150,27 @@ function parseRoomCreateRequestBody(
 	const input: RoomCreateRequestInput = {
 		participantSessionId: admission.data.participantSessionId,
 	};
+	if (record.lobbyMarketplace !== undefined) {
+		const market = PrimeMarketplaceSchema.safeParse(record.lobbyMarketplace);
+		if (record.lobbyProvider !== "primevideo" || !market.success) return invalidRequest();
+		input.lobbyMarketplace = market.data;
+	}
+	if (record.lobbyProvider !== undefined) {
+		const provider = RoomLobbyProviderSchema.safeParse(record.lobbyProvider);
+		if (!provider.success ||
+			typeof record.clientRequestId !== "string" || !record.clientRequestId.trim() ||
+			["sourceProvider", "sourceUrl", "videoFingerprint", "primeNavigation", "showId", "episodeId"].some(key => record[key] != null)) {
+			return invalidRequest();
+		}
+		input.lobbyProvider = provider.data;
+	}
 	assignCleanString(input, "showId", record.showId, 200);
 	assignCleanString(input, "episodeId", record.episodeId, 200);
 	assignCleanString(input, "title", record.title, 300);
 	assignCleanString(input, "clientRequestId", record.clientRequestId, 100);
 	for (const key of [
 		"sourceProvider",
+  "primeNavigation",
 		"sourceUrl",
 		"videoFingerprint",
 	] as const) {
