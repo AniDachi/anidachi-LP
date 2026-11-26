@@ -24,7 +24,7 @@ export function catalogPillPlacement(provider: string): CatalogPillPlacement {
 
 const margin = 8;
 const clickSlop = 6;
-const releaseRadius = 24;
+const releaseRadius = 48;
 const travelAtRelease = .30;
 const dockCenterRadius = 12;
 const capturePadding = 44;

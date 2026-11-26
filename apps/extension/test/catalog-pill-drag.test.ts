@@ -32,19 +32,25 @@ function mount(read: () => Promise<Position> = async () => null) {
 
 afterEach(() => { document.body.replaceChildren(); vi.restoreAllMocks(); });
 
-it("keeps an outward drop inside the magnetic area, then docks on a deliberate return", () => {
+it("stays docked below 48px, detaches at 48px, then moves freely until a deliberate return", () => {
   const { pointer, origin, write, dispose } = mount();
   pointer("pointerdown", homeX);
-  pointer("pointermove", homeX - 24);
-  pointer("pointerup", homeX - 24);
-  expect(origin().x).toBeCloseTo(homeX - 24);
+  pointer("pointermove", homeX - 47);
+  pointer("pointerup", homeX - 47);
+  expect(origin().x).toBe(homeX);
+  expect(write).not.toHaveBeenCalled();
+
+  pointer("pointerdown", homeX);
+  pointer("pointermove", homeX - 48);
+  pointer("pointerup", homeX - 48);
+  expect(origin().x).toBeCloseTo(homeX - 48);
   expect(write).toHaveBeenCalledTimes(1);
 
-  pointer("pointerdown", homeX - 24);
-  pointer("pointermove", homeX - 36);
-  pointer("pointerup", homeX - 40);
-  expect(origin().x).toBeCloseTo(homeX - 40);
-  pointer("pointerdown", homeX - 40);
+  pointer("pointerdown", homeX - 48);
+  pointer("pointermove", homeX - 55);
+  pointer("pointerup", homeX - 56);
+  expect(origin().x).toBeCloseTo(homeX - 56);
+  pointer("pointerdown", homeX - 56);
   pointer("pointerup", homeX - 8);
   expect(origin().x).toBe(homeX);
   expect(write).toHaveBeenLastCalledWith(null);
@@ -75,9 +81,9 @@ it("captures on return from outside the wide field and lets the user pull away a
   pointer("pointermove", homeX - 68);
   expect(origin().x).toBe(homeX);
   pointer("pointermove", homeX - 20);
-  pointer("pointermove", homeX - 52);
-  pointer("pointerup", homeX - 47);
-  expect(origin().x).toBeCloseTo(homeX - 47);
+  pointer("pointermove", homeX - 70);
+  pointer("pointerup", homeX - 65);
+  expect(origin().x).toBeCloseTo(homeX - 65);
   dispose();
 });
 
