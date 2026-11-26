@@ -1,4 +1,5 @@
 import { panelRoomActionsStyles } from "./panel-room-actions-styles";
+import { catalogPillStyles } from "./catalog-pill-styles";
 import { panelMatteGrain } from "./panel-matte-texture";
 import { extensionThemeTokens } from "./extension-theme";
 import { panelMediaControlStyles } from "./panel-media-controls-styles";
@@ -274,6 +275,7 @@ ${extensionThemeTokens}
   }
 
   .mini-panel[data-guarded-panel] { container: compact-panel / inline-size; }
+${catalogPillStyles}
 
   .panel-header {
     display: grid;

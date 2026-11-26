@@ -17,6 +17,13 @@ export function popupRoomProvider(href?: string): RoomLobbyProvider | null {
 	return provider === "disneyplus" && !isDisneyRoomSurface(href) ? null : provider;
 }
 
+/** Shorts can keep an existing room docked. Only a supported catalog or watch page can claim a new room. */
+export function popupCreateProvider(href?: string): RoomLobbyProvider | null {
+	const provider = popupRoomProvider(href);
+	if (href && provider === "youtube" && /^\/(?:feed\/)?shorts(?:\/|$)/.test(new URL(href).pathname)) return null;
+	return provider;
+}
+
 export function netflixProfileGate(doc: Document): boolean {
 	return Boolean(doc.querySelector('[data-uia="profile-gate-screen"], [data-uia="profile-selector"], .profiles-gate-container'));
 }

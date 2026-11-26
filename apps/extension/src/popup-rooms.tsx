@@ -62,16 +62,11 @@ export function RoomsCard({
 	return (
 		<section className="rooms-card" aria-label="Watch room">
 			{active ? (
-				<>
-					<div className="rooms-kicker">Active room</div>
-					<div className="rooms-provider">
-						<ProviderLogo
-							provider={active}
-							label={platformLabels[active] ?? "Watch room"}
-						/>
-						<strong>{platformLabels[active] ?? "Watch room"}</strong>
-					</div>
-				</>
+				<div className="rooms-provider rooms-heading">
+					<ProviderLogo provider={active} label={platformLabels[active] ?? "Watch room"} />
+					<strong>{platformLabels[active] ?? "Watch room"}</strong>
+					<span className="rooms-status">Active room</span>
+				</div>
 			) : (
 				<div
 					className="rooms-picker"
@@ -91,7 +86,7 @@ export function RoomsCard({
 				>
 					<button
 						type="button"
-						className="rooms-provider rooms-trigger"
+						className="rooms-provider rooms-heading rooms-trigger"
 						ref={trigger}
 						aria-label={
 							selected

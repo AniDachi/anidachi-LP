@@ -1,11 +1,9 @@
-import { YOUTUBE_CATALOG_ORIGINS } from "./source-adapters/youtube/url";
-import { CRUNCHYROLL_CATALOG_ORIGINS } from "./source-adapters/crunchyroll/url";
-import { catalogPlayerProvider } from "./catalog-room-routes";
-import { HBO_MAX_BROWSER_HOSTS, PRIME_CONTENT_MATCHES, ROOM_LOBBY_HOME, RoomLobbyProviderSchema, type RoomLobbyProvider } from "@anidachi/protocol";
+import { ROOM_LOBBY_HOME, RoomLobbyProviderSchema, type RoomLobbyProvider } from "@anidachi/protocol";
 import { getStoredAuthTokens } from "./auth-tokens";
 import { PRIME_ROOM_INTERNAL } from "./prime-room-contract";
 import {
 	popupRoomProvider,
+	popupCreateProvider,
 	lobbyRoomFromUrl,
 	popupRoomInvite,
 	ROOM_LAUNCH_MESSAGE,
@@ -92,7 +90,7 @@ export function registerPopupRoomLaunch() {
 				)
 					return null;
 				const tab = await chrome.tabs.get(pending.tabId);
-				if (popupRoomProvider(tab.url) !== pending.provider) return null;
+				if ((tab.pendingUrl && tab.pendingUrl !== tab.url) || popupCreateProvider(tab.url) !== pending.provider) return null;
 				await chrome.storage.session.remove(pendingKey);
 				return { id: pending.id, owner, provider: pending.provider, expires: pending.expires };
 			}
@@ -103,52 +101,35 @@ export function registerPopupRoomLaunch() {
 				return { here: popupRoomProvider(active?.url), room };
 			if (message.action !== "open") return;
 			const provider = RoomLobbyProviderSchema.safeParse(message.provider).data;
-			if (!room && !provider) return { error: "Choose a platform." };
 			let tabId = room?.tabId;
-			if (
-				tabId === undefined &&
-				pending?.owner === owner && pending.provider === provider &&
-				pending.expires > Date.now()
-			) {
-				const destination = await chrome.tabs.get(pending.tabId).catch(() => undefined);
-				if (destination && popupRoomProvider(destination.url ?? destination.pendingUrl) === provider) tabId = destination.id;
-			}
-			if (tabId === undefined && provider) {
-				const target = popupRoomProvider(active?.url) === provider
-					? active
-					: (
-							await chrome.tabs.query({
-								currentWindow: true,
-								url: provider === "primevideo" ? PRIME_CONTENT_MATCHES
-									: provider === "youtube" ? YOUTUBE_CATALOG_ORIGINS.map(origin => origin + "/*")
-									: provider === "crunchyroll" ? CRUNCHYROLL_CATALOG_ORIGINS.map(origin => origin + "/*")
-									: provider === "hbomax" ? HBO_MAX_BROWSER_HOSTS.map(host => `https://${host}/*`)
-									: new URL(ROOM_LOBBY_HOME[provider]).origin + "/*",
-							})
-						)
-							.filter(
-								(tab) =>
-									popupRoomProvider(tab.url) === provider && !catalogPlayerProvider(tab.url!),
-							)
-							.sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0))[0];
-				tabId =
-					target?.id ??
-					(await chrome.tabs.create({ url: ROOM_LOBBY_HOME[provider], active: false })).id;
+			let navigateTo: string | undefined;
+			if (tabId === undefined) {
+				if (!provider) return { error: "Choose a platform." };
+				const href = active?.pendingUrl ?? active?.url;
+				if (active?.id !== undefined && popupRoomProvider(href) === provider) {
+					tabId = active.id;
+					if (popupCreateProvider(href) !== provider) navigateTo = ROOM_LOBBY_HOME[provider];
+				} else {
+					const tab = await chrome.tabs.create({
+						url: ROOM_LOBBY_HOME[provider], windowId: active?.windowId, active: false,
+					});
+					tabId = tab.id;
+				}
 				if (tabId === undefined) throw new Error("Could not open the platform.");
-				await chrome.storage.session.set({
-					[pendingKey]: {
-						tabId,
-						provider, id: crypto.randomUUID(),
-						owner,
-						expires: Date.now() + (provider === "netflix" ? 300_000 : 60_000),
-					},
-				});
+				if (!pending || pending.tabId !== tabId || pending.provider !== provider ||
+					pending.owner !== owner || pending.expires <= Date.now()) {
+					await chrome.storage.session.set({
+						[pendingKey]: {
+							tabId, provider, id: crypto.randomUUID(), owner,
+							expires: Date.now() + (provider === "netflix" ? 300_000 : 60_000),
+						},
+					});
+				}
 			}
-			if (tabId === undefined) return { error: "Could not open the room." };
-			const target = await chrome.tabs.update(tabId, { active: true });
+			const target = await chrome.tabs.update(tabId, navigateTo ? { active: true, url: navigateTo } : { active: true });
 			if (target && target.windowId !== active?.windowId)
 				await chrome.windows.update(target.windowId, { focused: true });
-			if (!room)
+			if (!room && !navigateTo)
 				void chrome.tabs
 					.sendMessage(
 						tabId,

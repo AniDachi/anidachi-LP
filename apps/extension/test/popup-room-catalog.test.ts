@@ -74,6 +74,14 @@ describe("popup room before playback", () => {
 				crunchyroll: '<header><div role="button" aria-controls="user-menu-authenticated"></div></header>',
 				hbomax: '<nav><div data-testid="navigationMenu"><a data-testid="my-stuff_button" href="/br/pt/my-stuff">Minha lista</a><button data-testid="profile_button">Perfil</button></div></nav>',
 			}[provider];
+			if (provider === "youtube" && !invited) {
+				vi.stubGlobal("location", new URL("/shorts/abcdefghijk", home));
+				session.reconcile();
+				await vi.advanceTimersByTimeAsync(100);
+				expect(claims()).toHaveLength(0);
+				vi.stubGlobal("location", new URL(home));
+				session.reconcile();
+			}
 			await vi.advanceTimersByTimeAsync(8000);
 			expect(claims()).toHaveLength(1);
 			expect(mount).toHaveBeenCalledTimes(1);
