@@ -20,7 +20,8 @@ import {
 import { RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/client-api";
-import { LibraryEmptyState } from "./library-empty-state";
+import { LibraryRecordingPrompt } from "./library-recording-prompt";
+import { requestExtensionPresence } from "@/lib/extension-presence-client";
 import { WatchLibraryCapacity } from "./watch-library-capacity";
 import { HistoryBrowser, HistoryActions, type HistoryPlatform } from "./history-browser";
 import { useAccountViewState } from "@/components/account/account-workspace-state";
@@ -30,16 +31,19 @@ type Notice = { tone: "success" | "error"; text: string };
 export function WatchLibraryClient({
   initialHistory,
   initialAccess = "allowed",
+  extensionId,
 }: {
   initialHistory: WatchHistoryResponse;
   initialPreferences: WatchHistoryPreferencesResponse;
   initialAccess?: "allowed" | "plan_required";
+  extensionId?:string|null;
 }) {
   const ownerGenerationKey = `${initialHistory.meta.ownerUserId}:${initialHistory.meta.accountGeneration}:${initialAccess}`;
   return (
     <WatchLibraryOwnerClient
       initialHistory={initialHistory}
       initialAccess={initialAccess}
+      extensionId={extensionId}
       key={ownerGenerationKey}
     />
   );
@@ -48,9 +52,11 @@ export function WatchLibraryClient({
 function WatchLibraryOwnerClient({
   initialHistory,
   initialAccess = "allowed",
+  extensionId,
 }: {
   initialHistory: WatchHistoryResponse;
   initialAccess?: "allowed" | "plan_required";
+  extensionId?:string|null;
 }) {
   const [accessState, setAccessState] = useState<string>(initialAccess);
   const canRead = accessState === "allowed" || accessState === "plan_required";
@@ -430,6 +436,29 @@ function WatchLibraryOwnerClient({
     ],
   );
 
+  const [installed, setInstalled] = useState<boolean | null>(null);
+  useEffect(() => {
+    setInstalled(null);
+    if (!extensionId) return;
+    let pending: AbortController | undefined;
+    const check = () => {
+      pending?.abort();
+      const controller = new AbortController();
+      pending = controller;
+      void requestExtensionPresence(extensionId, controller.signal).then(present => {
+        if (!controller.signal.aborted) setInstalled(present);
+      });
+    };
+    check();
+    const unbind = bindWatchHistoryPageRefresh({ refresh: check });
+    window.addEventListener("pageshow", check);
+    return () => {
+      pending?.abort();
+      unbind();
+      window.removeEventListener("pageshow", check);
+    };
+  }, [extensionId]);
+
   // A filtered page is not evidence that the user's entire library is empty.
   const emptyLibrary = canRead && provider === "all" && historyProvider === "all"
     && history.totalTitleCount === 0 && history.items.length === 0 && !history.nextCursor;
@@ -467,14 +496,8 @@ function WatchLibraryOwnerClient({
           </HistoryActions>}
         </div>}
       </header>
-      {accessState === "plan_required" && !emptyLibrary && (
-        <p className="wh-hint" role="status">
-          Your saved history stays here. Plus or Pro unlocks recording and
-          progress editing.{" "}
-          <a href="/pricing" className="text-brand-orange">
-            View plans
-          </a>
-        </p>
+      {canRead && (
+        <LibraryRecordingPrompt empty={emptyLibrary} installed={installed} canRecord={accessState === "allowed"} />
       )}
       {notice && (
         <div
@@ -490,9 +513,7 @@ function WatchLibraryOwnerClient({
             ? "Update AniDachi to use personal history."
             : "History access is temporarily unavailable. Please retry."}
         </section>
-      ) : emptyLibrary ? (
-        <LibraryEmptyState canRecord={accessState === "allowed"} />
-      ) : (
+      ) : !emptyLibrary && (
         <HistoryBrowser
           key={`${ownerUserId}:${history.meta.accountGeneration}`}
           items={history.items}
