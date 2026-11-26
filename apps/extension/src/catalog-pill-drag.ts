@@ -25,10 +25,19 @@ export function catalogPillPlacement(provider: string): CatalogPillPlacement {
 const margin = 8;
 const clickSlop = 6;
 const releaseRadius = 24;
+const travelAtRelease = .30;
 const dockCenterRadius = 12;
 const capturePadding = 44;
 const magneticHysteresis = 8;
 const clamp = (n: number, max: number) => Math.max(0, Math.min(n, max));
+
+function stretchedScale(dx: number, dy: number, distance: number) {
+  const lengthSquared = Math.max(1, distance * distance);
+  const tension = Math.min(1, distance / releaseRadius);
+  const horizontal = dx * dx / lengthSquared;
+  const vertical = dy * dy / lengthSquared;
+  return `${1 + tension * (.20 * horizontal - .08 * vertical)} ${1 + tension * (.20 * vertical - .08 * horizontal)}`;
+}
 
 /** The dock always follows the provider's original anchor. Only catalog coordinates move. */
 export function attachCatalogPillDrag(
@@ -148,11 +157,11 @@ export function attachCatalogPillDrag(
         gesture.snappedDistance = null;
         pull?.cancel();
         if (!reducedMotion?.matches) {
-          const lag = Math.min(distance, releaseRadius) * .6 / distance;
+          const lag = Math.min(distance, releaseRadius) * (1 - travelAtRelease) / distance;
           pull = pill.animate([
-            { translate: -dx * lag + "px " + -dy * lag + "px" },
-            { translate: "0px 0px" },
-          ], { duration: 145, easing: "cubic-bezier(.16,.85,.32,1)" });
+            { translate: -dx * lag + "px " + -dy * lag + "px", scale: stretchedScale(dx, dy, distance) },
+            { translate: "0px 0px", scale: "1" },
+          ], { duration: 250, easing: "cubic-bezier(.28,.48,.22,1)" });
         }
         wave(false);
       }
@@ -160,10 +169,15 @@ export function attachCatalogPillDrag(
       gesture.changedPlacement = true;
       place({ x: rangeX ? (x - margin) / rangeX : 0, y: rangeY ? (y - margin) / rangeY : 0 });
     } else if (gesture.snappedDistance === null && !reducedMotion?.matches) {
-      const resistance = .65 - .25 * distance / releaseRadius;
-      pill.style.translate = dx * resistance + "px " + dy * resistance + "px";
+      const remainingPull = 1 - distance / releaseRadius;
+      const travel = travelAtRelease + .28 * remainingPull * remainingPull;
+      pill.style.translate = dx * travel + "px " + dy * travel + "px";
+      pill.style.scale = stretchedScale(dx, dy, distance);
     }
-    if (position) pill.style.removeProperty("translate");
+    if (position) {
+      pill.style.removeProperty("translate");
+      pill.style.removeProperty("scale");
+    }
   }
   function finish(e: PointerEvent) {
     if (!gesture || gesture.id !== e.pointerId) return;
@@ -186,6 +200,7 @@ export function attachCatalogPillDrag(
     }
     root.removeAttribute("data-catalog-dragging");
     pill.style.removeProperty("translate");
+    pill.style.removeProperty("scale");
     if (pill.hasPointerCapture(id)) pill.releasePointerCapture(id);
   }
   pill.addEventListener("pointerdown", down, options);
