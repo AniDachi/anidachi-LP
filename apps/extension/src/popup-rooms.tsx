@@ -1,5 +1,8 @@
-import { RoomLobbyProviderSchema, type RoomLobbyProvider } from "@anidachi/protocol";
-import { useEffect, useState } from "react";
+import {
+	RoomLobbyProviderSchema,
+	type RoomLobbyProvider,
+} from "@anidachi/protocol";
+import { useEffect, useRef, useState } from "react";
 import { ProviderLogo } from "./provider-logo";
 import { ROOM_LAUNCH_MESSAGE } from "./popup-room-launch";
 
@@ -12,7 +15,14 @@ export type RoomsState = {
 		invite: string;
 	} | null;
 };
-const platformLabels: Record<string, string> = { disneyplus: "Disney+", hbomax: "HBO Max", primevideo: "Prime Video", netflix: "Netflix", youtube: "YouTube", crunchyroll: "Crunchyroll" };
+export const platformLabels: Record<string, string> = {
+	disneyplus: "Disney+",
+	hbomax: "HBO Max",
+	primevideo: "Prime Video",
+	netflix: "Netflix",
+	youtube: "YouTube",
+	crunchyroll: "Crunchyroll",
+};
 
 export function RoomsCard({
 	state,
@@ -33,28 +43,110 @@ export function RoomsCard({
 }) {
 	const active = state?.room?.provider;
 
+	const [open, setOpen] = useState(false);
+	const picker = useRef<HTMLDivElement>(null);
+	const trigger = useRef<HTMLButtonElement>(null);
+	useEffect(() => {
+		if (!open) return;
+		const outside = (event: PointerEvent) => {
+			if (
+				event.target instanceof Node &&
+				!picker.current?.contains(event.target)
+			)
+				setOpen(false);
+		};
+		document.addEventListener("pointerdown", outside);
+		return () => document.removeEventListener("pointerdown", outside);
+	}, [open]);
+
 	return (
 		<section className="rooms-card" aria-label="Watch room">
-			<div className="rooms-kicker">
-				{state?.room ? "Active room" : "Platform"}
-			</div>
-			<div className="rooms-platforms">
-				{active ? (
+			{active ? (
+				<>
+					<div className="rooms-kicker">Active room</div>
 					<div className="rooms-provider">
-						<ProviderLogo provider={active} label={platformLabels[active] ?? "Watch room"} />
+						<ProviderLogo
+							provider={active}
+							label={platformLabels[active] ?? "Watch room"}
+						/>
 						<strong>{platformLabels[active] ?? "Watch room"}</strong>
 					</div>
-				) : RoomLobbyProviderSchema.options.map(provider => (
-					<button key={provider} className="rooms-provider" type="button"
-						aria-pressed={selected === provider}
+				</>
+			) : (
+				<div
+					className="rooms-picker"
+					ref={picker}
+					data-open={open}
+					onBlur={(event) => {
+						if (!event.currentTarget.contains(event.relatedTarget))
+							setOpen(false);
+					}}
+					onKeyDown={(event) => {
+						if (event.key === "Escape" && open) {
+							event.preventDefault();
+							setOpen(false);
+							trigger.current?.focus();
+						}
+					}}
+				>
+					<button
+						type="button"
+						className="rooms-provider rooms-trigger"
+						ref={trigger}
+						aria-label={
+							selected
+								? "Choose a platform, " + platformLabels[selected]
+								: "Choose a platform"
+						}
+						aria-expanded={open}
+						aria-controls="rooms-platforms"
 						disabled={!state || (disabled && selected !== null)}
-						onClick={() => onSelect(provider)}>
-						<ProviderLogo provider={provider} label={platformLabels[provider]} />
-						<strong>{platformLabels[provider]}</strong>
-						{selected === provider && <span className="rooms-check" aria-hidden="true">✓</span>}
+						onClick={() => setOpen((value) => !value)}
+					>
+						{selected && (
+							<ProviderLogo
+								provider={selected}
+								label={platformLabels[selected]}
+							/>
+						)}
+						<strong>
+							{selected ? platformLabels[selected] : "Choose a platform"}
+						</strong>
+						<span aria-hidden="true" className="rooms-chevron" />
 					</button>
-				))}
-			</div>
+					<div className="rooms-reveal" inert={!open}>
+						<div>
+							<div id="rooms-platforms" role="group" aria-label="Platforms">
+								{RoomLobbyProviderSchema.options.map((provider) => (
+									<button
+										key={provider}
+										type="button"
+										className="rooms-provider rooms-option"
+										aria-pressed={provider === selected}
+										onClick={() => {
+											onSelect(provider);
+											setOpen(false);
+											trigger.current?.focus();
+										}}
+									>
+										<ProviderLogo
+											provider={provider}
+											label={platformLabels[provider]}
+										/>
+										<span>{platformLabels[provider]}</span>
+										{selected === provider && (
+											<span className="rooms-check" aria-hidden="true">
+												✓
+											</span>
+										)}
+									</button>
+								))}
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+
 			<button
 				className="rooms-primary"
 				type="button"
@@ -89,7 +181,9 @@ export function PopupRooms({
 			.then((result) => {
 				if (!current) return;
 				if (!result || result.error)
-					throw new Error(result?.error || "Could not load room details. Try again.");
+					throw new Error(
+						result?.error || "Could not load room details. Try again.",
+					);
 				setState(result);
 				select(result.here);
 				setError("");

@@ -1,3 +1,5 @@
+import { panelMatteGrain } from "./panel-matte-texture";
+
 // Watch drawer: compact title list and a bounded episode picker.
 export const popupWatchHistoryStyles = `
   .popup-watch-screen [hidden] { display: none !important; }
@@ -54,6 +56,62 @@ export const popupWatchHistoryStyles = `
   .popup-watch-status { display: flex; align-items: center; justify-content: space-between; min-height: 20px; gap: 8px; color: var(--ad-muted); font-size: 10px; }
   .popup-watch-screen .popup-watch-refresh { display: inline-flex; align-items: center; gap: 4px; min-height: 22px; width: auto; padding: 2px 4px; font-size: 10px; }
   .popup-watch-screen .popup-resource-list { gap: 6px; }
+  .popup-platform-carousel {
+    display: grid; grid-template-columns: 32px minmax(0,1fr); align-items: center;
+    min-width: 0; padding: 2px 0 6px; border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .popup-watch-screen .popup-platform-carousel button {
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    min-width: 0; height: 36px; padding: 0 2px; border: 0; border-radius: 5px;
+    background: transparent; box-shadow: none; color: #9c9b9a; cursor: pointer;
+    font: inherit; font-size: 11px; line-height: 16px; font-weight: 600;
+  }
+  .popup-watch-screen .popup-platform-carousel .popup-platform-all {
+    background: linear-gradient(#383838,#383838) right center / 1px 12px no-repeat; padding-right: 7px;
+  }
+  .popup-watch-screen .popup-platform-carousel button:is(:hover,[aria-pressed="true"]) { color: var(--ad-text); }
+  .popup-watch-screen .popup-platform-carousel button:focus-visible { outline: 2px solid var(--ad-accent); outline-offset: -2px; }
+  .popup-platform-choices { position: relative; min-width: 0; overflow: clip; }
+  .popup-platform-inline { display: flex; align-items: center; justify-content: space-evenly; gap: 10px; width: max-content; min-width: 100%; }
+  .popup-platform-inline[inert] { position: absolute; top: 0; left: 0; visibility: hidden; }
+  .popup-watch-screen .popup-platform-inline button { flex: none; padding-inline: 6px; }
+  .popup-platform-inline .popup-platform-face { opacity: .6; transform: none; transition: none; }
+  .popup-platform-inline button:is([aria-pressed="true"],:hover,:focus-visible) .popup-platform-face { opacity: 1; }
+  .popup-platform-wheel { display: grid; grid-template-columns: 18px minmax(0,1fr) 18px; align-items: center; }
+  .popup-platform-slots { position: relative; overflow: clip; min-width: 0; height: 36px; }
+  .popup-watch-screen .popup-platform-slots .popup-platform-option {
+    position: absolute; top: 0; left: 0; width: calc(100% / 3); color: #fafafa;
+    transition: transform 300ms cubic-bezier(.25,.75,.25,1), color 220ms ease;
+  }
+  .popup-platform-face {
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 0;
+    transform: perspective(180px) rotateY(var(--wheel-angle, 0deg)) scale(var(--wheel-scale, 1));
+    opacity: var(--wheel-opacity, 1);
+    transition: transform 300ms cubic-bezier(.25,.75,.25,1), opacity 300ms ease;
+  }
+  .popup-platform-option[data-offset="0"][aria-pressed="true"] { --wheel-scale: 1.06; }
+  .popup-platform-option[data-offset="0"][aria-pressed="false"] { --wheel-opacity: .65; }
+  .popup-platform-option[data-offset="-1"], .popup-platform-option[data-offset="1"] {
+    --wheel-scale: .78; --wheel-opacity: .51;
+  }
+  .popup-platform-option[data-offset="-1"] { --wheel-angle: -32deg; }
+  .popup-platform-option[data-offset="1"] { --wheel-angle: 32deg; }
+  .popup-platform-option[inert] { --wheel-scale: .56; --wheel-opacity: 0; }
+  .popup-platform-option[data-offset="-2"] { --wheel-angle: -54deg; }
+  .popup-platform-option[data-offset="2"] { --wheel-angle: 54deg; }
+  .popup-watch-screen .popup-platform-option .resource-provider-logo {
+    display: grid; place-items: center; width: 14px; height: 14px; flex: none;
+    background: transparent; color: inherit; border: 0; border-radius: 0; box-shadow: none;
+  }
+  .popup-watch-screen .popup-platform-option .resource-provider-logo.disneyplus { width: 41px; height: 22px; }
+  .popup-watch-screen .popup-platform-option .resource-provider-logo.hbomax { width: 28px; height: 20px; }
+  .popup-watch-screen .popup-platform-option .resource-provider-logo svg { width: 100%; height: 100%; }
+  .popup-watch-screen .popup-platform-option .resource-provider-logo img { filter: brightness(0) invert(1); }
+  .popup-watch-screen .popup-platform-option .youtube path:last-child { fill: #111; }
+  .popup-platform-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  @media (prefers-reduced-motion: reduce) {
+    .popup-watch-screen .popup-platform-slots .popup-platform-option, .popup-platform-face { transition: none; }
+  }
   .popup-watch-screen .popup-provider { overflow: visible; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
   .popup-watch-screen .popup-provider-row { min-height: 48px; padding: 8px 0; grid-template-columns: 44px minmax(0,1fr) 24px; gap: 10px; border-radius: 10px; background: transparent; transition: background-color 160ms ease; }
   .popup-watch-screen .popup-provider-row:hover { background: rgba(255,255,255,.035); }
@@ -64,12 +122,53 @@ export const popupWatchHistoryStyles = `
   .popup-watch-screen .popup-provider-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; line-height: 1.4; font-weight: 600; }
   .popup-watch-screen .popup-provider-count { flex: 0 0 auto; align-self: flex-start; margin-top: 1px; margin-left: -3px; color: var(--ad-accent); font-size: 10px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
   .popup-watch-screen .popup-provider-body { gap: 8px; padding: 0; border: 0; }
-  .popup-watch-screen .popup-provider-body > .popup-watch-item { --popup-watch-artwork-width: 52px; min-width: 0; gap: 0; border: 1px solid rgba(238,230,220,.065); border-radius: 14px; background: transparent; transition: border-color 180ms ease; }
-  .popup-watch-screen .popup-watch-item[data-open="true"] { border-color: rgba(238,230,220,.11); }
-  .popup-watch-screen .popup-watch-item:focus-within { border-color: rgba(238,230,220,.18); }
-  .popup-watch-screen .popup-watch-row, .popup-watch-screen .popup-watch-item[data-kind="series"] .popup-watch-row { position: relative; display: block; box-sizing: border-box; padding: 10px; min-height: 0; background: transparent; border: 0; box-shadow: none; clip-path: none; }
-  .popup-watch-title-toggle { display: grid; grid-template-columns: var(--popup-watch-artwork-width) minmax(0,1fr) 24px; align-items: start; gap: 10px; min-width: 0; width: 100%; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--ad-text); text-align: left; cursor: pointer; }
-  .popup-watch-screen .popup-watch-artwork { width: var(--popup-watch-artwork-width); height: 78px; aspect-ratio: 2 / 3; border-radius: 6px; background: var(--ad-surface); border: 1px solid rgba(255,255,255,.08); box-shadow: none; font-size: 18px; font-weight: 600; color: var(--ad-muted); align-self: start; box-sizing: border-box; }
+  .popup-watch-screen .popup-platform-titles {
+    --popup-watch-artwork-width: 46px;
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px;
+  }
+  .popup-platform-titles > .popup-watch-item {
+    --watch-card-ease: cubic-bezier(.32,.08,.24,1);
+    --watch-card-grain: url("${panelMatteGrain}");
+    position: relative; isolation: isolate; display: block; min-width: 0;
+    border: 0; border-radius: 12px; background: transparent;
+  }
+  .popup-watch-reveal {
+    display: grid; grid-template-rows: minmax(0,0fr); overflow: clip;
+    transition: grid-template-rows 260ms var(--watch-card-ease);
+  }
+  .popup-watch-item[data-open="true"] > .popup-watch-reveal {
+    grid-template-rows: minmax(0,1fr); transition-duration: 340ms;
+  }
+  .popup-platform-titles > .popup-watch-item:focus-within { z-index: 1; }
+  .popup-platform-titles > .popup-watch-item::before, .popup-platform-titles .popup-watch-row::before {
+    content: ""; display: block; position: absolute; inset: 0; width: auto; height: auto;
+    z-index: -1; pointer-events: none; opacity: 0; transition: opacity 260ms ease;
+  }
+  .popup-platform-titles > .popup-watch-item::before {
+    border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255,255,255,.075);
+    background: var(--watch-card-grain) repeat 0 0 / 64px 64px, linear-gradient(155deg,#17191c,#121417 68%,#141619);
+  }
+  .popup-platform-titles .popup-watch-row::before {
+    border-radius: 12px 12px 0 0; box-shadow: inset 0 1px rgba(255,255,255,.08);
+    background: var(--watch-card-grain) repeat 0 0 / 64px 64px,
+      radial-gradient(ellipse at 14% 0%,rgba(255,255,255,.048),transparent 70%),
+      linear-gradient(155deg,#292c31,#232529 70%,#212327);
+  }
+  .popup-platform-titles > .popup-watch-item[data-open="true"]::before,
+  .popup-platform-titles > .popup-watch-item[data-open="true"] > .popup-watch-row::before { opacity: 1; }
+  .popup-watch-screen .popup-watch-row, .popup-watch-screen .popup-watch-item[data-kind="series"] .popup-watch-row {
+    position: relative; isolation: isolate; display: block; min-height: 0; padding: 0; border: 0; background: transparent; box-shadow: none; clip-path: none;
+  }
+  .popup-watch-title-toggle {
+    display: grid; grid-template-columns: var(--popup-watch-artwork-width) minmax(0,1fr) 16px;
+    align-items: center; gap: 12px; width: 100%; min-width: 0; padding: 9px 10px;
+    border: 0; border-radius: 7px; background: transparent; color: var(--ad-text); text-align: left; cursor: pointer;
+  }
+  .popup-watch-screen .popup-watch-artwork {
+    width: var(--popup-watch-artwork-width); height: auto; aspect-ratio: 2 / 3; border-radius: 5px;
+    background: var(--ad-surface); border: 1px solid rgba(255,255,255,.08); box-shadow: none;
+    font-size: 18px; font-weight: 600; color: var(--ad-muted); box-sizing: border-box;
+  }
   .popup-watch-screen .popup-watch-artwork img { width: 100%; height: 100%; object-fit: cover; }
   .popup-watch-screen .popup-watch-item:is([data-provider="netflix"],[data-provider="disneyplus"]) .popup-watch-artwork img { object-fit: contain; }
   .popup-watch-screen .popup-watch-main { display: flex; flex-direction: column; min-width: 0; gap: 6px; padding: 0; }
@@ -83,7 +182,8 @@ export const popupWatchHistoryStyles = `
   .popup-watch-pending { color: rgba(255,255,255,.48); font-size: 9.5px; line-height: 1.4; }
   .popup-watch-disclosure-icon { flex: 0 0 auto; color: rgba(255,255,255,.45); transform: rotate(-90deg); transition: transform 140ms ease; }
   [aria-expanded="true"] > .popup-watch-disclosure-icon { transform: rotate(0); }
-  .popup-watch-title-toggle > .popup-watch-disclosure-icon { justify-self: center; margin-top: 2px; }
+  .popup-watch-title-toggle > .popup-watch-disclosure-icon { justify-self: end; }
+  .popup-watch-title-toggle[aria-expanded="true"] > .popup-watch-disclosure-icon { transform: rotate(180deg); }
   .popup-watch-title-toggle:hover .popup-watch-title { color: var(--ad-text); }
   .popup-watch-title-toggle:hover .popup-watch-disclosure-icon { color: var(--ad-text); }
   .popup-watch-screen button:focus-visible, .popup-watch-screen a:focus-visible, .popup-watch-screen input:focus-visible, .popup-watch-screen select:focus-visible { outline: 2px solid var(--ad-accent); outline-offset: 2px; }
@@ -144,7 +244,13 @@ export const popupWatchHistoryStyles = `
   .popup-watch-screen button:disabled { cursor: default; opacity: .5; }
   .popup-watch-summary { display: block; width: fit-content; max-width: 100%; }
   .popup-watch-special-total { color: rgba(255,255,255,.44); font-size: 10px; }
-  .popup-watch-grid-view, .popup-watch-video-list { min-width: 0; margin: 0; padding: 12px 10px 10px; border: 0; border-radius: 0 0 13px 13px; background: rgba(238,230,220,.035); }
+  .popup-watch-grid-view, .popup-watch-video-list {
+    align-self: start; min-width: 0; margin: 0; padding: 12px 10px 10px; border: 0; background: transparent;
+  }
+  /* Keep the contents laid out at full size while the reveal clips them from the bottom. */
+  .popup-watch-screen :is(.popup-watch-grid-view,.popup-watch-video-list)[hidden] {
+    display: block !important; visibility: hidden; transition: visibility 0s 260ms;
+  }
   .popup-season-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; margin: 2px 0 11px; }
   .popup-season-picker { min-width: 0; max-width: 70%; }
   .popup-season-trigger { display: inline-flex; align-items: center; justify-content: space-between; gap: 12px; box-sizing: border-box; max-width: 100%; min-height: 32px; padding: 7px 12px; border: 1px solid transparent; border-radius: 999px; background: #eee6dc; color: #171411; font: inherit; font-size: 11px; font-weight: 600; line-height: 1.45; text-align: left; cursor: pointer; }
@@ -201,7 +307,7 @@ export const popupWatchHistoryStyles = `
   @keyframes watch-filter-reveal { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
   @media (max-width: 350px) { .popup-watch-screen .popup-watch-controls { gap: 6px; } .popup-watch-screen .popup-watch-search { padding-inline: 8px; gap: 5px; } .popup-watch-screen .popup-season-main { grid-template-columns: minmax(0,1fr); } }
   @media (hover: hover) and (pointer: fine) {
-    .popup-watch-screen .popup-watch-item:hover { border-color: rgba(238,230,220,.18); }
+    .popup-watch-item[data-open="false"] .popup-watch-title-toggle:hover { background: rgba(255,255,255,.035); }
     .popup-watch-title-toggle[data-has-progress="true"] .popup-watch-progress-preview,
     .popup-season-header[data-has-progress="true"] .popup-watch-progress-preview { position: fixed; z-index: 110; box-sizing: border-box; top: var(--preview-top, 0px); left: var(--preview-left, 0px); width: var(--preview-width, 224px); padding: 8px 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 9px; background: #1a1a1a; box-shadow: 0 8px 20px rgba(0,0,0,.3); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 140ms ease, visibility 140ms; }
     .popup-watch-title-toggle[data-has-progress="true"]:focus-visible .popup-watch-progress-preview[data-ready="true"]:not([data-dismissed="true"]),
