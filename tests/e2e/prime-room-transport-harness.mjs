@@ -28,7 +28,7 @@ const detail = provider + path;
 const catalog = provider + catalogPath;
 const fingerprint = service + "|" + (service === "youtube" ? new URL(detail).searchParams.get("v") : path.slice(1));
 const account = {
-	id: "user1",
+	id: "11111111-1111-4111-8111-111111111111",
 	displayName: "Host",
 	email: "test@example.test",
 	plan: "free",
@@ -87,11 +87,24 @@ let opened = 0,
 	closed = 0,
 	pauses = 0;
 let context;
+let remainingSeconds = 780, metering = false, timeRequests = 0;
 try {
 	http.listen(0, "127.0.0.1");
 	await once(http, "listening");
 	server.on("connection", (socket) => {
 		opened++;
+		let sequence = 0, previousRequest = -Infinity;
+		function sendTime(requestId) {
+			const now = Date.now(), utcDay = new Date(now).toISOString().slice(0, 10);
+			const resetAt = Date.parse(utcDay + "T00:00:00Z") + 86_400_000;
+			socket.send(JSON.stringify({
+				type: "HOSTING_TIME", roomId: record.roomId, roomGeneration: 1, serverTime: now,
+				validUntil: Math.min(now + 60_000, resetAt), requestId,
+				snapshot: { hostingTimeVersion: 1, ownerUserId: account.id, roomId: record.roomId, roomGeneration: 1,
+					snapshotSequence: ++sequence, serverTime: now, period: { utcDay, resetAt },
+					access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 1200 - remainingSeconds, remainingSeconds, metering } },
+			}));
+		}
 		socket.on("close", () => {
 			closed++;
 		});
@@ -102,6 +115,12 @@ try {
 			if (event.type === "JOIN") {
 				joined++;
 				socket.send(JSON.stringify(snapshot));
+				sendTime();
+			} else if (event.type === "HOSTING_TIME_REQUEST") {
+				timeRequests++;
+				if (Date.now() - previousRequest < 5_000) return;
+				previousRequest = Date.now();
+				sendTime(event.requestId);
 			}
 		});
 	});
@@ -134,12 +153,22 @@ try {
 			'import {registerPrimeRoomOffscreen} from "./src/prime-room-offscreen"; registerPrimeRoomOffscreen();',
 		page: `
 			import {PrimeRoomClient, getLivePrimeRoomSession, retireUnattachedPrimeRoom} from "./src/prime-room-client";
+			import {RoomHostingTime} from "./src/room-hosting-time";
+			import {useRoomHostingTime} from "./src/use-room-hosting-time";
 			import {createElement} from "react";
 			import {createRoot} from "react-dom/client";
 			import {PrimeCameraTile, PrimeDevicePermissionPrompt} from "./src/prime-media-session";
 			import {mediaAccessChannel} from "./src/prime-media-access";
 			import {overlayStyles} from "./src/styles";
 			const client = new PrimeRoomClient();
+			const clock = new RoomHostingTime(), sendTimeRequest = event => client.send(event);
+			const timerRoot = createRoot(document.body.appendChild(document.createElement("div")));
+			function Timer({ready}) {
+				const value = useRoomHostingTime(clock, ready, sendTimeRequest);
+				return createElement("output", {id: "host-time"}, value?.remainingSeconds ?? "");
+			}
+			let timeReady = false;
+			function renderTime() { timerRoot.render(createElement(Timer, {ready: timeReady})); }
 			const promptRoot = createRoot(document.body.appendChild(document.createElement("div")));
 			client.subscribeMedia(state => {
 				if (state.type !== "prime-media-state") return;
@@ -159,7 +188,7 @@ try {
 					style.textContent = overlayStyles;
 					document.head.append(style);
 					document.body.append(tile);
-					createRoot(tile).render(createElement(PrimeCameraTile, {participantId: "user1", fallback: "H"}));
+					createRoot(tile).render(createElement(PrimeCameraTile, {participantId: ${JSON.stringify(account.id)}, fallback: "H"}));
 					return;
 				}
 				if (action === "enable-microphone") {
@@ -194,7 +223,16 @@ try {
 				client.connect({
 					roomId: "room1", roomToken: action === "start" ? "local-test" : "",
 					participant: ${JSON.stringify(participant)}, participantSessionId: "exact-tab-session",
-					videoFingerprint: ${JSON.stringify(fingerprint)}, onEvent() {}, onStatus() {},
+					videoFingerprint: ${JSON.stringify(fingerprint)},
+					onStatus(status) { if (status !== "connected") { clock.beginTransport(); timeReady = false; renderTime(); } },
+					onEvent(event) {
+						if (event.type === "ROOM_SNAPSHOT") {
+							const host = event.participants.find(p => p.role === "host");
+							if (host) { clock.bind({ownerUserId: host.id, roomId: event.roomId, roomGeneration: event.roomGeneration}); timeReady = true; }
+						} else if (event.type === "HOSTING_TIME") clock.accept(event);
+						renderTime();
+					},
+					onRestoredHostingTime(scope) { clock.restoreNegotiation(scope); },
 					onTransportReady(ready) { document.body.dataset.ready = ready.senderConnectionId; }
 				});
 				if (action === "cancel-pending") client.close();
@@ -306,6 +344,23 @@ try {
 	}
 	await start();
 	const connectionId = await page.locator("body").getAttribute("data-ready");
+	const waitForSeconds = seconds => page.waitForFunction(
+		expected => document.querySelector("#host-time")?.textContent === String(expected), seconds, {timeout: 12_000});
+	await waitForSeconds(780);
+	for (const seconds of [742, 619]) {
+		remainingSeconds = seconds;
+		metering = seconds === 619;
+		await page.reload();
+		await page.waitForFunction(() => document.body.dataset.fixture === "ready");
+		await act("resume");
+		await ready();
+		await waitForSeconds(seconds);
+		assert.equal(await page.locator("body").getAttribute("data-ready"), connectionId);
+	}
+	await waitForSeconds(618);
+	assert.deepEqual([opened, joined, closed], [1, 1, 0]);
+	assert.ok(timeRequests >= 2 && timeRequests <= 3);
+	console.log("Passed", service, "free host timer recovery across two reloads on the same connection.");
 	await act("mount-camera");
 	await page.waitForFunction(() => document.body.dataset.cameraRequested === "true");
 	assert.equal(await page.locator("iframe.prime-camera-frame").evaluate(frame => getComputedStyle(frame).opacity), "0");

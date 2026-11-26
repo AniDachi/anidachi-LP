@@ -37,7 +37,8 @@ export function useRoomHostingTime(clock: RoomHostingTime, ready: boolean, send:
       // recovery, even if that earlier request consumed the expiry budget.
       const needsRecovery = clock.recoveryNeeded || (!expiryRecheckUsed && clock.needsExpiryRecovery());
       if (document.visibilityState === "hidden") clock.suspend({ preserveDisplay: true });
-      if (needsRecovery && document.visibilityState !== "hidden") { expiryRecheckUsed = true; recover(); }
+      else if (clock.needsRestoreRequest()) recover();
+      else if (needsRecovery) { expiryRecheckUsed = true; recover(); }
       render(n => n + 1);
     }, 1_000);
     window.addEventListener("focus", resume); window.addEventListener("pageshow", resume); window.addEventListener("online", resume);
