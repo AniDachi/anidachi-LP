@@ -51,6 +51,7 @@ import {
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
 import { PanelAccountTitle } from "./panel-account-title";
+import { ProfilePlansLink } from "./profile-plans-link";
 import { useHostingAccess } from "./use-hosting-access";
 import {
   buildPopupInboxModel,
@@ -904,7 +905,10 @@ export function PopupApp() {
           </button>
           <span className="popup-profile-copy">
             {accountUser ? (
-              <PanelAccountTitle displayName={accountUser.displayName} plan={currentPlan} />
+              <>
+                <PanelAccountTitle displayName={accountUser.displayName} plan={currentPlan} />
+                {currentPlan === "free" && <ProfilePlansLink />}
+              </>
             ) : (
               <>
                 <span className="popup-profile-state-title">

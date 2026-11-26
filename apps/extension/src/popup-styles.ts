@@ -1,4 +1,5 @@
 import { popupInboxStyles } from "./popup-inbox-styles";
+import { profilePlansLinkStyles } from "./panel-room-actions-styles";
 import { popupPeopleStyles } from "./popup-people-styles";
 import { extensionThemeTokens } from "./extension-theme";
 import { popupWatchHistoryStyles } from "./popup-watch-history-styles";
@@ -2734,6 +2735,8 @@ ${popupSettingsStyles}
     align-content: center;
     gap: 2px;
   }
+
+  ${profilePlansLinkStyles}
 
   .popup-profile-copy .panel-account-title-row {
     min-width: 0;
