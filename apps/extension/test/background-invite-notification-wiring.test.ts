@@ -155,6 +155,8 @@ describe("production introduction claim wiring", () => {
     const set = vi.fn(async () => {});
     Object.assign(chrome.storage, { local: { get, set } });
     await start();
+    // Only the messages below are under test; startup reads saved room sessions.
+    get.mockClear();
     for (const sender of [{ id: "other-extension", tab: { id: 1 } }, { id: "our-extension" }]) {
       const response = vi.fn();
       handlers.get("message")!({ type: "ANIDACHI_PLAYER_INTRODUCTION" }, sender, response);

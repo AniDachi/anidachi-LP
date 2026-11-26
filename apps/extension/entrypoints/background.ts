@@ -64,6 +64,7 @@ import {
 import {
   handleRoomDepartureRuntimeMessage,
   handleRoomTabDeparture,
+  recoverClosedRoomTabs,
   isRoomDepartureRuntimeMessage,
   roomDepartureRuntimeResponse,
   type RoomTabDepartureDependencies,
@@ -92,6 +93,7 @@ import {
 import {
   clearRoomSessionForDepartureIfMatch,
   handleRoomSessionStorageRuntimeMessage,
+  type RoomSessionRecord,
 } from "../src/room-session-storage";
 import { handleSocialHttpMessage, isSocialHttpMessage } from "../src/social-client";
 import {
@@ -125,9 +127,26 @@ export interface RemovedRoomTabDependencies {
   removePrivilegedAuthority?: (tabId: number) => Promise<void>;
 }
 
-export async function handleRemovedRoomTab(
+const closingTabs = new Map<number, Promise<void>>();
+
+export function handleRemovedRoomTab(
   tabId: number,
   dependencies: RemovedRoomTabDependencies = {},
+  expected?: RoomSessionRecord,
+): Promise<void> {
+  // A removal can wake this worker and race startup recovery for the same tab.
+  const pending = closingTabs.get(tabId);
+  if (pending) return pending;
+  const closing = cleanupRemovedRoomTab(tabId, dependencies, expected)
+    .finally(() => closingTabs.delete(tabId));
+  closingTabs.set(tabId, closing);
+  return closing;
+}
+
+async function cleanupRemovedRoomTab(
+  tabId: number,
+  dependencies: RemovedRoomTabDependencies = {},
+  expected?: RoomSessionRecord,
 ): Promise<void> {
   const persistedAdmissionIntent = (
     dependencies.cancelRoomAdmission ?? cancelRoomAdmissionForTab
@@ -146,7 +165,7 @@ export async function handleRemovedRoomTab(
           settlePersistedDeparture:
             dependencies.departureDependencies?.settlePersistedDeparture ??
             departPersistedRoomSession,
-        }))
+        }, expected))
     )(tabId);
   } finally {
     await (
@@ -470,6 +489,9 @@ export default defineBackground(() => {
     )
       .catch(() => undefined);
   };
+  void recoverClosedRoomTabs({
+    depart: (tabId, expected) => handleRemovedRoomTab(tabId, {}, expected),
+  }).catch(() => undefined);
   chrome.runtime.onStartup?.addListener(() => {
     void registerUninstallUrl({ force: true });
     reconcileStoredWebsiteSession(true);

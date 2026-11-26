@@ -721,6 +721,12 @@ async function loadRoomSessionWithDurableFallback(
   return durable;
 }
 
+export function listDurableRoomSessions(): Promise<Record<string, RoomSessionRecord>> {
+  return enqueueDurableRoomSessionOperation(() =>
+    readDurableRoomSessionState(chrome.storage.local as StorageAreaLike),
+  );
+}
+
 function loadDurableRoomSession(
   storage: StorageAreaLike,
   tabId: number,
