@@ -179,6 +179,7 @@ import {
 } from "./overlay-voice-session";
 import { PanelRoomActions, PanelTimeCounter, ROOM_START_PRESENTATION_TIMEOUT_MS, type PanelStartingTime } from "./panel-room-actions";
 import { PanelAccountTitle } from "./panel-account-title";
+import { ProfilePlansLink } from "./profile-plans-link";
 import { PanelMediaControls } from "./panel-media-controls";
 import { ParticipantAudioContourControl } from "./participant-audio-controls";
 import { PlaybackSyncController } from "./playback-sync-controller";
@@ -7091,7 +7092,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 									loadingIdentity={!identityLoaded}
 								/>
 								<div className="panel-account-secondary">
-								{panelPlan === "free" && !quotaExhausted ? <a className="panel-plan-link" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer">View plans<ArrowUpRight size={11} aria-hidden="true" /></a> : null}
+								{panelPlan === "free" && !quotaExhausted ? <ProfilePlansLink /> : null}
 								{roomId && !mediaV3 && !joiningRoom ? (
 									<div className="panel-room-summary">
 										<span>{mediaSeatSummaryText}</span>
