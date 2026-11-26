@@ -33,7 +33,7 @@ test("a desktop guest can install in another tab and return to the original join
     assert.equal(install.textContent, "Install extension");
     assert.equal(install.href, CHROME_WEB_STORE_URL);
     assert.equal(install.target, "_blank");
-    assert.equal(install.nextElementSibling?.textContent, "Return here after installation to join the room.");
+    assert.equal(install.previousElementSibling?.textContent, "AniDachi lets you watch together. After installing, return here to join.");
     assert.equal(container.querySelectorAll("a,button,summary,input").length, 1);
     assert.equal(container.querySelector("form"), null);
     enabled = true;
@@ -59,7 +59,7 @@ test("both channels show the same install prompt and mobile keeps its existing h
     const stagingId = "a".repeat(32);
     await render(stagingId, false);
     assert.equal(container.innerHTML, publicPrompt);
-    assert.equal(container.querySelector("h1,h2,details"), null);
+    assert.equal(container.querySelector("h2")?.textContent, "Install the extension");
     assert.equal(container.querySelector("a")?.href, CHROME_WEB_STORE_URL);
     await render(stagingId, true);
     assert.equal(container.textContent, "Continue on desktop");

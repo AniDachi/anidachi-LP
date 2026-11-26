@@ -63,7 +63,7 @@ async function renderPage(lobby?: string) {
 test("the real invite uses the agreed presentation and offers a newcomer Join room", async () => {
   const html = await renderPage();
   assert.equal(authReturnPath, "/room/test-room");
-  assert.match(html.replace(/<[^>]*>/g, ""), /Watch together with Alex/);
+  assert.match(html.replace(/<[^>]*>/g, ""), /Alex invited you/);
   assert.match(html, /Join room/);
   assert.match(html, /action="\/api\/rooms\/test-room\/join" method="POST"/);
   assert.doesNotMatch(html, /Open watchroom|Members:|Ready to open in your video tab/);
@@ -75,7 +75,7 @@ for (const participant of ["member", "host"]) {
     alreadyMember = participant === "member";
     userId = participant === "host" ? "host" : "guest";
     const html = await renderPage();
-    assert.match(html.replace(/<[^>]*>/g, ""), /Watch together with Alex/);
+    assert.match(html.replace(/<[^>]*>/g, ""), /Alex invited you/);
     assert.match(html, /Open watchroom/);
     assert.match(html, /action="\/api\/rooms\/test-room\/join" method="POST"/);
   });

@@ -7,6 +7,9 @@ import { getSession } from "@/lib/anidachi-auth/session";
 import { sanitizeAuthReturnTo } from "@/lib/anidachi-auth/return-to";
 import { getLoginContext } from "@/lib/login-context";
 import { isMobileUserAgent } from "@/lib/mobile-user-agent";
+import { readInviteTicket } from "@/lib/room-ticket";
+import { InviteTicket } from "@/components/invite-ticket";
+import { InviteSignIn } from "@/components/invite-sign-in";
 import { RoomInviteExtensionStep } from "@/components/room-invite-extension-step";
 import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
 import { isSafeInstallNextPath } from "@/lib/install-cta";
@@ -51,11 +54,22 @@ export default async function LoginPage({ searchParams }: Props) {
     ? (ERROR_MESSAGES[error] ?? "An error occurred. Please try again.")
     : null;
 
+  if (isSafeInstallNextPath(sanitizedNext)) {
+    const details = await readInviteTicket(sanitizedNext).catch(() => {
+      // Optional invitation artwork and credits must not prevent sign-in.
+      console.warn("Room invitation details are temporarily unavailable");
+      return null;
+    });
+    return (
+      <InviteTicket details={details ?? { title: "Watch together" }}>
+        <RoomInviteExtensionStep extensionId={readApprovedExtensionClientId()} initialMobile={isMobile}>
+          <InviteSignIn error={errorMessage} returnTo={sanitizedNext} emailEnabled={emailLoginEnabled()} />
+        </RoomInviteExtensionStep>
+      </InviteTicket>
+    );
+  }
+
   return (
-    <RoomInviteExtensionStep
-      extensionId={isSafeInstallNextPath(sanitizedNext) ? readApprovedExtensionClientId() : null}
-      initialMobile={isMobile}
-    >
       <AuthPageShell maxWidth="max-w-md">
         <AuthPageCard>
           <div className="mb-6 text-center">
@@ -103,6 +117,5 @@ export default async function LoginPage({ searchParams }: Props) {
           </p>
         </AuthPageCard>
       </AuthPageShell>
-    </RoomInviteExtensionStep>
   );
 }

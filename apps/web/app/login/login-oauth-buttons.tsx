@@ -8,6 +8,8 @@ type Provider = "discord" | "google";
 
 type Props = {
   safeNext: string;
+  provider?: Provider;
+  preview?: boolean;
 };
 
 function oauthHref(provider: Provider, safeNext: string) {
@@ -15,7 +17,7 @@ function oauthHref(provider: Provider, safeNext: string) {
   return safeNext ? `${base}?returnTo=${safeNext}` : base;
 }
 
-export function LoginOAuthButtons({ safeNext }: Props) {
+export function LoginOAuthButtons({ safeNext, provider, preview = false }: Props) {
   const [pending, setPending] = useState<Provider | null>(null);
 
   function handleClick(provider: Provider) {
@@ -24,10 +26,11 @@ export function LoginOAuthButtons({ safeNext }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-        <a
-          href={oauthHref("discord", safeNext)}
+        {(!provider || provider === "discord") && <a
+          href={preview ? undefined : oauthHref("discord", safeNext)}
+          aria-disabled={preview || undefined}
           aria-busy={pending === "discord"}
-          onClick={() => handleClick("discord")}
+          onClick={preview ? undefined : () => handleClick("discord")}
           className="flex min-h-12 items-center justify-center gap-3 rounded-xl bg-[#5865F2] px-5 py-3 text-sm font-semibold text-white shadow transition hover:bg-[#4752c4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5865F2] disabled:pointer-events-none disabled:opacity-70"
         >
           {pending === "discord" ? (
@@ -36,12 +39,13 @@ export function LoginOAuthButtons({ safeNext }: Props) {
             <DiscordIcon className="h-5 w-5 shrink-0" />
           )}
           {pending === "discord" ? "Redirecting…" : "Continue with Discord"}
-        </a>
+        </a>}
 
-        <a
-          href={oauthHref("google", safeNext)}
+        {(!provider || provider === "google") && <a
+          href={preview ? undefined : oauthHref("google", safeNext)}
+          aria-disabled={preview || undefined}
           aria-busy={pending === "google"}
-          onClick={() => handleClick("google")}
+          onClick={preview ? undefined : () => handleClick("google")}
           className="flex min-h-12 items-center justify-center gap-3 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-900 shadow transition hover:bg-white/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 disabled:pointer-events-none disabled:opacity-70"
         >
           {pending === "google" ? (
@@ -67,7 +71,7 @@ export function LoginOAuthButtons({ safeNext }: Props) {
             </svg>
           )}
           {pending === "google" ? "Redirecting…" : "Continue with Google"}
-        </a>
+        </a>}
     </div>
   );
 }
