@@ -12,6 +12,10 @@ import { RoomInviteView } from "../../room/[roomId]/room-invite-view";
 export const metadata: Metadata = { title: "Room invite preview", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 const sample = { title: "The Queen’s Gambit", episode: "S1 E1 · Openings", host: "Ads Mag", provider: "netflix" } satisfies InviteTicketDetails;
+const youtubeSample = {
+  title: "Эль-Ниньо: мир ждет кризис | Природа рушит экономику, цены растут, логистика страдает",
+  host: sample.host, episode: null, provider: "youtube",
+} satisfies InviteTicketDetails;
 const views = { join: "Join", login: "Sign in", install: "Install" } as const;
 
 export default async function RoomInvitePreviewPage({ searchParams }: { searchParams: Promise<{view?: string; platform?: string}> }) {
@@ -22,7 +26,8 @@ export default async function RoomInvitePreviewPage({ searchParams }: { searchPa
   }
   const { view, platform } = await searchParams;
   const provider = RoomSourceProviderSchema.safeParse(platform).data ?? sample.provider;
-  const ticket = provider === sample.provider ? sample : {
+  const video = provider === "youtube" ? youtubeSample : provider === sample.provider ? sample : null;
+  const ticket = video ?? {
     provider, host: sample.host, title: "Let’s pick something together", episode: null,
   };
   const state = view === "login" || view === "install" ? view : "join";
@@ -34,7 +39,7 @@ export default async function RoomInvitePreviewPage({ searchParams }: { searchPa
     </nav>
     {state === "join" ? <RoomInviteView
       status="live" roomTitle={ticket.title} roomSubtitle={ticket.episode} sourceProvider={ticket.provider}
-      hostName={ticket.host} hasLaunchUrl={Boolean(ticket.episode)} isParticipant={false} initialMobile={false}
+      hostName={ticket.host} hasLaunchUrl={Boolean(video)} isParticipant={false} initialMobile={false}
     /> : <InviteTicket details={ticket}>
       {state === "install" ? <InviteInstallPrompt /> : <InviteSignIn emailEnabled preview returnTo="" />}
     </InviteTicket>}
