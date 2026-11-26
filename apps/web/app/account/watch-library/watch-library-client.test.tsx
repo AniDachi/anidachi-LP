@@ -1,5 +1,7 @@
 import { WATCH_HISTORY_OWNER_HEADER } from "../../../lib/watch-history-owner";
 import assert from "node:assert/strict";
+import { WEBSITE_PRESENCE } from "@anidachi/protocol";
+import { CHROME_WEB_STORE_URL } from "@/lib/install-cta";
 import { afterEach, it } from "node:test";
 import type {
   WatchHistoryEditRequest,
@@ -560,6 +562,7 @@ async function renderClient(
   initialHistory = historyFixture(),
   initialPreferences = preferencesFixture,
   initialAccess: "allowed" | "plan_required" = "allowed",
+  extensionId?: string,
 ): Promise<{ container: HTMLDivElement; root: Root }> {
   const container = document.createElement("div");
   document.body.append(container);
@@ -570,6 +573,7 @@ async function renderClient(
         initialHistory,
         initialPreferences,
         initialAccess,
+        extensionId,
       }),
     );
   });
@@ -863,7 +867,7 @@ async function markFirstEpisode(container: HTMLElement) {
   await click(buttonByText(container, "Mark watched"));
 }
 
-it("SSR includes Free's saved covers with a recording notice and no open editor", () => {
+it("SSR includes Free's saved covers without assuming the extension is installed", () => {
   const html = renderToStaticMarkup(
     <WatchLibraryClient
       initialHistory={historyFixture()}
@@ -872,7 +876,7 @@ it("SSR includes Free's saved covers with a recording notice and no open editor"
     />,
   );
   assert.match(html, /Manage Series One/);
-  assert.match(html, /Plus or Pro unlocks recording/);
+  assert.doesNotMatch(html, /View plans|Install AniDachi/);
   assert.doesNotMatch(html, /wh-inspector/);
   assert.match(html, /Clear all history/);
   assert.doesNotMatch(
@@ -1989,24 +1993,50 @@ it("legacy capacity shows Netflix unavailable rather than manufacturing zero usa
   } finally { await unmount(view.root); }
 });
 
-for (const access of ["plan_required", "allowed"] as const) {
-  it(`empty library offers setup appropriate to ${access} without dead filters`, () => {
-    const html = renderToStaticMarkup(<WatchLibraryClient
-      initialHistory={{ ...historyFixture(), items: [], totalTitleCount: 0 }}
-      initialPreferences={preferencesFixture} initialAccess={access} />);
-    assert.match(html, /Your watch library/);
-    assert.match(html, /Install AniDachi/);
-    assert.match(html, /href="\/extension"/);
-    assert.doesNotMatch(html, /Search your library|Filter by progress|Filter by platform|Clear all history/);
-    assert.doesNotMatch(html, /Your saved history stays here|Start a Watchroom/);
-    if (access === "allowed") {
-      assert.match(html, /Turn on Allow recording/);
-      assert.doesNotMatch(html, /View plans|Saving progress requires/);
-    } else {
-      assert.match(html, /Saving progress requires Plus or Pro/);
-      assert.equal((html.match(/View plans/g) ?? []).length, 1);
-    }
-  });
+it("empty library waits for extension detection before offering an action", () => {
+  const html = renderToStaticMarkup(<WatchLibraryClient
+    initialHistory={{ ...historyFixture(), items: [], totalTitleCount: 0 }}
+    initialPreferences={preferencesFixture} initialAccess="plan_required" />);
+  assert.match(html, /Your watch library/);
+  assert.doesNotMatch(html, /Install AniDachi|View plans|Filter by platform|Clear all history/);
+});
+
+for (const empty of [false, true]) {
+  for (const access of ["plan_required", "allowed"] as const) {
+    it(`library with ${empty ? "no" : "saved"} titles and ${access} access detects installation on return`, async (t) => {
+      const extensionId = "a".repeat(32);
+      let installed = false;
+      const runtime = { sendMessage(id: string, message: unknown, reply: (response: unknown) => void) {
+        assert.equal(id, extensionId);
+        assert.deepEqual(message, { type: WEBSITE_PRESENCE });
+        reply(installed ? { type: WEBSITE_PRESENCE, installed: true } : undefined);
+      }};
+      const previous = Object.getOwnPropertyDescriptor(globalThis, "chrome");
+      Object.defineProperty(globalThis, "chrome", { value: { runtime }, configurable: true });
+      t.after(() => {
+        if (previous) Object.defineProperty(globalThis, "chrome", previous);
+        else Reflect.deleteProperty(globalThis, "chrome");
+      });
+      installServer();
+      const initial = empty ? { ...historyFixture(), items: [], totalTitleCount: 0 } : historyFixture();
+      const view = await renderClient(initial, preferencesFixture, access, extensionId);
+      try {
+        const content = () => view.container.textContent ?? "";
+        assert.equal(view.container.querySelector(`a[href="${CHROME_WEB_STORE_URL}"]`)?.textContent, "Install AniDachi");
+        assert.doesNotMatch(content(), /View plans/);
+        installed = true;
+        await act(async () => { window.dispatchEvent(new testWindow.Event("pageshow") as unknown as Event); });
+        assert.doesNotMatch(content(), /Install AniDachi/);
+        if (access === "plan_required") {
+          assert.equal(view.container.querySelector('a[href="/pricing"]')?.textContent, "View plans");
+        } else {
+          assert.doesNotMatch(content(), /View plans/);
+          if (empty) assert.match(content(), /Allow recording/);
+        }
+        if (!empty) assert.ok(view.container.querySelector('[aria-label="Manage Series One"]'));
+      } finally { await unmount(view.root); }
+    });
+  }
 }
 it("an incomplete empty page retains browsing controls instead of first-visit setup", () => {
   const html = renderToStaticMarkup(<WatchLibraryClient

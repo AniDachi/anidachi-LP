@@ -1,3 +1,4 @@
+import {readApprovedExtensionClientId} from "@/lib/anidachi-auth/extension-codes";
 import "./history-browser.css";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -31,6 +32,7 @@ export default async function AccountWatchLibraryPage() {
 		);
 		return (
 			<WatchLibraryClient
+        extensionId={readApprovedExtensionClientId()}
 				initialHistory={history}
 				initialPreferences={preferences}
 				initialAccess={access.state}
