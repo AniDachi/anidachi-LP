@@ -180,6 +180,7 @@ import {
 import { PanelRoomActions, PanelTimeCounter, ROOM_START_PRESENTATION_TIMEOUT_MS, type PanelStartingTime } from "./panel-room-actions";
 import { PanelAccountTitle } from "./panel-account-title";
 import { ProfilePlansLink } from "./profile-plans-link";
+import { attachCatalogPillDrag, type CatalogPillPosition } from "./catalog-pill-drag";
 import { PanelMediaControls } from "./panel-media-controls";
 import { ParticipantAudioContourControl } from "./participant-audio-controls";
 import { PlaybackSyncController } from "./playback-sync-controller";
@@ -622,6 +623,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const overlayRootRef = useRef<HTMLDivElement | null>(null);
 	const cameraStackRef = useRef<HTMLDivElement | null>(null);
 	const topBubbleRef = useRef<HTMLButtonElement | null>(null);
+	const catalogDockRef = useRef<HTMLSpanElement>(null);
+	const catalogPillPosition = useRef<CatalogPillPosition>(null);
 	const roomActionFeedbackTimerRef = useRef<number | null>(null);
 	const transientPanelNoticeTimerRef = useRef<number | null>(null);
 	const inviteNoticeTimerRef = useRef<number | null>(null);
@@ -6923,6 +6926,12 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		storedRoomSession?.participantSessionId && currentParticipant.participantSessionId === storedRoomSession.participantSessionId &&
 		participants.some(p => p.role === "host" && p.connected !== false) ? catalogReturnUrl : null;
 	const catalogReturnTarget = primeBrowsing && !capsuleNotice.open ? guestPlayerUrl : null;
+	useLayoutEffect(() => {
+		const root = overlayRootRef.current, pill = topBubbleRef.current, dock = catalogDockRef.current;
+		if (primeBrowsing && !capsuleNotice.present && root && pill && dock) {
+			return attachCatalogPillDrag(root, pill, dock, catalogPillPosition);
+		}
+	}, [primeBrowsing, capsuleNotice.present]);
 	const guestSessionId = storedRoomSession?.participantSessionId;
 	const disneyReturn = useMemo(() => {
 		const playback = adapter.provider === "disneyplus" && guestPlayerUrl && disneyPlusWatchId(guestPlayerUrl);
@@ -7029,6 +7038,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				{...(guardedPanelOpen ? overlayPointerBoundaryProps : {})}
 			>
 				<span className="top-bubble-edge-glow" aria-hidden="true" />
+				{primeBrowsing && <span className="catalog-pill-dock" ref={catalogDockRef} aria-hidden="true"><i /><i /></span>}
 				{catalogReturnTarget && (
 					<button type="button" className="catalog-return-to-video"
 						onClick={backToCatalogVideo}>
