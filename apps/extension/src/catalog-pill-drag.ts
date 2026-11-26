@@ -24,7 +24,8 @@ export function catalogPillPlacement(provider: string): CatalogPillPlacement {
 
 const margin = 8;
 const clickSlop = 6;
-const releaseRadius = 16;
+const releaseRadius = 24;
+const dockCenterRadius = 12;
 const capturePadding = 44;
 const magneticHysteresis = 8;
 const clamp = (n: number, max: number) => Math.max(0, Math.min(n, max));
@@ -38,7 +39,8 @@ export function attachCatalogPillDrag(
   const options = { signal: events.signal };
   let gesture: {
     id: number; start: Point; grab: Point; moved: boolean;
-    furthestFromDock: number; snapped: boolean; changedPlacement: boolean;
+    furthestFromDock: number; crossedField: boolean; snappedDistance: number | null;
+    changedPlacement: boolean;
   } | null = null;
   let position: CatalogPillPosition = null;
   let restingPosition: CatalogPillPosition = null;
@@ -49,6 +51,7 @@ export function attachCatalogPillDrag(
   let capRadius = 0, halfStraight = 0;
   let home: Point = { x: 0, y: 0 };
   let origin: Point = { x: 0, y: 0 };
+  let tracking: AbortController | undefined;
   const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
 
   function place(next: CatalogPillPosition) {
@@ -85,19 +88,34 @@ export function attachCatalogPillDrag(
       ], { duration: 440, delay: (arriving ? 75 : 0) + i * 85, easing: "cubic-bezier(.22,.65,.32,1)" });
     });
   }
+  function distanceFromOutline(dx: number, dy: number) {
+    return Math.hypot(Math.max(0, Math.abs(dx) - halfStraight), dy) - capRadius;
+  }
   function down(e: PointerEvent) {
     if (e.button !== 0 || !e.isPrimary || gesture) return;
     measure();
     const rect = pill.getBoundingClientRect();
+    const dx = rect.left - origin.x - home.x, dy = rect.top - origin.y - home.y;
     suppressClick = false;
     gesture = { id: e.pointerId, start: { x: e.clientX, y: e.clientY },
       grab: { x: e.clientX - rect.left, y: e.clientY - rect.top }, moved: false,
-      furthestFromDock: Math.hypot(rect.left - origin.x - home.x, rect.top - origin.y - home.y),
-      snapped: false, changedPlacement: false };
+      furthestFromDock: Math.hypot(dx, dy), crossedField: distanceFromOutline(dx, dy) > capturePadding,
+      snappedDistance: null, changedPlacement: false };
+    // Keep following this gesture if the page takes pointer capture away from the pill.
+    tracking = new AbortController();
+    const track = { capture: true, signal: tracking.signal };
+    window.addEventListener("pointermove", move, track);
+    window.addEventListener("pointerup", finish, track);
+    window.addEventListener("pointercancel", finish, track);
+    window.addEventListener("blur", finishAtLastPoint, { signal: tracking.signal });
     pill.setPointerCapture(e.pointerId);
   }
   function move(e: PointerEvent) {
     if (!gesture || gesture.id !== e.pointerId) return;
+    if (e.type === "pointermove" && e.buttons === 0) {
+      finishAtLastPoint();
+      return;
+    }
     if (!gesture.moved && Math.hypot(e.clientX - gesture.start.x, e.clientY - gesture.start.y) < clickSlop) return;
     gesture.moved = true;
     root.setAttribute("data-catalog-dragging", "");
@@ -105,13 +123,17 @@ export function attachCatalogPillDrag(
     const y = margin + clamp(e.clientY - origin.y - gesture.grab.y - margin, rangeY);
     const dx = x - home.x, dy = y - home.y;
     // Distance from the dragged pill's center to the dock's stadium outline.
-    const fromDock = Math.hypot(Math.max(0, Math.abs(dx) - halfStraight), dy) - capRadius;
-    // The breakaway point is inside the capture area. Only an inward movement can dock the pill.
+    const fromDock = distanceFromOutline(dx, dy);
     const distance = Math.hypot(dx, dy);
+    if (fromDock > capturePadding) gesture.crossedField = true;
     const returning = gesture.furthestFromDock - distance >= magneticHysteresis;
-    if (position && fromDock <= capturePadding && returning) {
+    // While positioning inside the field, only the dock's center is a return target.
+    const capture = gesture.crossedField ? fromDock <= capturePadding : distance <= dockCenterRadius;
+    if (gesture.snappedDistance !== null) gesture.snappedDistance = Math.min(gesture.snappedDistance, distance);
+    if (position && capture && returning) {
       place(null);
-      gesture.snapped = true;
+      gesture.snappedDistance = distance;
+      gesture.crossedField = false;
       gesture.changedPlacement = true;
       if (!reducedMotion?.matches) {
         pull?.cancel();
@@ -119,43 +141,56 @@ export function attachCatalogPillDrag(
           { translate: "0 0" }], { duration: 220, easing: "cubic-bezier(.18,.8,.22,1)" });
       }
       wave(true);
-    } else if (position || (gesture.snapped ? fromDock > capturePadding + magneticHysteresis : distance >= releaseRadius)) {
+    } else if (position || distance - (gesture.snappedDistance ?? 0) >= releaseRadius) {
       if (!position) {
         gesture.furthestFromDock = distance;
-        gesture.snapped = false;
+        gesture.snappedDistance = null;
         pull?.cancel();
-        if (!reducedMotion?.matches) pull = pill.animate([{ scale: ".96" }, { scale: "1.045", offset: .55 }, { scale: "1" }], { duration: 210, easing: "ease-out" });
+        if (!reducedMotion?.matches) {
+          const lag = Math.min(distance, releaseRadius) * .6 / distance;
+          pull = pill.animate([
+            { translate: -dx * lag + "px " + -dy * lag + "px" },
+            { translate: "0px 0px" },
+          ], { duration: 145, easing: "cubic-bezier(.16,.85,.32,1)" });
+        }
         wave(false);
       }
       gesture.furthestFromDock = Math.max(gesture.furthestFromDock, distance);
       gesture.changedPlacement = true;
       place({ x: rangeX ? (x - margin) / rangeX : 0, y: rangeY ? (y - margin) / rangeY : 0 });
-    } else if (!gesture.snapped && !reducedMotion?.matches) {
-      pill.style.translate = dx * .2 + "px " + dy * .2 + "px";
+    } else if (gesture.snappedDistance === null && !reducedMotion?.matches) {
+      const resistance = .65 - .25 * distance / releaseRadius;
+      pill.style.translate = dx * resistance + "px " + dy * resistance + "px";
     }
     if (position) pill.style.removeProperty("translate");
   }
   function finish(e: PointerEvent) {
     if (!gesture || gesture.id !== e.pointerId) return;
     if (e.type === "pointerup") move(e);
-    const { moved, changedPlacement } = gesture;
+    endGesture(e.type === "pointerup");
+  }
+  function finishAtLastPoint() {
+    endGesture(true);
+  }
+  function endGesture(commit: boolean) {
+    if (!gesture) return;
+    const { id, moved, changedPlacement } = gesture;
     gesture = null;
+    tracking?.abort();
     suppressClick = moved;
-    if (e.type === "pointerup" && changedPlacement) {
+    if (commit && changedPlacement) {
       dropped = true;
       restingPosition = position;
       void placement.write(position).catch(() => {});
     } else {
-      if (e.type !== "pointerup") pull?.cancel();
+      if (!commit) pull?.cancel();
       place(restingPosition);
     }
     root.removeAttribute("data-catalog-dragging");
     pill.style.removeProperty("translate");
-    if (pill.hasPointerCapture(e.pointerId)) pill.releasePointerCapture(e.pointerId);
+    if (pill.hasPointerCapture(id)) pill.releasePointerCapture(id);
   }
   pill.addEventListener("pointerdown", down, options);
-  pill.addEventListener("pointermove", move, options);
-  for (const name of ["pointerup", "pointercancel", "lostpointercapture"] as const) pill.addEventListener(name, finish, options);
   pill.addEventListener("click", e => {
     if (suppressClick && e.detail > 0) { e.preventDefault(); e.stopImmediatePropagation(); }
     suppressClick = false;
@@ -171,6 +206,7 @@ export function attachCatalogPillDrag(
   resize?.observe(pill);
   return () => {
     events.abort();
+    tracking?.abort();
     resize?.disconnect();
     if (gesture && pill.hasPointerCapture(gesture.id)) pill.releasePointerCapture(gesture.id);
     pull?.cancel();

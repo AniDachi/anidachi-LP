@@ -10,6 +10,7 @@ function mount(read: () => Promise<Position> = async () => null) {
   const pill = document.createElement("button");
   const dock = document.createElement("span");
   root.append(pill, dock);
+  document.body.append(root);
   Object.defineProperties(root, { clientWidth: { value: 500 }, clientHeight: { value: 300 } });
   Object.defineProperties(pill, { offsetWidth: { value: 72 }, offsetHeight: { value: 32 } });
   Object.defineProperties(dock, { offsetLeft: { value: homeX }, offsetTop: { value: homeY } });
@@ -22,13 +23,14 @@ function mount(read: () => Promise<Position> = async () => null) {
   vi.spyOn(window, "matchMedia").mockReturnValue({ matches: true } as MediaQueryList);
   const write = vi.fn(async (_position: Position) => {});
   const dispose = attachCatalogPillDrag(root, pill, dock, { read, write });
-  const pointer = (type: string, x: number) => pill.dispatchEvent(new PointerEvent(type, {
-    button: 0, pointerId: 1, isPrimary: true, clientX: x + 36, clientY: homeY + 16,
+  const pointer = (type: string, x: number, target: EventTarget = pill) => target.dispatchEvent(new PointerEvent(type, {
+    bubbles: true, composed: true, button: 0, buttons: type === "pointerup" ? 0 : 1,
+    pointerId: 1, isPrimary: true, clientX: x + 36, clientY: homeY + 16,
   }));
   return { pointer, origin, write, dispose };
 }
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { document.body.replaceChildren(); vi.restoreAllMocks(); });
 
 it("keeps an outward drop inside the magnetic area, then docks on a deliberate return", () => {
   const { pointer, origin, write, dispose } = mount();
@@ -43,9 +45,39 @@ it("keeps an outward drop inside the magnetic area, then docks on a deliberate r
   pointer("pointerup", homeX - 40);
   expect(origin().x).toBeCloseTo(homeX - 40);
   pointer("pointerdown", homeX - 40);
-  pointer("pointerup", homeX - 25);
+  pointer("pointerup", homeX - 8);
   expect(origin().x).toBe(homeX);
   expect(write).toHaveBeenLastCalledWith(null);
+  dispose();
+});
+
+it("allows fine adjustments near the dock and follows the final release even after capture is lost", () => {
+  const { pointer, origin, write, dispose } = mount();
+  pointer("pointerdown", homeX);
+  pointer("pointermove", homeX - 57);
+  pointer("pointerup", homeX - 45);
+  expect(origin().x).toBeCloseTo(homeX - 45);
+
+  pointer("pointerdown", homeX - 45);
+  pointer("pointermove", homeX - 120);
+  pointer("lostpointercapture", homeX - 120);
+  pointer("pointermove", homeX - 150, document.body);
+  pointer("pointerup", homeX - 156, document.body);
+  expect(origin().x).toBeCloseTo(homeX - 156);
+  expect(write).toHaveBeenCalledTimes(2);
+  dispose();
+});
+
+it("captures on return from outside the wide field and lets the user pull away again before dropping", () => {
+  const { pointer, origin, dispose } = mount();
+  pointer("pointerdown", homeX);
+  pointer("pointermove", homeX - 120);
+  pointer("pointermove", homeX - 68);
+  expect(origin().x).toBe(homeX);
+  pointer("pointermove", homeX - 20);
+  pointer("pointermove", homeX - 52);
+  pointer("pointerup", homeX - 47);
+  expect(origin().x).toBeCloseTo(homeX - 47);
   dispose();
 });
 
