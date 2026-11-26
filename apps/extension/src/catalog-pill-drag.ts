@@ -4,7 +4,8 @@ export type CatalogPillPosition = Point | null;
 const margin = 8;
 const clickSlop = 6;
 const releaseRadius = 36;
-const captureRadius = 24;
+const capturePadding = 44;
+const magneticHysteresis = 8;
 const clamp = (n: number, max: number) => Math.max(0, Math.min(n, max));
 
 /** The dock always follows the provider's original anchor. Only catalog coordinates move. */
@@ -14,11 +15,15 @@ export function attachCatalogPillDrag(
 ) {
   const events = new AbortController();
   const options = { signal: events.signal };
-  let gesture: { id: number; start: Point; grab: Point; original: CatalogPillPosition; moved: boolean } | null = null;
+  let gesture: {
+    id: number; start: Point; grab: Point; original: CatalogPillPosition; moved: boolean;
+    furthestFromDock: number; snapped: boolean;
+  } | null = null;
   let position = saved.current;
   let suppressClick = false;
   let pull: Animation | undefined;
   let rangeX = 0, rangeY = 0;
+  let capRadius = 0, halfStraight = 0;
   let home: Point = { x: 0, y: 0 };
   let origin: Point = { x: 0, y: 0 };
   const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
@@ -38,6 +43,9 @@ export function attachCatalogPillDrag(
     const bounds = root.getBoundingClientRect();
     origin = { x: bounds.left, y: bounds.top };
     root.style.setProperty("--catalog-pill-width", width + "px");
+    root.style.setProperty("--catalog-pill-height", height + "px");
+    capRadius = height / 2;
+    halfStraight = Math.max(0, width / 2 - capRadius);
     rangeX = Math.max(0, root.clientWidth - width - 2 * margin);
     rangeY = Math.max(0, root.clientHeight - height - 2 * margin);
     home = { x: dock.offsetLeft, y: dock.offsetTop };
@@ -48,10 +56,10 @@ export function attachCatalogPillDrag(
     Array.from(dock.children).forEach((ring, i) => {
       ring.getAnimations().forEach(a => a.cancel());
       ring.animate([
-        { transform: "scale(.55)", opacity: 0 },
-        { opacity: arriving ? .65 : .45, offset: .16 },
-        { transform: "scale(2.3)", opacity: 0 },
-      ], { duration: 500, delay: i * 85, easing: "cubic-bezier(.2,.65,.32,1)" });
+        { inset: "0px", opacity: 0 },
+        { opacity: arriving ? .72 : .52, offset: .16 },
+        { inset: arriving ? "-12px" : "-9px", opacity: 0 },
+      ], { duration: 440, delay: (arriving ? 75 : 0) + i * 85, easing: "cubic-bezier(.22,.65,.32,1)" });
     });
   }
   function down(e: PointerEvent) {
@@ -60,7 +68,8 @@ export function attachCatalogPillDrag(
     const rect = pill.getBoundingClientRect();
     suppressClick = false;
     gesture = { id: e.pointerId, start: { x: e.clientX, y: e.clientY },
-      grab: { x: e.clientX - rect.left, y: e.clientY - rect.top }, original: position, moved: false };
+      grab: { x: e.clientX - rect.left, y: e.clientY - rect.top }, original: position, moved: false,
+      furthestFromDock: position ? Infinity : 0, snapped: false };
     pill.setPointerCapture(e.pointerId);
   }
   function move(e: PointerEvent) {
@@ -70,30 +79,39 @@ export function attachCatalogPillDrag(
     root.setAttribute("data-catalog-dragging", "");
     const x = margin + clamp(e.clientX - origin.x - gesture.grab.x - margin, rangeX);
     const y = margin + clamp(e.clientY - origin.y - gesture.grab.y - margin, rangeY);
-    const distance = Math.hypot(x - home.x, y - home.y);
-    if (position && distance <= captureRadius) {
+    const dx = x - home.x, dy = y - home.y;
+    // Distance from the dragged pill's center to the dock's stadium outline.
+    const fromDock = Math.hypot(Math.max(0, Math.abs(dx) - halfStraight), dy) - capRadius;
+    // A fresh pull starts inside the magnetic field. Catch it only on the way back or on release.
+    const returning = gesture.furthestFromDock - fromDock >= magneticHysteresis || e.type === "pointerup";
+    if (position && fromDock <= capturePadding && returning) {
       place(null);
+      gesture.snapped = true;
       if (!reducedMotion?.matches) {
         pull?.cancel();
-        pull = pill.animate([{ translate: (x - home.x) + "px " + (y - home.y) + "px" },
-          { translate: "0 0" }], { duration: 190, easing: "cubic-bezier(.18,.8,.22,1)" });
+        pull = pill.animate([{ translate: dx + "px " + dy + "px" },
+          { translate: "0 0" }], { duration: 220, easing: "cubic-bezier(.18,.8,.22,1)" });
       }
       wave(true);
-    } else if (position || distance >= releaseRadius) {
+    } else if (position || (gesture.snapped ? fromDock > capturePadding + magneticHysteresis : Math.hypot(dx, dy) >= releaseRadius)) {
       if (!position) {
+        gesture.furthestFromDock = fromDock;
+        gesture.snapped = false;
         pull?.cancel();
         if (!reducedMotion?.matches) pull = pill.animate([{ scale: ".96" }, { scale: "1.045", offset: .55 }, { scale: "1" }], { duration: 210, easing: "ease-out" });
         wave(false);
       }
+      gesture.furthestFromDock = Math.max(gesture.furthestFromDock, fromDock);
       place({ x: rangeX ? (x - margin) / rangeX : 0, y: rangeY ? (y - margin) / rangeY : 0 });
-    } else if (!reducedMotion?.matches) {
-      pill.style.translate = (x - home.x) * .2 + "px " + (y - home.y) * .2 + "px";
+    } else if (!gesture.snapped && !reducedMotion?.matches) {
+      pill.style.translate = dx * .2 + "px " + dy * .2 + "px";
     }
     if (position) pill.style.removeProperty("translate");
   }
   function finish(e: PointerEvent) {
     if (!gesture || gesture.id !== e.pointerId) return;
     const { original, moved } = gesture;
+    if (e.type === "pointerup" && moved && position) move(e);
     gesture = null;
     suppressClick = moved;
     if (e.type === "pointerup") saved.current = position;
@@ -120,6 +138,6 @@ export function attachCatalogPillDrag(
     pull?.cancel();
     pill.style.removeProperty("translate");
     for (const key of ["dragging", "floating", "panel-above", "return-right"]) root.removeAttribute("data-catalog-" + key);
-    for (const key of ["x", "y", "width"]) root.style.removeProperty("--catalog-pill-" + key);
+    for (const key of ["x", "y", "width", "height"]) root.style.removeProperty("--catalog-pill-" + key);
   };
 }

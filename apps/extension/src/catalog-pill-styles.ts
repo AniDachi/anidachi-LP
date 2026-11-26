@@ -1,14 +1,15 @@
 export const catalogPillStyles = `
   .catalog-pill-dock {
     position: absolute; top: var(--top-bubble-top); right: var(--top-bubble-right);
-    width: var(--catalog-pill-width); height: 32px; display: grid; place-items: center; pointer-events: none;
+    width: var(--catalog-pill-width); height: var(--catalog-pill-height, 32px); pointer-events: none;
   }
   .catalog-pill-dock > i, .catalog-pill-dock::before {
-    grid-area: 1 / 1; width: 31px; height: 31px; border-radius: 50%; opacity: 0;
-    border: 1px solid #ffc39a;
+    position: absolute; inset: 0; border-radius: 999px; opacity: 0;
+    border: 1px solid #efb78e;
   }
   .catalog-pill-dock::before {
-    content: ""; background: #27222166; border: 1px dashed #ffe1c477;
+    content: ""; border-color: #efbe9b85;
+    background: linear-gradient(180deg, #e4b39212, #19171b38);
     transition: opacity 150ms ease;
   }
   [data-catalog-dragging][data-catalog-floating] .catalog-pill-dock::before { opacity: 1; }
