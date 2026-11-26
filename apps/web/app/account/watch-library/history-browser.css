@@ -171,25 +171,22 @@ html:has(.account-workspace) { scrollbar-gutter: stable; }
 @media(pointer:coarse) { .wh-button,.wh-primary,.wh-text,.wh-icon,.wh-edit-actions summary,.wh-actions-popover button,.wh-select-season,.wh-selection-actions .wh-button { min-height: 44px; }.wh-selection-count .wh-icon { width: 44px; }.wh-edit-actions summary { width: 44px; }.wh-range-hint { display: none; }.wh-editor-active { top: 58px; } }
 @media(pointer:coarse) { .wh-page-actions .wh-edit-actions summary { min-height: 44px; width: 44px; } }
 
-/* First visit: one installation action, shown only for a fully empty library. */
 .wh-page-first-watch { min-height: calc(100dvh - 150px); }
+.wh-recording-prompt { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; padding: 14px 18px; margin: 12px 0; border: 1px solid #39322e; border-radius: 14px; background: #1c1918; color: #d3ccc5; font-size: 14px; line-height: 1.5; }
+.wh-recording-link { color: #ffad70; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .wh-first-watch { font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: clamp(48px,7vh,90px) 20px 64px; color: #eee8df; }
 .wh-first-watch-icon { width: 148px; height: 148px; object-fit: contain; mix-blend-mode: lighten; margin-bottom: 12px; flex-shrink: 0; }
 .wh-first-watch h2 { font-size: clamp(34px,3.5vw,56px); line-height: 1.12; font-weight: 650; letter-spacing: -.04em; text-wrap: balance; }
 .wh-first-watch h2 span { color: #ff994f; }
-.wh-first-watch-description { margin-top: 28px; color: #aaa6a2; font-size: clamp(17px,1.65vw,25px); line-height: 1.5; letter-spacing: -.015em; }
+.wh-first-watch-description { max-width: 38ch; text-wrap: pretty; margin-top: 28px; color: #aaa6a2; font-size: clamp(17px,1.65vw,25px); line-height: 1.5; letter-spacing: -.015em; }
 .wh-first-watch-install { display: inline-flex; align-items: center; justify-content: center; gap: 16px; min-height: 70px; min-width: 340px; margin-top: 44px; padding: 16px 34px; border-radius: 999px; background: #f1e9da; color: #171512; font-size: 20px; font-weight: 600; text-decoration: none; transition: background .15s; }
 .wh-first-watch-install:hover { background: #fff7e9; }
-.wh-first-watch-install:focus-visible,.wh-first-watch-note a:focus-visible { outline: 2px solid #ff994f; outline-offset: 5px; }
-.wh-first-watch-note { margin-top: 32px; max-width: 420px; color: #aaa6a2; font-size: 16px; line-height: 1.6; }
-.wh-first-watch-note a { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; color: #ff994f; text-decoration: underline; text-underline-offset: 4px; }
+.wh-first-watch-install:focus-visible,.wh-recording-link:focus-visible { outline: 2px solid #ff994f; outline-offset: 5px; }
 @media (max-width: 600px) {
   .wh-page-first-watch { min-height: auto; }
   .wh-first-watch { padding: 40px 0; }
   .wh-first-watch-icon { width: 104px; height: 104px; margin-bottom: 12px; }
   .wh-first-watch h2 { font-size: clamp(30px,7.5vw,40px); }
   .wh-first-watch-description { margin-top: 22px; font-size: 17px; max-width: 32ch; }
-  .wh-first-watch-break { display: none; }
   .wh-first-watch-install { width: 100%; min-width: 0; max-width: 320px; margin-top: 30px; min-height: 58px; font-size: 18px; padding: 14px 24px; }
-  .wh-first-watch-note { margin-top: 26px; font-size: 14px; }
 }
