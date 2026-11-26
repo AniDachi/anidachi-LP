@@ -162,7 +162,12 @@ async function main() {
       if (!html.includes(expected)) throw new Error(`Invite ticket ${view}: missing ${expected}`);
     }
   }
-  console.log("Invitation ticket smoke passed: install, sign in, join");
+  const inviteLogin = await fetchManual("/login?next=%2Froom%2F00000000-0000-4000-8000-000000000000", {
+    headers: { cookie: stagingCookie },
+  });
+  assertStatus(inviteLogin, 200, "Guest invitation sign-in");
+  await assertTextIncludes(inviteLogin, 'aria-label="Room invitation"', "Guest invitation sign-in");
+  console.log("Invitation ticket smoke passed: install, sign in, join and guest invite route");
 
   // A guest must keep the chosen plan/period across the protected page and login.
   // Read-only: never start OAuth or create a Stripe session in this smoke.
