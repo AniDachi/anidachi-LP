@@ -7,6 +7,7 @@ import {
 	handleActiveRoomRecovery,
 	handleExplicitRoomDeparture,
 	handleRoomTabDeparture,
+	recoverClosedRoomTabs,
 	isRoomDepartureRuntimeMessage,
 	type RoomDepartureRequestResult,
 	requestCurrentRoomDeparture,
@@ -18,6 +19,53 @@ import {
 import type { RoomSessionRecord } from "../src/room-session-storage";
 
 describe("closed-tab room departure", () => {
+	it("keeps the tab record if writing the departure job fails", async () => {
+		const clearRoomSession = vi.fn(async () => true);
+		await expect(handleRoomTabDeparture(14, {
+			loadRoomSession: async () => roomSession(),
+			clearRoomSession,
+			settlePersistedDeparture: async () => { throw new Error("storage unavailable"); },
+		})).rejects.toThrow("storage unavailable");
+		expect(clearRoomSession).not.toHaveBeenCalled();
+	});
+
+	it("ignores an obsolete recovery snapshot when its tab record was replaced", async () => {
+		const settlePersistedDeparture = vi.fn();
+		const clearRoomSession = vi.fn();
+		await expect(handleRoomTabDeparture(14, {
+			loadRoomSession: async () => ({ ...roomSession(), participantSessionId: "replacement" }),
+			settlePersistedDeparture,
+			clearRoomSession,
+		}, roomSession())).resolves.toBe("stale");
+		expect(settlePersistedDeparture).not.toHaveBeenCalled();
+		expect(clearRoomSession).not.toHaveBeenCalled();
+	});
+
+	it("recovers missed close events without ending an open tab or its copied identity", async () => {
+		const closed = roomSession();
+		const live = { ...closed, participantSessionId: "live-session" };
+		const depart = vi.fn(async () => "room_ended" as const);
+		const clear = vi.fn(async () => true);
+		await recoverClosedRoomTabs({
+			readRecords: async () => ({ 10: closed, 11: live, 12: live }),
+			queryTabs: async () => [{ id: 11 }],
+			depart,
+			clear,
+		});
+		expect(depart.mock.calls).toEqual([[10, closed]]);
+		expect(clear.mock.calls).toEqual([[12, live]]);
+	});
+
+	it("preserves every record when Chrome cannot enumerate tabs", async () => {
+		const depart = vi.fn();
+		await expect(recoverClosedRoomTabs({
+			readRecords: async () => ({ 10: roomSession() }),
+			queryTabs: async () => { throw new Error("tabs unavailable"); },
+			depart,
+		})).rejects.toThrow("tabs unavailable");
+		expect(depart).not.toHaveBeenCalled();
+	});
+
 	it("releases the exact server assignment before clearing a closed tab", async () => {
 		const requestDeparture = vi.fn(async () => ({
 			kind: "ack" as const,

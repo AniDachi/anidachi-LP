@@ -11,6 +11,7 @@ import { getStoredAuthTokens, type ExtensionAuthTokens } from "./auth-tokens";
 import { WEB_HTTP_BASE } from "./constants";
 import {
   clearRoomSessionForClosedTab,
+  listDurableRoomSessions,
   loadRoomSessionForExactDeparture,
   loadRoomSessionForTab,
   roomSessionIdentityMatches,
@@ -315,6 +316,7 @@ export async function handleActiveRoomRecovery(
 export async function handleRoomTabDeparture(
   tabId: number,
   dependencies: RoomTabDepartureDependencies = {},
+  expected?: RoomSessionRecord,
 ): Promise<RoomTabDepartureOutcome> {
   const loadRoomSession = dependencies.loadRoomSession ??
 		((resolvedTabId: number) =>
@@ -335,14 +337,38 @@ export async function handleRoomTabDeparture(
   }
 
 	if (!record) return "no-session";
-	try {
-		return await (
-			dependencies.settlePersistedDeparture?.(record) ??
-			notifyBoundedDeparture(record, dependencies)
-		);
-	} finally {
-		await clearRoomSession(tabId, record).catch(() => false);
-	}
+	if (expected && !roomSessionIdentityMatches(record, expected)) return "stale";
+	const outcome = await (
+		dependencies.settlePersistedDeparture?.(record) ??
+		notifyBoundedDeparture(record, dependencies)
+	);
+	// If persisting retry ownership throws, the next worker needs this record.
+	await clearRoomSession(tabId, record);
+	return outcome;
+}
+
+export async function recoverClosedRoomTabs(dependencies: {
+	depart(tabId: number, expected: RoomSessionRecord): Promise<unknown>;
+	readRecords?: typeof listDurableRoomSessions;
+	queryTabs?: () => Promise<{ id?: number }[]>;
+	clear?: typeof clearRoomSessionForClosedTab;
+}): Promise<void> {
+	const records = Object.entries(await (dependencies.readRecords ?? listDurableRoomSessions)());
+	if (!records.length) return;
+	// Snapshot records first so a tab opened during enumeration cannot be mistaken for a closed one.
+	const tabs = await (dependencies.queryTabs ?? (() => chrome.tabs.query({})))();
+	const open = new Set(tabs.map(tab => tab.id));
+	const liveRecords = records.filter(([id]) => open.has(Number(id)));
+	const clear = dependencies.clear ?? clearRoomSessionForClosedTab;
+	await Promise.all(records.map(async ([id, record]) => {
+		const tabId = Number(id);
+		if (open.has(tabId)) return;
+		if (liveRecords.some(([, live]) => roomSessionIdentityMatches(live, record))) {
+			await clear(tabId, record);
+		} else {
+			await dependencies.depart(tabId, record);
+		}
+	}));
 }
 
 async function notifyBoundedDeparture(
