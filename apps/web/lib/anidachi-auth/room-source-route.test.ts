@@ -44,7 +44,7 @@ for (const scenario of ["persisted", "newer-pending", "read-error", "conflict", 
 			assert.equal(init?.method, "GET");
 			assert.equal(url.searchParams.get("room_id"), "eq.route-proof-room");
 			assert.deepEqual(url.searchParams.get("select")?.split(",").sort(),
-				["room_id", "status", "source_provider", "source_url", "video_fingerprint", "source_generation"].sort());
+				["room_id", "status", "source_provider", "source_url", "video_fingerprint", "source_generation", "prime_navigation"].sort());
 			if (scenario === "read-error") return Response.json({ code: "42501", message: "private database detail" }, { status: 403 });
 			return Response.json([{ ...proof, source_generation: scenario === "newer-pending" ? 1 : 2 }]);
 		};

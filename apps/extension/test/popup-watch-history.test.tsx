@@ -7,10 +7,11 @@ import {
 } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { PopupHistorySettings } from "../src/popup-history-settings";
 import {
   PopupWatchHistoryPanel,
+  groupWatchHistoryItems,
   selectConfirmedPopupWatchHistorySnapshot,
   subscribeToPopupWatchHistorySnapshot,
   type PopupWatchHistoryClient,
@@ -109,6 +110,45 @@ describe("Popup Watch History v3", () => {
       updated.items[0]!.artworkUrl = "https://www.crunchyroll.com/new-poster.jpg";
       await act(async () => { publish(snapshotFixture(updated)); });
       expect(artwork().querySelector("img")?.getAttribute("src")).toBe(updated.items[0]!.artworkUrl);
+    } finally { await unmount(view.root); }
+  });
+
+  it.each(["missing", "broken", "wide", "portrait"] as const)("renders saved HBO artwork or resolves the exact title for a %s cover", async scenario => {
+    vi.stubEnv("WXT_EXTENSION_CHANNEL", "staging");
+    onTestFinished(() => { vi.unstubAllEnvs(); });
+    const history = youtubeMovieHistoryFixture();
+    const item = history.items[0]!;
+    const id = "e7dc7b3a-a494-4ef1-8107-f4308aa6bbf7";
+    const poster = "https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/" + id + "/poster.jpeg";
+    item.provider = "hbomax";
+    item.titleKey = item.latestActivity.episodeKey = "hbomax:movie:" + id;
+    item.sourceUrl = "https://www.hbomax.com/video/watch/" + id;
+    item.artworkUrl = scenario === "missing" ? null : "https://images.cdn.prd.api.discomax.com/group/legacy.jpeg";
+    const lookup = vi.fn(async () => ({ ok: true as const, data: poster }));
+    const normal = requestForHistory(history);
+    const view = await renderPanel(clientFixture({ cached: snapshotFixture(history), request: message => {
+      if (message.command !== "title-poster") return normal(message);
+      expect(message.titleKey).toBe(item.titleKey);
+      return lookup();
+    } }));
+    const image = () => view.container.querySelector<HTMLImageElement>(".popup-watch-artwork img");
+    try {
+      if (scenario !== "missing") {
+        expect(lookup).not.toHaveBeenCalled();
+        const legacy = image()!;
+        expect(legacy.getAttribute("src")).toBe(item.artworkUrl + "?w=500&f=webp");
+        Object.defineProperties(legacy, { naturalWidth: { value: 500 }, naturalHeight: { value: scenario === "wide" ? 281 : 750 } });
+        await act(async () => { legacy.dispatchEvent(new Event(scenario === "broken" ? "error" : "load")); });
+      }
+      if (scenario === "portrait") {
+        expect(lookup).not.toHaveBeenCalled();
+      } else {
+        expect(lookup).toHaveBeenCalledTimes(1);
+        expect(image()?.getAttribute("src")).toBe(poster);
+        await act(async () => { image()!.dispatchEvent(new Event("error")); });
+        expect(image()?.getAttribute("src")).toBe(scenario === "wide" ? item.artworkUrl + "?w=500&f=webp" : undefined);
+        expect(lookup).toHaveBeenCalledTimes(1);
+      }
     } finally { await unmount(view.root); }
   });
 
@@ -465,7 +505,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("14:00"));
     expect(view.container.textContent).toContain("Pending sync");
     expect(client.loadCached).toHaveBeenCalledTimes(1);
-    expect(listRequests).toBe(3);
+    expect(listRequests).toBe(5);
     await unmount(view.root);
   });
 
@@ -1098,7 +1138,7 @@ describe("Popup Watch History v3", () => {
       );
     });
 
-    await waitFor(() => expect(listRequests).toBe(6));
+    await waitFor(() => expect(listRequests).toBe(10));
     expect(view.container.textContent).toContain("Stable Frieren");
     expect(view.container.textContent).not.toContain("Older cached Frieren");
     expect(view.container.textContent).not.toContain("Loading watch history");
@@ -1192,7 +1232,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("2000 observed episodes"));
     expect(view.container.textContent).toContain("Episode 1");
     expect(view.container.querySelector('[title="Episode 8"]')).not.toBeNull();
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(3);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(5);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1340,7 +1380,7 @@ describe("Popup Watch History v3", () => {
     await click(secondTitle);
     expect(secondTitle.getAttribute("aria-expanded")).toBe("true");
     expect(title.getAttribute("aria-expanded")).toBe("true");
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(3);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(5);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1431,7 +1471,7 @@ describe("Popup Watch History v3", () => {
     await click(retry);
 
     await waitFor(() => expect(view.container.textContent).toContain("Frieren"));
-    expect(listAttempts).toBe(4);
+    expect(listAttempts).toBe(6);
     expect(view.container.textContent).not.toContain("Could not refresh watch history.");
     await unmount(view.root);
   });
@@ -1489,7 +1529,7 @@ describe("Popup Watch History v3", () => {
     );
     expect(recoveryCall).toBeGreaterThan(-1);
     expect(secondListCall).toBeGreaterThan(recoveryCall);
-    expect(listAttempts).toBe(6);
+    expect(listAttempts).toBe(10);
     await unmount(view.root);
   });
 
@@ -1525,7 +1565,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Browser storage is full."));
     expect(view.container.textContent).toContain("Cached Frieren");
     await findButton(view.container, "Retry watch history");
-    expect(listAttempts).toBe(5);
+    expect(listAttempts).toBe(9);
     await unmount(view.root);
   });
 
@@ -1576,7 +1616,7 @@ function fixtureFetch(fetch: typeof globalThis.fetch, initial: WatchHistoryRespo
       const page = fixtureBrowseDetail(latest, input);
       return page.ok ? Response.json(page.data) : new Response("unavailable", { status: 503 });
     }
-    if (parsedUrl.pathname.endsWith("/browse") && ["youtube", "netflix"].includes(String(input.provider)) && !latest.items.some(item => item.provider === input.provider)) {
+    if (parsedUrl.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo", "disneyplus"].includes(String(input.provider)) && !latest.items.some(item => item.provider === input.provider)) {
       const empty = fixtureBrowseTitles(latest, input);
       return Response.json(empty.ok ? empty.data : null);
     }
@@ -2144,3 +2184,11 @@ vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
   isHistoryRecordingEnabled: async () => true,
 }));
+
+
+it("keeps the legacy amazon placeholder separate from Prime Video", () => {
+  const base = historyFixture().items[0]!;
+  const groups = groupWatchHistoryItems([{ ...base, provider: "amazon" }, { ...base, provider: "primevideo" }]);
+  expect(groups.map(group => [group.provider, group.label])).toEqual([["amazon", "amazon"], ["primevideo", "Prime Video"]]);
+  expect(groups.map(group => group.items.length)).toEqual([1, 1]);
+});

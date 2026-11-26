@@ -565,6 +565,16 @@ ${popupSettingsStyles}
     box-shadow: 0 0 14px rgba(249, 115, 22, 0.22);
   }
 
+  .resource-provider-logo.primevideo, .resource-provider-logo:is(.disneyplus, .hbomax) {
+    background: #f3faff;
+  }
+
+  .resource-provider-logo.primevideo img, .resource-provider-logo:is(.disneyplus, .hbomax) img {
+    width: 28px;
+    height: 20px;
+    object-fit: contain;
+  }
+
   .resource-provider-logo.netflix {
     color: #ef4444;
   }

@@ -1,9 +1,10 @@
+import type {PrimeNavigation} from "@anidachi/protocol";
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronLeft, Ellipsis, Film, LockKeyhole, Pencil, Play, RotateCcw, Search, Trash2, Undo2, X } from "lucide-react";
 import {
-  WatchHistoryEditorResponseSchema, WatchHistoryEditAckSchema,
+  WatchHistoryEditorResponseSchema, WatchHistoryEditAckSchema, isHboMaxArtworkUrl, isHboMaxHistoryKey,
   type WatchHistoryItem, type WatchHistoryDeleteScope, type WatchHistoryEditorResponse,
   type WatchHistoryEditorEpisode, type WatchHistoryEditRequest,
 } from "@anidachi/protocol";
@@ -18,10 +19,10 @@ type Props = {
   busy: boolean; nextCursor: string | null; loadingMore: boolean; capacity: ReactNode | ((provider: HistoryPlatform) => ReactNode);
   onLoadMore(): void; onEdited(): Promise<void>; onDraftChange(active: boolean): void;
   captureAccessFailure(): (error: unknown) => boolean;
-  onResume(provider: WatchHistoryItem["provider"], url: string, time: number): void;
+  onResume(provider: WatchHistoryItem["provider"], url: string, time: number, navigation?:PrimeNavigation): void;
   onDelete(target: WatchHistoryDeleteScope): void;
 };
-const providerName = (provider: WatchHistoryItem["provider"]) => ({ crunchyroll: "Crunchyroll", youtube: "YouTube", netflix: "Netflix", amazon: "Prime Video" })[provider];
+const providerName = (provider: WatchHistoryItem["provider"]) => ({ crunchyroll: "Crunchyroll", youtube: "YouTube", netflix: "Netflix", disneyplus: "Disney+", hbomax: "HBO Max", primevideo: "Prime Video", amazon: "Prime Video" })[provider];
 const itemId = (item: WatchHistoryItem) => `${item.provider}:${item.titleKey}`;
 export function HistoryBrowser(props: Props) {
   useAccountScrollRestoration(`${props.owner}:library:scroll`);
@@ -94,6 +95,9 @@ const historyPlatforms = [
   { value: "crunchyroll", label: "Crunchyroll", name: "Crunchyroll" },
   { value: "youtube", label: "YouTube", name: "YouTube" },
   { value: "netflix", label: "Netflix", name: "Netflix" },
+  { value: "primevideo", label: "Prime Video", name: "Prime Video" },
+  { value: "disneyplus", label: "Disney+", name: "Disney+" },
+  { value: "hbomax", label: "HBO Max", name: "HBO Max" },
 ] as const;
 
 function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; onChange(value: HistoryPlatform): void }) {
@@ -118,6 +122,9 @@ function HistoryPlatformSwitch({ value, onChange }: { value: HistoryPlatform; on
         <path d="m9.545 15.568 6.273-3.568-6.273-3.568v7.136Z" fill="#fff" />
       </svg>}
       {platform.value === "netflix" && <svg viewBox="0 0 141 277" className="wh-platform-logo wh-platform-netflix" aria-hidden="true"><path fill="currentColor" d="M140.803 258.904c-15.404 2.705-31.079 3.516-47.294 5.676L44.051 119.724v151.073C28.647 272.418 14.594 274.58 0 276.742V0h41.08l56.212 157.021V0h43.511v258.904z" /></svg>}
+      {platform.value === "hbomax" && <img src="/platforms/hbomax.png" alt="" className="wh-platform-logo wh-platform-hbomax" aria-hidden="true" />}
+      {platform.value === "disneyplus" && <img src="/platforms/disneyplus.svg" alt="" className="wh-platform-logo wh-platform-disneyplus" aria-hidden="true" />}
+      {platform.value === "primevideo" && <img src="/platforms/primevideo.svg" alt="" className="wh-platform-logo wh-platform-primevideo" aria-hidden="true" />}
       <span>{platform.label}</span>
     </button>)}
   </div>;
@@ -157,7 +164,9 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   const dirty = Object.keys(draft).length > 0;
   const leaveGuard = useRef(false);
   leaveGuard.current = dirty || saving;
-  const canonicalSignature = `${item.lastWatchedAt}:${item.latestActivity.episodeKey}:${item.latestActivity.currentTime}:${item.completedEpisodeCount}`;
+  // A refreshed HBO series can have a larger partial catalog at exactly the same resume position.
+  const canonicalSignature = item.provider === "hbomax" && item.itemKind === "series" ? item :
+    `${item.lastWatchedAt}:${item.latestActivity.episodeKey}:${item.latestActivity.currentTime}:${item.completedEpisodeCount}`;
   const previousCanonical = useRef(canonicalSignature);
   const single = item.provider === "youtube" || item.itemKind === "movie";
   const load = useCallback(async () => {
@@ -169,7 +178,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
     setLoading(true); setError(null);
     try {
       const query = new URLSearchParams({ provider: item.provider, titleKey: item.titleKey, accountGeneration: String(generation) });
-      const next = WatchHistoryEditorResponseSchema.parse(await api<unknown>(`/api/watch-history/v3/editor?${query}`, { headers: { [WATCH_HISTORY_OWNER_HEADER]: owner }, signal: controller.signal }));
+      const next = WatchHistoryEditorResponseSchema.parse(await api<unknown>(`/api/watch-history/v3/editor?${query}`, { headers: { "x-anidachi-prime-navigation":"1", [WATCH_HISTORY_OWNER_HEADER]: owner }, signal: controller.signal }));
       if (next.meta.ownerUserId !== owner || next.meta.accountGeneration !== generation || next.titleKey !== item.titleKey || next.provider !== item.provider)
         throw new Error("The signed-in account or history changed. Reload this page.");
       if (!mounted.current || id !== requestId.current) return;
@@ -247,7 +256,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
     retryRequest.current = body;
     try {
       const ack = WatchHistoryEditAckSchema.parse(await api<unknown>("/api/watch-history/v3/editor", {
-        method: "POST", headers: { [WATCH_HISTORY_OWNER_HEADER]: owner }, body: JSON.stringify(body),
+        method: "POST", headers: { "x-anidachi-prime-navigation":"1", [WATCH_HISTORY_OWNER_HEADER]: owner }, body: JSON.stringify(body),
       }));
       if (ack.meta.ownerUserId !== owner || ack.meta.accountGeneration !== generation || ack.clientMutationId !== body.clientMutationId)
         throw new Error("Could not confirm the saved progress. Retry to check the result.");
@@ -306,8 +315,9 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
     });
     if (!range || anchor < 0) selectionAnchor.current = ep.episodeKey;
   };
-  const available = episodes.filter(ep => ep.available);
-  const completed = available.filter(watched).length;
+  // HBO publishes episode links beyond the rail currently eligible for progress edits.
+  const countedEpisodes = item.provider === "hbomax" && !data?.catalogComplete ? episodes : episodes.filter(ep => ep.available);
+  const completed = countedEpisodes.filter(watched).length;
   const currentTime = selected && selected.episodeKey in draft ? (watched(selected) ? selected.duration : 0) : selected?.currentTime ?? 0;
   const progress = selected && selected.episodeKey in draft ? (watched(selected) ? 1 : 0) : selected?.progress ?? 0;
   const editLocked = saving || loading || conflict || !canEdit;
@@ -316,7 +326,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
   return <>
     <dialog ref={dialog} className="wh-inspector" aria-label={`${item.title} progress`} onCancel={event => { event.preventDefault(); onClose(); }}>
       <div className="wh-inspector-top"><button className="wh-text" onClick={onClose}><ChevronLeft size={16} /> Library</button><button className="wh-icon" aria-label="Close title" onClick={onClose}><X size={18} /></button></div>
-      <div className="wh-identity"><div className={`wh-detail-cover ${single ? "wh-single-cover" : ""}`}><HistoryArtwork item={item} /></div>
+      <div className="wh-identity"><div className={`wh-detail-cover ${single ? "wh-single-cover" : ""}`}><HistoryArtwork key={item.artworkUrl} item={item} /></div>
         <div><span className={`wh-provider wh-provider-${item.provider}`}>{providerName(item.provider)}</span><h2 dir="auto">{item.title}</h2><p>{titleProgress(item)}</p></div>
       </div>
       <div className={`wh-editor-heading ${editing ? "wh-editor-active" : ""}`}>
@@ -325,7 +335,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
         {editing && <div className="wh-editor-buttons"><button ref={cancelButton} className="wh-text" disabled={saving} onClick={() => { discard(); setConflict(false); setError(null); }}>Cancel</button><button className="wh-primary" aria-label={saving ? "Saving changes" : `Save ${changeCount} ${changeCount === 1 ? "change" : "changes"}`} disabled={editLocked || !dirty} onClick={() => void save()}>{saving ? "Saving…" : "Save"}</button></div>}
       </div>
       {!canEdit && <p className="wh-hint"><LockKeyhole size={14} /> Plus or Pro unlocks recording and progress editing. Saved history stays available.</p>}
-      {loading && <p className="wh-hint" role="status">Loading progress…</p>}
+      {loading && !data && <p className="wh-hint" role="status">Loading progress…</p>}
       {error && <div className="wh-error" role="alert"><p>{error}</p>
         {conflict ? <button className="wh-text" disabled={saving} onClick={async () => {
           const latest = await load(); if (latest) {
@@ -336,13 +346,15 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
       </div>}
       {data && <>
         {saved && <p className="wh-saved" role="status"><Check size={14} /> Progress saved</p>}
-        {!data.catalogComplete && !single && <p className="wh-hint">Only saved episodes are available. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</p>}
+        {!data.catalogComplete && !single && <p className="wh-hint">{(item.provider === "primevideo" || item.provider === "disneyplus" || item.provider === "hbomax") && item.catalogState === "partial"
+          ? `Showing known episodes. ${providerName(item.provider)} may have additional seasons or episodes.`
+          : <>Showing known episodes; the full catalog is unavailable. Open this title in {providerName(item.provider)} with the extension to load its full catalog.</>}</p>}
         {!single && <div className="wh-season-row"><label><span className="sr-only">Season or specials</span><select value={season ?? ""} onChange={event => { setSeason(event.target.value || null); setEpisodeKey(null); clearSelection(); }}>
           {seasons.map(value => <option value={value.key ?? ""} key={value.key ?? "saved"}>{value.title}</option>)}
-        </select></label><span>{available.length > 0 ? `${completed} / ${available.length} ${data.catalogComplete ? "watched" : "saved"}` : `${episodes.filter(watched).length} watched`}</span></div>}
+        </select></label><span>{countedEpisodes.length > 0 ? `${completed} / ${countedEpisodes.length} ${data.catalogComplete ? "watched" : "known"}` : `${episodes.filter(watched).length} watched`}</span></div>}
         {editing && <div className={`wh-selection-tools ${single ? "wh-single-tools" : ""}`}>
           {!single && <div className="wh-selection-row">
-            <label className="wh-select-season"><input type="checkbox" checked={allSelected} ref={node => { if (node) node.indeterminate = targets.length > 0 && !allSelected; }} disabled={editLocked || !selectable.length} onChange={() => { setSelection(new Set(allSelected ? [] : selectable.map(ep => ep.episodeKey))); selectionAnchor.current = null; }} />{data.catalogComplete ? "Select season" : "Select all saved"}</label>
+            <label className="wh-select-season"><input type="checkbox" checked={allSelected} ref={node => { if (node) node.indeterminate = targets.length > 0 && !allSelected; }} disabled={editLocked || !selectable.length} onChange={() => { setSelection(new Set(allSelected ? [] : selectable.map(ep => ep.episodeKey))); selectionAnchor.current = null; }} />{data.catalogComplete ? "Select season" : "Select all shown"}</label>
             <div className="wh-selection-count"><span role="status">{targets.length} selected</span><button type="button" className="wh-icon" aria-label="Clear selection" disabled={editLocked || !targets.length} onClick={clearSelection}><X size={14} /></button></div>
           </div>}
           <div className="wh-selection-actions" aria-label={single ? "Progress actions" : "Actions for selected episodes"}>
@@ -369,7 +381,7 @@ function TitleInspector({ item, owner, generation, canEdit, busy, onEdited, onDr
           <div className="wh-episode-name"><span>{single ? (item.provider === "youtube" ? "Video" : "Film") : episodeLabel(selected, episodes.indexOf(selected))}</span><h4>{single ? (watched(selected) ? "Watched" : progress > 0 ? "In progress" : "Not watched") : selected.episodeTitle}</h4></div>
           <div className="wh-progress" role="progressbar" aria-label="Episode progress" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${progress * 100}%` }} /></div>
           <div className="wh-playback"><span>{selected.duration > 0 ? `${clock(currentTime)} / ${clock(selected.duration)}` : watched(selected) ? "Marked as watched" : currentTime > 0 ? `${clock(currentTime)} watched` : "Not started"}</span>
-            {!editing && <button className="wh-primary" disabled={busy} onClick={() => onNavigate(() => onResume(item.provider, selected.sourceUrl, watched(selected) ? 0 : currentTime))}><Play size={14} fill="currentColor" />{watched(selected) ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}</button>}
+            {!editing && <button className="wh-primary" disabled={busy} onClick={() => onNavigate(() => onResume(item.provider, selected.sourceUrl, watched(selected) ? 0 : currentTime,selected.primeNavigation))}><Play size={14} fill="currentColor" />{watched(selected) ? "Watch again" : currentTime > 0 ? "Resume" : "Watch"}</button>}
           </div>
         </div>}
       </>}
@@ -409,11 +421,25 @@ function ConfirmDialog({ title, children, onClose }: { title: string; children: 
   return <dialog ref={ref} className="wh-confirm" aria-label={title} onCancel={event => { event.preventDefault(); onClose(); }}><h2>{title}</h2>{children}</dialog>;
 }
 function HistoryArtwork({ item }: { item: WatchHistoryItem }) {
-  const [failed, setFailed] = useState(false);
-  const checkLoaded = useCallback((image: HTMLImageElement | null) => {
-    if (image?.complete && image.naturalWidth === 0) setFailed(true);
-  }, []);
-  return item.artworkUrl && !failed ? <img ref={checkLoaded} src={item.artworkUrl} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} /> : <span className="wh-artwork-fallback"><Film size={30} aria-hidden /><span>{item.title}</span></span>;
+  const [storedStatus, setStoredStatus] = useState<"initial" | "landscape" | "failed">("initial");
+  const [posterFailed, setPosterFailed] = useState(false);
+  const artwork = item.artworkUrl;
+  const saved = artwork && item.provider === "hbomax" && isHboMaxArtworkUrl(artwork) ? artwork + "?w=500&f=webp" : artwork;
+  const canResolve = item.provider === "hbomax" && (isHboMaxHistoryKey(item.titleKey, "series") || isHboMaxHistoryKey(item.titleKey, "movie"));
+  const usePoster = canResolve && !posterFailed && (!saved || storedStatus !== "initial");
+  const src = usePoster ? `/api/watch-history/poster?titleKey=${encodeURIComponent(item.titleKey)}` : storedStatus === "failed" ? null : saved;
+  const checkImage = useCallback((image: HTMLImageElement | null) => {
+    if (!image?.complete) return;
+    if (image.naturalWidth === 0) {
+      if (usePoster) setPosterFailed(true);
+      else setStoredStatus("failed");
+    } else if (canResolve && !usePoster && image.naturalWidth > image.naturalHeight) {
+      setStoredStatus("landscape");
+    }
+  }, [canResolve, usePoster]);
+  return src ? <img key={src} ref={checkImage} src={src} alt="" loading="lazy" decoding="async"
+    onLoad={event => checkImage(event.currentTarget)} onError={() => usePoster ? setPosterFailed(true) : setStoredStatus("failed")} />
+    : <span className="wh-artwork-fallback"><Film size={30} aria-hidden /><span>{item.title}</span></span>;
 }
 function isTitleWatched(item: WatchHistoryItem) { return item.itemKind === "movie" || item.provider === "youtube" ? Boolean(item.latestActivity.completedAt) : item.aggregate.progress === 1; }
 function titleProgress(item: WatchHistoryItem) {

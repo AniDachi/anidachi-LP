@@ -8,6 +8,16 @@ import type {
 } from "@anidachi/protocol";
 import { shouldApplyRoomMediaSnapshot } from "@anidachi/protocol";
 
+export interface RoomMediaRebindState {
+	error: string | null;
+	snapshot: RoomMediaSnapshot | null;
+	state: ParticipantMediaState | null;
+	sequence: number;
+	intents: MediaIntent[];
+	accepted: [RoomMediaKind, number][];
+	sequences: Record<RoomMediaKind, number>;
+}
+
 export interface MediaSeatControlState {
 	pending: boolean;
 	requestId?: string;
@@ -32,6 +42,41 @@ export class RoomMediaSession {
 		readonly roomId: string,
 		readonly participantSessionId: string,
 	) {}
+
+	/** A newly attached UI mirrors the live offscreen owner's exact intent and ACK. */
+	rebindState(): RoomMediaRebindState {
+		return { snapshot: this.snapshot, state: this.state, sequence: this.sequence, error: this.error,
+			intents: [...this.current.values()], accepted: [...this.accepted], sequences: {...this.sequences} };
+	}
+
+	restoreRebindState(value: RoomMediaRebindState): void {
+		this.error = value.error;
+		this.snapshot = value.snapshot;
+		this.state = value.state;
+		this.sequence = value.sequence;
+		this.current = new Map(value.intents.map(intent => [intent.media, intent]));
+		this.accepted = new Map(value.accepted);
+		this.sequences = {...value.sequences};
+		this.restorationPending = false;
+		this.roomGeneration = value.snapshot?.roomGeneration ?? this.roomGeneration;
+	}
+
+	/** Register an explicit UI intent before sending it over the physical socket. */
+	acceptForwardedIntent(intent: MediaIntent): boolean {
+		if (!this.state || intent.roomId !== this.roomId || intent.roomGeneration !== this.roomGeneration ||
+			intent.participantSessionId !== this.participantSessionId || (intent.enabled && !this.hasSeat()) ||
+			intent.revocationEpoch !== this.state[`${intent.media}RevocationEpoch`] ||
+			intent.intentSequence <= Math.max(this.sequences[intent.media], this.state[`${intent.media}IntentSequence`])) return false;
+		this.sequences[intent.media] = intent.intentSequence;
+		this.current.set(intent.media, intent);
+		this.accepted.delete(intent.media);
+		return true;
+	}
+
+	trackForwardedSeat(command: SetMediaSeat): void {
+		this.seatRequests.set(command.targetUserId, command);
+		this.seatControls.set(command.targetUserId, {pending: true, requestId: command.requestId});
+	}
 
 	/** Only the authenticated ROOM_SNAPSHOT lifecycle may change this binding. */
 	bindRoomGeneration(generation: number): boolean {

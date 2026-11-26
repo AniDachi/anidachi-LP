@@ -302,6 +302,106 @@ describe("PlaybackSyncController", () => {
 		expect(harness.adapter.pause).toHaveBeenCalledTimes(1);
 	});
 
+	it("continues a paused guest interstitial once when the matching host starts, retaining the content barrier", async () => {
+		const h = createHarness({isHost: false, provider: "primevideo"});
+		const resume = vi.fn(async (_signal: AbortSignal) => {h.adapter.setPaused(false);});
+		h.adapter.resumeInterstitial = resume;
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		const state = playbackState({videoFingerprint: "primevideo|video", playing: false});
+		await h.controller.handleHostState(state);
+		expect(resume).not.toHaveBeenCalled();
+		await h.controller.handleHostState({...state, videoFingerprint:"primevideo|another", playing:true});
+		expect(resume).not.toHaveBeenCalled();
+		await h.controller.handleHostState({...state, playing:true});
+		expect(resume).toHaveBeenCalledTimes(1);
+		h.adapter.setPaused(true); // A later native pause is the viewer's choice.
+		h.adapter.emitPhase();
+		await h.controller.handleHostState({...state, playing:false});
+		await h.controller.handleHostState({...state, playing:true});
+		expect(resume).toHaveBeenCalledTimes(1);
+		expect(h.adapter.play).not.toHaveBeenCalled();
+		expect(h.adapter.pause).not.toHaveBeenCalled();
+		expect(h.adapter.seek).not.toHaveBeenCalled();
+		expect(h.adapter.setPlaybackRate).not.toHaveBeenCalled();
+		h.controller.dispose();
+	});
+
+	it("requires a confirmed host fingerprint before a command can continue a local ad", async () => {
+		const h=createHarness({isHost:false,provider:"primevideo"});
+		const resume=vi.fn(async (_signal:AbortSignal)=>undefined); h.adapter.resumeInterstitial=resume;
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		h.controller.handleRemoteCommand({type:"PLAY",roomId:"room-1",byUserId:"host",at:10});
+		expect(resume).not.toHaveBeenCalled();
+		await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:false}));
+		h.controller.handleRemoteCommand({type:"PLAY",roomId:"room-1",byUserId:"host",at:10});
+		expect(resume).toHaveBeenCalledTimes(1);
+		h.controller.dispose();
+	});
+
+	it("clears the blocked-ad prompt after native Prime Play", async () => {
+		const h=createHarness({isHost:false,provider:"primevideo"});
+		h.adapter.resumeInterstitial=vi.fn().mockRejectedValue(Object.assign(new Error("blocked"),{name:"NotAllowedError"}));
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:true}));
+		await Promise.resolve(); await Promise.resolve();
+		expect(h.statuses.at(-1)).toEqual({kind:"resume-required"});
+		h.adapter.setPaused(false); h.adapter.emitPhase();
+		expect(h.statuses.at(-1)).toEqual({kind:"watching-local-ad"});
+		h.controller.dispose();
+	});
+
+	it("offers manual continuation after a cancelled ad attempt without claiming a browser permission denial", async () => {
+		const h=createHarness({isHost:false,provider:"primevideo"});
+		const resume=vi.fn((_signal:AbortSignal)=>new Promise<void>(()=>undefined)); h.adapter.resumeInterstitial=resume;
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		const state=playbackState({videoFingerprint:"primevideo|video",playing:true});
+		await h.controller.handleHostState(state);
+		await h.controller.handleHostState({...state,playing:false});
+		await h.controller.handleHostState(state);
+		expect(resume).toHaveBeenCalledTimes(1);
+		expect(h.statuses.at(-1)).toEqual({kind:"resume-required",reason:"interstitial-paused"});
+		h.controller.resumeFromUserGesture();
+		expect(resume).toHaveBeenCalledTimes(2);
+		h.controller.dispose();
+	});
+
+	it.each(["session", "adapter", "phase", "suspend", "host-pause"] as const)("cancels guest interstitial continuation on %s without stale error feedback", async change => {
+		const h = createHarness({isHost:false,provider:"primevideo"});
+		let reject!: (error: Error) => void;
+		let signal!: AbortSignal;
+		h.adapter.resumeInterstitial = vi.fn((s: AbortSignal) => {signal=s; return new Promise<void>((_resolve, r)=>{reject=r;});});
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:true}));
+		expect(signal?.aborted).toBe(false);
+		if(change==="session") h.controller.setSession(session({roomId:null}));
+		else if(change==="adapter") h.controller.bindAdapter(null);
+		else if(change==="suspend") h.controller.suspend();
+		else if(change==="host-pause") await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:false}));
+		else {h.adapter.setPhase("content"); h.adapter.emitPhase();}
+		expect(signal.aborted).toBe(true);
+		const before=h.statuses.length;
+		reject(Object.assign(new Error("blocked"),{name:"NotAllowedError"}));
+		await Promise.resolve(); await Promise.resolve();
+		expect(h.statuses.slice(before)).not.toContainEqual({kind:"resume-required"});
+		h.controller.dispose();
+	});
+
+	it("retries an autoplay-blocked local interstitial only through the existing Resume action", async () => {
+		const h=createHarness({isHost:false,provider:"primevideo"});
+		const resume=vi.fn().mockRejectedValueOnce(Object.assign(new Error("blocked"),{name:"NotAllowedError"})).mockResolvedValue(undefined);
+		h.adapter.resumeInterstitial=resume;
+		h.adapter.setPhase("interstitial"); h.adapter.emitPhase();
+		await h.controller.handleHostState(playbackState({videoFingerprint:"primevideo|video",playing:true}));
+		await Promise.resolve(); await Promise.resolve();
+		expect(h.statuses.at(-1)).toEqual({kind:"resume-required"});
+		h.adapter.emitPhase(); expect(resume).toHaveBeenCalledTimes(1);
+		h.controller.resumeFromUserGesture();
+		await Promise.resolve(); await Promise.resolve();
+		expect(resume).toHaveBeenCalledTimes(2);
+		expect(h.adapter.seek).not.toHaveBeenCalled();
+		h.controller.dispose();
+	});
+
 	it("cancels pending remote play when a transition begins", async () => {
 		const harness = createHarness({ isHost: false, provider: "youtube" });
 		harness.adapter.setPaused(true);
@@ -321,6 +421,35 @@ describe("PlaybackSyncController", () => {
 		await Promise.resolve();
 
 		expect(harness.adapter.play).not.toHaveBeenCalled();
+	});
+
+	it.each(["content", "transition", "interstitial"] as const)("clears a solo unsupported notice when playback becomes %s", phase => {
+		const harness = createHarness({ isHost: false });
+		harness.controller.setSession(session({roomId: null, roomProvider: null}));
+		harness.adapter.setPhase("unsupported");
+		harness.adapter.emitPhase();
+		expect(harness.statuses.at(-1)).toEqual({kind: "unsupported-media"});
+		harness.adapter.setPhase(phase);
+		harness.adapter.emitPhase();
+		expect(harness.statuses.at(-1)).toEqual({kind: "synced"});
+		expect(harness.adapter.play).not.toHaveBeenCalled();
+		expect(harness.adapter.pause).not.toHaveBeenCalled();
+		expect(harness.sent).toEqual([]);
+		harness.controller.dispose();
+	});
+
+	it.each(["adapter", "session"] as const)("clears unsupported notice when content resumes through %s replacement", mode => {
+		const harness = createHarness({isHost: false});
+		harness.adapter.setPhase("unsupported");
+		harness.adapter.emitPhase();
+		expect(harness.statuses.at(-1)).toEqual({kind:"unsupported-media"});
+		if (mode === "adapter") harness.controller.bindAdapter(createFakeAdapter({provider:"youtube"}));
+		else {
+			harness.adapter.setPhase("content");
+			harness.controller.setSession(session({connectionGeneration: 2}));
+		}
+		expect(harness.statuses.at(-1)).toEqual({kind:"synced"});
+		harness.controller.dispose();
 	});
 
 	it("blocks unsupported media without touching playback", () => {
@@ -736,7 +865,7 @@ describe("PlaybackSyncController", () => {
 		expect(ensureRemoteSource).not.toHaveBeenCalled();
 	});
 
-	it("holds remote playback and applies the newest state after the target adapter binds", async () => {
+	it.each(["content", "transition", "interstitial", "buffering"] as const)("applies the newest host state when the target adapter binds during %s", async phase => {
 		const navigation = deferred<EnsureSourceResult>();
 		const ensureRemoteSource = vi.fn(() => navigation.promise);
 		const harness = createHarness({ isHost: false, ensureRemoteSource });
@@ -771,7 +900,13 @@ describe("PlaybackSyncController", () => {
 			fingerprint: targetSource.videoFingerprint,
 			provider: "youtube",
 		});
+		replacement.setPhase(phase);
 		harness.controller.bindAdapter(replacement);
+		if (phase !== "content") {
+			expect(replacement.seek).not.toHaveBeenCalled();
+			replacement.setPhase("content");
+			replacement.emitPhase();
+		}
 		await first;
 		await second;
 
@@ -1009,8 +1144,8 @@ interface HarnessOptions {
 	fingerprint?: string;
 	isHost: boolean;
 	playImplementation?: () => Promise<void>;
-	provider?: "crunchyroll" | "youtube" | "generic";
-	roomProvider?: "crunchyroll" | "youtube" | "generic" | null;
+	provider?: "crunchyroll" | "youtube" | "generic" | "primevideo";
+	roomProvider?: "crunchyroll" | "youtube" | "generic" | "primevideo" | null;
 }
 
 function createHarness(options: HarnessOptions) {

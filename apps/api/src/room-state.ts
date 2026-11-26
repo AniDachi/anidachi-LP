@@ -21,6 +21,7 @@ import type {
 } from "@anidachi/protocol";
 import {
   RoomSourceDescriptorSchema,
+  WatchSourceDescriptorSchema,
   canonicalizeRoomSourceUrl,
   isLegacyRoomSourceFingerprintAlias,
 } from "@anidachi/protocol";
@@ -159,6 +160,7 @@ export class RoomState {
       sourceUrl: this.source.sourceUrl,
       canonicalUrl: this.source.canonicalUrl,
       videoFingerprint: this.source.videoFingerprint,
+      ...(this.source.primeNavigation ? {primeNavigation:this.source.primeNavigation} : {}),
     };
     const parsed = RoomSourceDescriptorSchema.safeParse(durableSource);
     return parsed.success ? parsed.data : undefined;
@@ -327,6 +329,18 @@ export class RoomState {
       return { accepted: false, sourceChanged: false, code: "INVALID_SOURCE" };
     }
     const nextSource = normalized.source;
+    if (nextSource?.provider === "hbomax" && nextSource.hbomaxIdentity === undefined &&
+      previousSource?.sourceUrl === nextSource.sourceUrl && previousSource.hbomaxIdentity) {
+      nextSource.hbomaxIdentity = previousSource.hbomaxIdentity;
+    }
+    if (nextSource?.provider === "disneyplus" && nextSource.disneyplusIdentity === undefined &&
+      previousSource?.sourceUrl === nextSource.sourceUrl && previousSource.disneyplusIdentity) {
+      nextSource.disneyplusIdentity = previousSource.disneyplusIdentity;
+    }
+    if (nextSource?.provider === "primevideo" && !nextSource.primeNavigation &&
+        previousSource?.sourceUrl === nextSource.sourceUrl && previousSource.primeNavigation) {
+      nextSource.primeNavigation = previousSource.primeNavigation;
+    }
     if (
       nextSource &&
       this.sourceProvider !== undefined &&
@@ -951,7 +965,10 @@ function normalizeRoomSourceUpdate(
 	if (
 		candidate.provider !== "crunchyroll" &&
 		candidate.provider !== "youtube" &&
-		candidate.provider !== "netflix"
+		candidate.provider !== "netflix" &&
+		candidate.provider !== "disneyplus" &&
+		candidate.provider !== "hbomax" &&
+		candidate.provider !== "primevideo"
 	) {
     return null;
   }
@@ -972,7 +989,10 @@ function normalizeWatchSourceDescriptor(
 	if (
 		candidate.provider !== "crunchyroll" &&
 		candidate.provider !== "youtube" &&
-		candidate.provider !== "netflix"
+		candidate.provider !== "netflix" &&
+		candidate.provider !== "disneyplus" &&
+		candidate.provider !== "hbomax" &&
+		candidate.provider !== "primevideo"
 	) {
     return null;
   }
@@ -1027,11 +1047,16 @@ function normalizeWatchSourceDescriptor(
     return null;
   }
 
+  // A live identity can arrive from a host event or a hibernated room snapshot.
+  if ((candidate.disneyplusIdentity !== undefined || candidate.hbomaxIdentity !== undefined) && !WatchSourceDescriptorSchema.safeParse(candidate).success) {
+    return null;
+  }
   const durableSource: RoomSourceDescriptor = {
     provider: sourceUrl.source.provider,
     sourceUrl: sourceUrl.source.sourceUrl,
     canonicalUrl: sourceUrl.source.canonicalUrl,
     videoFingerprint: expectedFingerprint,
+    ...(candidate.primeNavigation ? {primeNavigation:candidate.primeNavigation} : {}),
   };
   if (!RoomSourceDescriptorSchema.safeParse(durableSource).success) return null;
 

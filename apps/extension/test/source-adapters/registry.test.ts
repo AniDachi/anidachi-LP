@@ -82,6 +82,14 @@ describe("source adapter registry", () => {
   });
 });
 
+it.each(["https://primevideo.com/storefront", "https://synthetic-2.edge3.primevideo.com/detail/AAAAAAAAAAAAAAAAAAAAAAAAAA", "https://synthetic-2.edge3.amazon.com/gp/video/detail/B0FX33MPNX", "http://synthetic-2.edge3.primevideo.com/detail/AAAAAAAAAAAAAAAAAAAAAAAAAA"])("does not fall through to generic video for a known family without matching SDK metadata at %s", (url) => {
+ mockLocation(url);
+ document.body.innerHTML = `<main id="player"><video></video></main>`;
+ mockRect(document.querySelector("video")!, 640, 360);
+ mockRect(document.querySelector("main")!, 640, 360);
+ expect(detectSourceAdapter(document)).toBeNull();
+});
+
 function mockLocation(url: string): void {
   Object.defineProperty(window, "location", {
     configurable: true,
