@@ -1,7 +1,14 @@
+export const profilePlansLinkStyles = `
+  .panel-plan-link { display:inline-flex; align-items:center; align-self:flex-start; justify-self:start; gap:3px; padding:3px 0; margin:-3px 0; border-radius:3px; color:#dca575; font-size:11px; font-weight:550; line-height:14px; text-decoration:none; white-space:nowrap; }
+  .panel-plan-link:hover { color:#ffc18a; }
+  .panel-plan-link:focus-visible { outline:2px solid #edac72; outline-offset:3px; }
+  .panel-plan-link svg { flex:none; opacity:.85; }
+`;
+
 export const panelRoomActionsStyles = `
   .panel-account-link { color:inherit; text-decoration:none; cursor:pointer; transition:filter 120ms ease; }
   .panel-account-link:hover { filter:brightness(1.16); }
-  .panel-account-link:focus-visible, .panel-plan-link:focus-visible { outline:2px solid #edac72; outline-offset:3px; }
+  .panel-account-link:focus-visible { outline:2px solid #edac72; outline-offset:3px; }
   .panel-account-copy { gap:1px; }
   .panel-account-title-row { min-height:18px; }
   .panel-account-secondary { min-height:14px; display:flex; flex-direction:column; align-items:flex-start; }
@@ -11,9 +18,7 @@ export const panelRoomActionsStyles = `
   .panel-people-reveal[data-visible=true] { grid-template-rows:1fr; opacity:1; }
   .panel-people-reveal > div { min-height:0; overflow:hidden; }
   .panel-plan-link, .panel-account-title-row .plan-badge { animation:panel-content-in 160ms ease-out both; }
-  .panel-plan-link { display:inline-flex; align-items:center; gap:3px; align-self:flex-start; padding:3px 0; margin:-3px 0; border-radius:3px; color:#dca575; font-size:11px; font-weight:550; line-height:14px; text-decoration:none; white-space:nowrap; }
-  .panel-plan-link:hover { color:#ffc18a; }
-  .panel-plan-link svg { flex:none; opacity:.85; }
+  ${profilePlansLinkStyles}
   .panel-limit-copy { margin:0 1px 13px; }
   .panel-limit-copy strong { color:#f2ede5; font-size:13px; font-weight:650; line-height:1.4; }
   .panel-limit-copy p { margin:5px 0 0; color:#a9a8ac; font-size:11px; line-height:1.55; text-wrap:pretty; }

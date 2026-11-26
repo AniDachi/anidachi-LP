@@ -78,6 +78,18 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe("Popup current account plan", () => {
+  it("shows View plans only for the current account's verified Free plan", async () => {
+    await mount();
+    const plansLink = () => container.querySelector<HTMLAnchorElement>(".popup-profile-copy .panel-plan-link");
+    expect(plansLink()?.textContent).toBe("View plans");
+    const nextAccess = deferred<HostingAccountAccess>();
+    read.mockReturnValue(nextAccess.promise);
+    await changeSession(tokens(B));
+    expect(plansLink()).toBeNull();
+    await act(async () => nextAccess.resolve(access("plus", B)));
+    expect(container.querySelector(".plan-badge")?.textContent).toBe("Plus");
+    expect(plansLink()).toBeNull();
+  });
   it.each(["access-only", "refresh-token"])("keeps the verified badge through same-login credential rotation and rejects the old reply: %s", async rotation => {
     const original = { ...tokens(), authSessionId: "login-a", authRevision: "revision-a" };
     store.set(AUTH_TOKENS_KEY, original);
