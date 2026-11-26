@@ -904,7 +904,7 @@ export function PopupApp() {
             {accountUser ? (
               <>
                 <PanelAccountTitle displayName={accountUser.displayName} plan={currentPlan} />
-                <ProfilePlansLink />
+                {currentPlan === "free" && <ProfilePlansLink />}
               </>
             ) : (
               <>
