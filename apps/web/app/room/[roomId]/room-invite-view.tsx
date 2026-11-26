@@ -2,6 +2,7 @@ import { AuthPageCard, AuthPageShell } from "@/components/auth-page-shell";
 import { AnidachiLogo } from "@/components/anidachi-logo";
 import { ArrowRight } from "lucide-react";
 import type { RoomSourceProvider } from "@anidachi/protocol";
+import { RoomInviteExtensionStep } from "@/components/room-invite-extension-step";
 import { RoomInviteHelp } from "./room-invite-help";
 import styles from "./room-invite.module.css";
 import { RoomMobileHandoff } from "./room-mobile-handoff";
@@ -26,6 +27,7 @@ type RoomInviteViewProps = {
 	hostName: string;
 	sourceProvider?: RoomSourceProvider;
 	joinAction?: string;
+	extensionId?: string | null;
 	isParticipant: boolean;
 	hasLaunchUrl: boolean;
 	initialMobile: boolean;
@@ -39,6 +41,7 @@ export function RoomInviteView({
 	hostName,
 	sourceProvider,
 	joinAction,
+	extensionId,
 	isParticipant,
 	hasLaunchUrl,
 	initialMobile,
@@ -50,42 +53,44 @@ export function RoomInviteView({
 	const ctaLabel =
 		isParticipant && hasLaunchUrl ? "Open watchroom" : "Join room";
 	return (
-		<main id="main-content" className={styles.page}>
-			<div className={styles.content}>
-				<header>
-					<p className={styles.invitation}>
-						Watch together with <strong>{hostName}</strong>
-					</p>
-					<h1 className={styles.title}>{roomTitle}</h1>
-					<div className={styles.metadata}>
-						{platform && <span>{platform}</span>}
-						{roomSubtitle && <span>{roomSubtitle}</span>}
-						<span className={styles.status}>
-							<i aria-hidden="true" />
-							{status === "live" ? "Live room" : "Lobby"}
-						</span>
+		<RoomInviteExtensionStep extensionId={extensionId} initialMobile={initialMobile}>
+			<main id="main-content" className={styles.page}>
+				<div className={styles.content}>
+					<header>
+						<p className={styles.invitation}>
+							Watch together with <strong>{hostName}</strong>
+						</p>
+						<h1 className={styles.title}>{roomTitle}</h1>
+						<div className={styles.metadata}>
+							{platform && <span>{platform}</span>}
+							{roomSubtitle && <span>{roomSubtitle}</span>}
+							<span className={styles.status}>
+								<i aria-hidden="true" />
+								{status === "live" ? "Live room" : "Lobby"}
+							</span>
+						</div>
+					</header>
+
+					<div className={styles.join}>
+						<form action={joinAction} method="POST">
+							<button
+								type={joinAction ? "submit" : "button"}
+								className={styles.primary}
+							>
+								{ctaLabel}
+								<ArrowRight size={18} aria-hidden="true" />
+							</button>
+						</form>
+						<p className={styles.nextStep}>Join free. No subscription needed.</p>
 					</div>
-				</header>
 
-				<div className={styles.join}>
-					<form action={joinAction} method="POST">
-						<button
-							type={joinAction ? "submit" : "button"}
-							className={styles.primary}
-						>
-							{ctaLabel}
-							<ArrowRight size={18} aria-hidden="true" />
-						</button>
-					</form>
-					<p className={styles.nextStep}>Join free. No subscription needed.</p>
+					<RoomMobileHandoff
+						variant={isParticipant && hasLaunchUrl ? "joined" : "ready"}
+						initialMobile={initialMobile}
+					/>
+					<RoomInviteHelp showInstallLink={!extensionId || initialMobile} hasLaunchUrl={hasLaunchUrl} />
 				</div>
-
-				<RoomMobileHandoff
-					variant={isParticipant && hasLaunchUrl ? "joined" : "ready"}
-					initialMobile={initialMobile}
-				/>
-				<RoomInviteHelp hasLaunchUrl={hasLaunchUrl} />
-			</div>
-		</main>
+			</main>
+		</RoomInviteExtensionStep>
 	);
 }
