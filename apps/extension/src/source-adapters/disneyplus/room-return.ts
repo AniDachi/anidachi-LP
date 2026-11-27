@@ -70,7 +70,8 @@ export async function finishDisneyRoomReturn(doc: Document, intent: DisneyRoomRe
     link.click();
   }
   signal.addEventListener("abort", stop, { once: true });
-  observer.observe(doc.body, { subtree: true, childList: true, characterData: true, attributes: true,
+  // Disney can restore the room before it mounts the catalog body.
+  observer.observe(doc, { subtree: true, childList: true, characterData: true, attributes: true,
     attributeFilter: ["href", "data-testid", "aria-disabled", "disabled", "aria-hidden", "hidden", "inert"] });
   await tryLink();
 }
