@@ -19,21 +19,32 @@ async function returnIntent(action: "prepare-return" | "read-return" | "take-ret
 }
 
 export async function returnToDisneyPlayer(doc: Document, destination: string, intent: DisneyRoomReturn, signal: AbortSignal) {
-  const link = disneyRoomPlayLink(doc, intent.playback);
-  if (link) { link.click(); return; }
+  if (signal.aborted) return;
   const href = doc.location.href;
   await returnIntent("prepare-return", intent);
-  if (!signal.aborted && doc.location.href === href) doc.location.assign(destination);
+  if (signal.aborted || doc.location.href !== href) return;
+  const link = disneyRoomPlayLink(doc, intent.playback);
+  if (link) link.click();
+  else doc.location.assign(destination);
 }
 
 /** A bare player link may redirect to details. Complete only an explicit return
  * by the same guest to the host's still-current episode. */
-export async function finishDisneyRoomReturn(doc: Document, intent: DisneyRoomReturn, signal: AbortSignal, inPlayer: boolean) {
+export async function finishDisneyRoomReturn(doc: Document, intent: DisneyRoomReturn, signal: AbortSignal, video: HTMLVideoElement | null) {
   const entity = disneyPlusEntityId(doc.location.href);
-  const playingTarget = inPlayer && disneyPlusPlaybackId(doc.location.href) === intent.playback;
-  if (signal.aborted || (!playingTarget && !entity)) return;
-  const expires = await returnIntent(playingTarget ? "take-return" : "read-return", intent);
-  if (playingTarget || signal.aborted || expires <= Date.now()) return;
+  if (signal.aborted) return;
+  if (video && disneyPlusPlaybackId(doc.location.href) === intent.playback) {
+    const arrived = async () => {
+      if (!signal.aborted && disneyPlusPlaybackId(doc.location.href) === intent.playback)
+        await returnIntent("take-return", intent);
+    };
+    if (video.readyState >= 2) await arrived();
+    else video.addEventListener("loadeddata", arrived, { once: true, signal });
+    return;
+  }
+  if (!entity) return;
+  const expires = await returnIntent("read-return", intent);
+  if (signal.aborted || expires <= Date.now()) return;
   const observer = new MutationObserver(() => void tryLink());
   const timer = setTimeout(stop, expires - Date.now());
   let checking = false;

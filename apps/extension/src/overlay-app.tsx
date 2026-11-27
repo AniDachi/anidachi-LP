@@ -6881,13 +6881,14 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	}, [adapter.provider, guestPlayerUrl, roomId, guestSessionId]);
 	const returnController = useRef<AbortController | null>(null);
 	const disneyPath = disneyReturn ? location.pathname : "";
+	const disneyReturnVideo = disneyReturn && adapterActive && !primeBrowsing ? adapter.video : null;
 	useLayoutEffect(() => {
 		if (!disneyReturn) return;
 		const controller = new AbortController();
 		returnController.current = controller;
-		void finishDisneyRoomReturn(document, disneyReturn, controller.signal, adapterActive);
+		void finishDisneyRoomReturn(document, disneyReturn, controller.signal, disneyReturnVideo);
 		return () => { controller.abort(); returnController.current = null; };
-	}, [disneyReturn, disneyPath, adapterActive]);
+	}, [disneyReturn, disneyPath, disneyReturnVideo]);
 	function backToCatalogVideo() {
 		if (!catalogReturnTarget) return;
 		const destination = catalogWatchDestination(catalogReturnTarget, location.href, renderedHboMaxWatchUrl(document, catalogReturnTarget));
