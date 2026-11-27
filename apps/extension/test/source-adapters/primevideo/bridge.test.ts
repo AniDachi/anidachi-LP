@@ -116,6 +116,7 @@ describe("Prime observed SDK and real MAIN/client boundary", () => {
 		stops.push(adapter.subscribe(() => {}));
 		await tick();
 		expect(adapter.getSourceDescriptor()?.sourceUrl).toContain(ids.first);
+		expect(adapter.getSourceDescriptor()?.episodeSeriesId).toBeUndefined();
 		expect(adapter.getPrimeSnapshot()?.metadata.identity).toBeNull();
 		expect(primeHistoryPolicy.observe({ adapter, preferences: null })).toBe(
 			HISTORY_OBSERVATION_SUSPENDED,
@@ -273,6 +274,7 @@ describe("Prime transient rate and hostile bridge inputs", () => {
 		const events: unknown[] = [];
 		stops.push(adapter.subscribe((event) => events.push(event)));
 		await tick();
+		expect(adapter.getSourceDescriptor()?.episodeSeriesId).toBe(ids.anchor);
 		adapter.setPlaybackRate(1.5);
 		await tick();
 		expect(f.context.playback.player.setPlaybackRate).toHaveBeenCalledWith(1.5);

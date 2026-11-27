@@ -1,4 +1,4 @@
-import { navigateToGuestPlayback } from "./guest-playback-navigation";
+import { continueGuestEpisode, navigateToGuestPlayback } from "./guest-playback-navigation";
 import { bindHboMaxGuestExit } from "./source-adapters/hbomax/navigation";
 import { observeHboMaxRoomSource, clearHboMaxRoomSource } from "./source-adapters/hbomax/metadata";
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
@@ -3693,6 +3693,8 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
       playbackSyncController.bindAdapter(activePlayer.current);
       void playbackSyncController.handleHostState(state, source);
     },
+    playerSource: () => activePlayer.current?.getSourceDescriptor(true),
+    continueEpisode: (source, record, signal) => continueGuestEpisode(document, source, record, signal),
     suspend: () => playbackSyncController.suspend(),
     persist: setRoomFollowing,
     navigate: (url, record, signal) => navigateToGuestPlayback(document, url, record, signal),

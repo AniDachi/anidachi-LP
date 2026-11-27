@@ -3165,6 +3165,10 @@ export class RoomDurableObject {
     }
 
     // A host can resolve the series after the guest has already joined this playback.
+    if (!result.sourceChanged && result.source?.episodeSeriesId &&
+      result.source.episodeSeriesId !== result.previousSource?.episodeSeriesId) {
+      this.broadcast(this.currentRoomSnapshot(), socket);
+    }
     const identity = event.source?.disneyplusIdentity;
     const previousIdentity = result.previousSource?.disneyplusIdentity;
     if (!result.sourceChanged && identity &&

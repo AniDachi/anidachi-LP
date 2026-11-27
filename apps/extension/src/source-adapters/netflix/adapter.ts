@@ -94,6 +94,7 @@ export class NetflixVideoAdapter extends Html5VideoAdapter {
 			canonicalUrl: sourceUrl,
 			videoFingerprint: this.getFingerprint(),
 			title: snapshot.metadata.title,
+			...(snapshot.metadata.identity?.kind === "episode" && { episodeSeriesId: snapshot.metadata.identity.providerSeriesId }),
 			duration: snapshot.duration,
 		};
 	}

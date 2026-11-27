@@ -1,4 +1,5 @@
-import { canonicalizeRoomSourceUrl } from "@anidachi/protocol";
+import { primeVideoDefinition } from "./source-adapters/primevideo/definition";
+import { canonicalizeRoomSourceUrl, type WatchSourceDescriptor } from "@anidachi/protocol";
 import { catalogWatchDestination, renderedHboMaxWatchUrl } from "./catalog-room-routes";
 import { returnToPrimePlayer } from "./prime-launch-client";
 import type { RoomSessionRecord } from "./room-session-storage";
@@ -19,4 +20,12 @@ export async function navigateToGuestPlayback(doc: Document, url: string, room: 
     doc.location.assign(destination);
   }
   return !signal.aborted;
+}
+
+export async function continueGuestEpisode(doc: Document, source: WatchSourceDescriptor, room: RoomSessionRecord, signal: AbortSignal) {
+  if (source.provider === "primevideo") {
+    const result = await primeVideoDefinition.ensureSource(source, { roomProvider: "primevideo", roomId: room.roomId, signal });
+    return result.status === "already-current" || result.status === "navigation-started";
+  }
+  return navigateToGuestPlayback(doc, source.sourceUrl, room, signal);
 }

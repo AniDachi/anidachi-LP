@@ -14,7 +14,7 @@ import {
   getCrunchyrollRelatedSeriesId,
   selectCrunchyrollPosterTall,
 } from "../src/source-adapters/crunchyroll/artwork-select";
-import { collectCrunchyrollHistoryCatalog, resolveCrunchyrollHistoryMetadata } from "../src/source-adapters/crunchyroll/bridge-client";
+import { readCrunchyrollEpisodeSeries, collectCrunchyrollHistoryCatalog, resolveCrunchyrollHistoryMetadata } from "../src/source-adapters/crunchyroll/bridge-client";
 import { canonicalizeRoomSourceUrl, type WatchCatalogLocaleContext } from "@anidachi/protocol";
 
 export default defineContentScript({
@@ -194,7 +194,7 @@ function handlePersonalResumeRequest(request: CrunchyrollControlRequest): void {
 async function handleControlRequest(request: CrunchyrollControlRequest): Promise<void> {
   if (request.action === "resumeReadiness" || request.action === "resumeSeek") { handlePersonalResumeRequest(request); return; }
   if (request.action === "cancelHistory") { historyRequests.get(request.id)?.abort(); return; }
-  if (request.action === "historyIdentity" || request.action === "historyCatalog") {
+  if (request.action === "episodeSeries" || request.action === "historyIdentity" || request.action === "historyCatalog") {
     await handleHistoryRequest(request);
     return;
   }
@@ -350,7 +350,7 @@ async function handleHistoryRequest(request: CrunchyrollControlRequest): Promise
   if (historyRequests.has(request.id) || historyRequests.size >= 4) return;
   const abort = new AbortController();
   historyRequests.set(request.id, abort);
-  const timer = window.setTimeout(() => abort.abort(), request.action === "historyIdentity" ? 30_000 : 120_000);
+  const timer = window.setTimeout(() => abort.abort(), request.action === "historyCatalog" ? 120_000 : 30_000);
   // Audio is current-player context only when the original watch GUID is still
   // current. It is never substituted for the raw object's declared audio variant.
   const currentGuid = location.pathname.match(/\/watch\/([A-Za-z0-9_-]+)/)?.[1];
@@ -388,7 +388,9 @@ async function handleHistoryRequest(request: CrunchyrollControlRequest): Promise
       if (!contextMatches()) throw new Error("HISTORY_CONTEXT_CHANGED");
       return JSON.parse(body);
     };
-    const payload = request.action === "historyIdentity"
+    const payload = request.action === "episodeSeries"
+      ? { episodeSeriesId: await readCrunchyrollEpisodeSeries(request.contentId!, context, load, abort.signal) }
+      : request.action === "historyIdentity"
       ? { metadata: await resolveCrunchyrollHistoryMetadata(request.contentId!, context, load, abort.signal) }
       : { catalog: await collectCrunchyrollHistoryCatalog(request.seriesId!, context, load, abort.signal) };
     if (abort.signal.aborted) throw new Error("HISTORY_ABORTED");

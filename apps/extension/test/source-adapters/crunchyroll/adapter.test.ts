@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import * as bridge from "../../../src/source-adapters/crunchyroll/bridge-client";
 import { crunchyrollDefinition } from "../../../src/source-adapters/crunchyroll/definition";
 
 describe("Crunchyroll adapter definition", () => {
@@ -49,6 +50,43 @@ describe("Crunchyroll adapter definition", () => {
 			},
 			hostBufferingHoldDelayMs: 500,
 		});
+	});
+
+	it("allows one delayed retry for an unavailable series lookup", async () => {
+		vi.useFakeTimers();
+		mockLocation("https://www.crunchyroll.com/watch/G8WUNM123/first");
+		document.body.innerHTML = '<div id="player-container"><video></video></div>';
+		const adapter = crunchyrollDefinition.detect(document.querySelector("video")!)!;
+		const lookup = vi.spyOn(bridge, "runCrunchyrollMainCommand").mockResolvedValue({
+			action: "episodeSeries", source: "anidachi-crunchyroll-control-result", id: "1", ok: false, error: "HISTORY_UNAVAILABLE",
+		});
+		try {
+			for (const delay of [0, 100, 10_000, 20_000]) {
+				vi.advanceTimersByTime(delay);
+				expect(adapter.getSourceDescriptor(true)?.episodeSeriesId).toBeUndefined();
+				await Promise.resolve();
+			}
+			expect(lookup).toHaveBeenCalledTimes(2);
+		} finally { lookup.mockRestore(); vi.useRealTimers(); }
+	});
+
+	it("looks up the exact room episode once and discards a late series from a previous episode", async () => {
+		mockLocation("https://www.crunchyroll.com/watch/G8WUNM123/first");
+		document.body.innerHTML = '<div id="player-container"><video></video></div>';
+		const adapter = crunchyrollDefinition.detect(document.querySelector("video")!)!;
+		const lookup = vi.spyOn(bridge, "runCrunchyrollMainCommand");
+		try {
+			lookup.mockResolvedValue({ action: "episodeSeries", source: "anidachi-crunchyroll-control-result", id: "1", ok: true, episodeSeriesId: "SHOW1" });
+			adapter.getSourceDescriptor();
+			expect(lookup).not.toHaveBeenCalled();
+			expect(adapter.getSourceDescriptor(true)?.episodeSeriesId).toBeUndefined();
+			mockLocation("https://www.crunchyroll.com/watch/G8WUNM124/second");
+			lookup.mockResolvedValue({ action: "episodeSeries", source: "anidachi-crunchyroll-control-result", id: "2", ok: true, episodeSeriesId: "SHOW2" });
+			expect(adapter.getSourceDescriptor(true)?.episodeSeriesId).toBeUndefined();
+			await Promise.resolve();
+			expect(adapter.getSourceDescriptor(true)?.episodeSeriesId).toBe("SHOW2");
+			expect(lookup).toHaveBeenCalledTimes(2);
+		} finally { lookup.mockRestore(); }
 	});
 
 	it("does not claim a non-Crunchyroll player", () => {

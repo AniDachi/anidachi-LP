@@ -94,6 +94,8 @@ in that task's delivery receipt; no production promotion is included.
 YouTube guest choice pilot (2026-11-27): [playback contract and staging scenarios](../../youtube-adapter-notes.md#choosing-shared-playback).
 
 The same guest choice applies to Netflix, Crunchyroll, HBO Max, Disney+ including Hulu, and Prime Video on primevideo.com and Amazon. A guest browsing or playing another title stays there while the host changes titles or playback. The capsule offers the current episode. Accepting the offer or receiving the host's live Sync opens that episode using the guest's platform route and applies the host's latest position and play/pause state. A guest already watching together synchronizes in place. Reconnection restores the viewing choice for that room session and does not replay a past Sync.
+
+A guest watching together follows autoplay and manual episode changes within the same identified series, including season changes. The guest must still be on the previously followed episode when the host starts the new one. Another title, an unresolved series, or a guest browsing independently uses the watch-together offer. YouTube retains its explicit choice for every new video.
 Two-profile acceptance covers independent playback, voluntary return, host sync while paused and page reload.
 
 ## Follow-up: Free20 scope transfer candidate, 2026-11-03
