@@ -236,6 +236,26 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.offer).not.toHaveBeenCalled();
   });
 
+  if (provider === "disneyplus") it.each(["same document", "new document"])(
+    "restores the return button immediately when the guest opens Movies in the %s",
+    async transition => {
+      const { ctx, machine, mount, page } = setup();
+      machine.receive(state, host);
+      await machine.join();
+      machine.refresh();
+      expect(ctx.offer).toHaveBeenLastCalledWith(null);
+      page.href = new URL("../browse/movies", watchUrl).href;
+      if (transition === "new document") {
+        machine.bind(null);
+        mount().receive(state, host);
+      } else machine.refresh();
+      expect(ctx.navigate).toHaveBeenCalledWith(host.sourceUrl, expect.anything(), expect.objectContaining({ aborted: true }));
+      expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
+      expect(ctx.navigate).toHaveBeenCalledTimes(1);
+      expect(ctx.apply).not.toHaveBeenCalled();
+    },
+  );
+
   it("offers an unresolved title after the metadata wait, unless the room has ended", () => {
     vi.useFakeTimers();
     try {

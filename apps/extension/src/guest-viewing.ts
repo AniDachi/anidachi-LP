@@ -1,6 +1,6 @@
-import type { PlaybackState, WatchSourceDescriptor } from "@anidachi/protocol";
+import { disneyPlusEntityId, type PlaybackState, type WatchSourceDescriptor } from "@anidachi/protocol";
 import { roomSessionIdentityMatches, type RoomSessionRecord } from "./room-session-storage";
-import { roomWatchSource, type CatalogRoomProvider } from "./catalog-room-routes";
+import { catalogRoomProvider, roomWatchSource, type CatalogRoomProvider } from "./catalog-room-routes";
 
 type HostPlayback = PlaybackState & { hostSurface?: "player" | "catalog" };
 const EPISODE_IDENTITY_WAIT_MS = 10_000;
@@ -40,6 +40,7 @@ export class GuestViewing {
   private target: { url: string; state: HostPlayback; receivedAt: number; source?: WatchSourceDescriptor } | null = null;
   private navigating: AbortController | null = null;
   private awaitingArrival = false;
+  private disneyNavigationPath: string | null = null;
   private navigatingFrom: string | null = null;
   private playedHere = false;
   private episode: { fingerprint: string; series: string; pending?: string } | null = null;
@@ -126,6 +127,16 @@ export class GuestViewing {
       }
     }
     if (!target) return;
+    // Disney can send a player through title details. A separate catalog section
+    // is ordinary browsing and must offer the host video again immediately.
+    const href = this.context.href();
+    const disneySection = !localFingerprint && this.context.provider() === "disneyplus" &&
+      catalogRoomProvider(href) === "disneyplus" && !disneyPlusEntityId(href);
+    if (this.disneyNavigationPath !== null) {
+      const path = new URL(href).pathname;
+      if (disneySection && path !== this.disneyNavigationPath) this.cancelNavigation();
+      else this.disneyNavigationPath = path;
+    }
     if (this.navigatingFrom && localFingerprint && !this.onTarget() &&
         localFingerprint !== this.navigatingFrom) {
       this.restoreOrigin();
@@ -169,7 +180,7 @@ export class GuestViewing {
         }
       }
     }
-    const leftPlayer = !onTarget && (this.playedHere || localFingerprint !== null);
+    const leftPlayer = !onTarget && (this.playedHere || localFingerprint !== null || disneySection);
     if (this.following === undefined || (this.following && (leftPlayer || this.following !== fingerprint))) {
       const initialDirectJoin = this.following === undefined && onTarget;
       const next = initialDirectJoin ? fingerprint : null;
@@ -215,6 +226,7 @@ export class GuestViewing {
     if (!target || !room || !this.active() || this.navigating) return;
     const pending = new AbortController();
     this.navigating = pending;
+    this.disneyNavigationPath = this.context.provider() === "disneyplus" ? new URL(this.context.href()).pathname : null;
     this.show(null);
     this.navigatingFrom = episodeOrigin ?? null;
     const previous = this.following;
@@ -295,6 +307,7 @@ export class GuestViewing {
 
   private cancelNavigation() {
     this.navigatingFrom = null;
+    this.disneyNavigationPath = null;
     this.awaitingArrival = false;
     this.navigating?.abort();
     this.navigating = null;
