@@ -2213,17 +2213,21 @@ describe("privileged overlay wiring", () => {
     } finally { await unmount(view.root); }
   });
 
-  it.each(["ready", "slow-admission", "slow-admission-timeout", "reopen", "credential-rotation", "connection-error", "admission-error", "unknown-live", "generation-change", "transport-restart", "hidden-reopen"] as const)("keeps the real create sequence quiet and recoverable: %s", async outcome => {
+  it.each(["ready", "late-balance", "slow-admission", "slow-admission-timeout", "reopen", "credential-rotation", "connection-error", "admission-error", "unknown-live", "generation-change", "transport-restart", "hidden-reopen"] as const)("keeps the real create sequence quiet and recoverable: %s", async outcome => {
     const owner = "22222222-2222-4222-8222-222222222222";
     let session: Free20TimerTestSession = { ...sessionFor(owner), authSessionId: "stable-login" };
     installActiveHostRoomRuntime({ getSession: () => session });
     const at = Date.parse("2026-11-01T12:00:00Z");
     const period = { utcDay: "2026-11-01", resetAt: Date.parse("2026-11-02T00:00:00Z") };
     const access = { kind: "daily_free" as const, budgetSeconds: 1200 as const, usedSeconds: 420, remainingSeconds: 780, metering: false };
-    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockResolvedValue({ mode: "free20", status: {
+    const balanceRead = deferred<void>();
+    vi.mocked(accountHostingClient.requestAccountHostingStatus).mockImplementation(async () => {
+      if (outcome === "late-balance") await balanceRead.promise;
+      return { mode: "free20", status: {
       accountHostingVersion: 1, ownerUserId: owner, planCode: "free", serverTime: at, validUntil: at + 60_000,
       period, access, activeRoom: null, canCreateRoom: true,
-    } });
+      } };
+    });
     const admission = deferred<boolean>();
     const send = vi.mocked(chrome.runtime.sendMessage), original = send.getMockImplementation()!;
     send.mockImplementation(async (...args: any[]) => {
@@ -2250,9 +2254,15 @@ describe("privileged overlay wiring", () => {
       if (outcome === "credential-rotation") session = { ...session, accessToken: "rotated-access", refreshToken: "rotated-refresh", authRevision: "rotated-revision" };
       await click(button(view.container, "Create room"));
       await vi.waitFor(() => expect(send.mock.calls.filter(([m]: any) => m.command === "create-room")).toHaveLength(1));
+      if (outcome === "late-balance") {
+        expect(view.container.querySelector(".panel-room-actions")?.getAttribute("data-timed-layout")).toBe("true");
+        expect(view.container.querySelector(".panel-time-counter,.panel-time-placeholder")).toBeNull();
+        await act(async () => balanceRead.resolve());
+      }
       const expectPending = () => {
         const action = primaryRoomAction(view.container);
-        expect(action.textContent).toBe(view.container.querySelector(".panel-idle-time strong") ? "Create room" : "Creating room");
+        expect(action.textContent).toBe("Creating room");
+        expect(view.container.querySelector(".panel-idle-time strong")?.textContent).toBe("13:00");
         expect(action.getAttribute("aria-label")).toBe("Creating room");
         expect(action.disabled).toBe(true);
         expect(action.classList.contains("room-exit")).toBe(false);
@@ -2297,15 +2307,15 @@ describe("privileged overlay wiring", () => {
       }
       await act(async () => options.onStatus("connected"));
       expectPending(); // Socket open is not yet authoritative membership.
-      const counter = view.container.querySelector(".panel-action-timer strong");
+      const counter = view.container.querySelector(".panel-idle-time strong");
       if (outcome === "slow-admission-timeout") {
         expect(counter?.textContent).toBe("13:00");
         await act(async () => vi.advanceTimersByTimeAsync(9_800));
         const action = primaryRoomAction(view.container);
         expect(action.disabled).toBe(false);
         expect(action.getAttribute("aria-label")).toBe("Cancel connection");
-        expect(action.dataset.showAction).toBe("false");
-        expect(view.container.querySelector(".panel-action-timer strong")).toBe(counter);
+        expect(action.textContent).toBe("Creating room");
+        expect(view.container.querySelector(".panel-idle-time strong")).toBe(counter);
         expect(view.container.querySelector(".panel-time-placeholder,.panel-action-time-pending")).toBeNull();
       }
       await act(async () => options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
