@@ -4,7 +4,10 @@ import { HBO_CLOCK_REPLY, HBO_CLOCK_REQUEST, type HboContentClock } from "./cont
 interface Period { type: string; startMs: number; durationMs: number }
 interface PlayerControls {
   _rootElement?: Element;
-  _lastLoadedContentMetadata?: { videoId?: string; id?: string };
+  _lastLoadedContentMetadata?: {
+    videoId?: string; id?: string; videoType?: string; showId?: string;
+    title?: string; subtitle?: string; seasonNumber?: number; episodeNumber?: number;
+  };
   _playbackEngineAdapter?: {
     _activeLoadContext?: { contentId?: string };
     _activeStreamInfo?: { streamMode?: string; videoPeriods?: Period[] };
@@ -33,7 +36,7 @@ function controlsFor(video: HTMLVideoElement): PlayerControls | undefined {
   }
 }
 
-function nativeClock(video: HTMLVideoElement, target: number | null): HboContentClock | undefined {
+function nativeClock(video: HTMLVideoElement, target: number | "episode" | null): HboContentClock | undefined {
   const id = hboMaxPlaybackId(location.href);
   const controls = controlsFor(video);
   const engine = controls?._playbackEngineAdapter;
@@ -55,7 +58,17 @@ function nativeClock(video: HTMLVideoElement, target: number | null): HboContent
   const duration = main.durationMs / 1000;
   const inMain = elapsed >= 0 && elapsed <= main.durationMs + 50;
   const clock: HboContentClock = { duration, inMain, position: Math.min(duration, Math.max(0, elapsed / 1000)) };
-  if (target !== null && inMain) {
+  // HBO can advance past the last episode in its cached catalog without fetching another player page.
+  if (target === "episode" && inMain && metadata.id && metadata.id === engine?._activeLoadContext?.contentId &&
+      metadata.videoType === "EPISODE" && metadata.showId && metadata.title && metadata.subtitle &&
+      metadata.seasonNumber && metadata.episodeNumber) {
+    clock.episode = {
+      identity: { kind: "episode", providerSeriesId: metadata.showId, providerEpisodeIdentifier: id },
+      title: metadata.title, episodeTitle: metadata.subtitle, displayTitle: metadata.title + " — " + metadata.subtitle,
+      seasonNumber: metadata.seasonNumber, episodeNumber: metadata.episodeNumber, seasonTitle: null, artworkUrl: null,
+    };
+  }
+  if (typeof target === "number" && inMain) {
     const ms = main.startMs + Math.min(main.durationMs, Math.max(0, target * 1000));
     const media = manager.getStreamPlayhead(ms);
     if (Number.isFinite(media) && media >= 0 && media <= video.duration * 1000 + 50 &&
@@ -71,7 +84,7 @@ export function startHboClock(doc: Document) {
     const video = event.target;
     const target = (event as CustomEvent).detail;
     if (!(video instanceof HTMLVideoElement) || !video.matches('[data-testid="playerContainer"] > video[data-testid="VideoElement"]') ||
-        !(target === null || Number.isFinite(target))) return;
+        !(target === null || target === "episode" || Number.isFinite(target))) return;
     try {
       const clock = nativeClock(video, target);
       if (clock) video.dispatchEvent(new CustomEvent(HBO_CLOCK_REPLY, { detail: clock }));

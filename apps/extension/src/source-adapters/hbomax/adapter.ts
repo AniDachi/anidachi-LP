@@ -57,9 +57,9 @@ export class HboMaxVideoAdapter extends Html5VideoAdapter {
   }
 
   override getSourceDescriptor(): WatchSourceDescriptor | undefined {
-    const clock = readHboClock(this.video);
+    const clock = readHboClock(this.video, "episode");
     if (!this.playbackId || !clock || this.phase(clock) !== "content") return undefined;
-    const metadata = readHboMaxPlaybackMetadata(this.video.ownerDocument, this.playbackId);
+    const metadata = readHboMaxPlaybackMetadata(this.video.ownerDocument, this.playbackId, clock.episode);
     const url = hboMaxSourceUrl(this.playbackId);
     const posterUrl = metadata?.artworkUrl && hboMaxArtworkUrl(metadata.artworkUrl);
     return {
