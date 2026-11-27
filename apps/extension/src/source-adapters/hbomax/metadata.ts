@@ -323,10 +323,11 @@ function corroborateHboCmsPlayback(doc: Document, playbackId: string, cms: HboCm
 	return { ...cms, title, episodeTitle, displayTitle: title + " — " + episodeTitle, artworkUrl: matchingDetail?.artworkUrl ?? verifiedArtwork };
 }
 
-export function readHboMaxPlaybackMetadata(doc: Document, playbackId: string): HboMaxPlaybackMetadata | null {
+export function readHboMaxPlaybackMetadata(doc: Document, playbackId: string, loadedEpisode?: HboCmsPlayback): HboMaxPlaybackMetadata | null {
 	if (hboMaxPlaybackId(doc.location.href) !== playbackId) return null;
 	const packet = getHboCmsPacket(doc, playbackId);
-	const metadata = resolvePlayback(doc, playbackId, packet?.metadata);
+	const metadata = resolvePlayback(doc, playbackId, packet?.metadata) ??
+		(!packet?.metadata && loadedEpisode?.identity.kind === "episode" && loadedEpisode.identity.providerEpisodeIdentifier === playbackId ? loadedEpisode : null);
 	if (!metadata || !packet?.poster) return metadata;
 	const identity = metadata.identity;
 	const titleId = identity.kind === "episode" ? identity.providerSeriesId : identity.providerMovieId;

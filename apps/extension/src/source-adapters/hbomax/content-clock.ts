@@ -1,3 +1,5 @@
+import { HboCmsPlaybackSchema, type HboCmsPlayback } from "./cms-catalog";
+
 /** Both sides speak in seconds. Only the page-world reader talks to the HBO SDK. */
 export const HBO_CLOCK_REQUEST = "anidachi:hbo-clock:read";
 export const HBO_CLOCK_REPLY = "anidachi:hbo-clock:reply";
@@ -7,9 +9,10 @@ export interface HboContentClock {
   duration: number;
   inMain: boolean;
   streamTarget?: number;
+  episode?: HboCmsPlayback;
 }
 
-export function readHboClock(video: HTMLVideoElement, target?: number): HboContentClock | null {
+export function readHboClock(video: HTMLVideoElement, target?: number | "episode"): HboContentClock | null {
   let clock: HboContentClock | null = null;
   const receive = (event: Event) => {
     const value = (event as CustomEvent<HboContentClock>).detail;
@@ -18,6 +21,7 @@ export function readHboClock(video: HTMLVideoElement, target?: number): HboConte
         typeof value.inMain === "boolean" && (value.streamTarget === undefined ||
         (Number.isFinite(value.streamTarget) && value.streamTarget >= 0 && value.streamTarget <= video.duration))) {
       clock = { position: value.position, duration: value.duration, inMain: value.inMain, streamTarget: value.streamTarget };
+      if (target === "episode" && value.episode) clock.episode = HboCmsPlaybackSchema.safeParse(value.episode).data;
     }
   };
   video.addEventListener(HBO_CLOCK_REPLY, receive);

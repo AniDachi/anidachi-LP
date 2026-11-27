@@ -64,6 +64,28 @@ it("withholds a recycled video while only the URL has changed", () => {
   expect(detectHboMaxAdapter(document)?.getFingerprint()).toBe("hbomax|video/watch/" + nextId);
 });
 
+it("identifies the first episode of the next season from the loaded player when its catalog page is missing", () => {
+  const { controls, video, player } = fixture();
+  const showId = "fff09eaf-17c3-446b-be32-8a0d47e4ccf1";
+  go(url(nextId));
+  vi.spyOn(document, "location", "get").mockReturnValue(location);
+  video.src = "blob:season-two";
+  const next = detectHboMaxAdapter(document)!;
+  Object.assign(controls._lastLoadedContentMetadata, {
+    videoType: "EPISODE", showId, seasonNumber: 2, episodeNumber: 1,
+    title: "Adventure Time", subtitle: "It Came From the Nightosphere",
+  });
+  expect(next.getSourceDescriptor()).toBeUndefined(); // The previous video is still loaded.
+  controls._lastLoadedContentMetadata.videoId = nextId;
+  player.insertAdjacentHTML("beforeend", '<div data-testid="content-metadata"><span data-testid="player-ux-asset-title">Adventure Time</span><span data-testid="player-ux-season-episode">S2 E1</span><span data-testid="player-ux-asset-subtitle">It Came From the Nightosphere</span></div>');
+  expect(next.getSourceDescriptor()).toMatchObject({
+    hbomaxIdentity: { kind: "episode", providerSeriesId: showId, providerEpisodeIdentifier: nextId },
+    seriesTitle: "Adventure Time", episodeTitle: "It Came From the Nightosphere", seasonNumber: 2, episodeNumber: 1,
+  });
+  Object.assign(controls._lastLoadedContentMetadata, { videoType: "MOVIE" });
+  expect(next.getSourceDescriptor()?.hbomaxIdentity).toBeUndefined();
+});
+
 it("rejects ambiguous main videos", () => {
   const { player, video } = fixture();
   const other = video.cloneNode() as HTMLVideoElement;
