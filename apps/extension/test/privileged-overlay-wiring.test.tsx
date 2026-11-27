@@ -222,6 +222,9 @@ describe("privileged overlay wiring", () => {
 			expect(action()).toBeNull();
 			vi.spyOn(document.documentElement, "lang", "get").mockReturnValue("ru");
 			await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} adapterActive={false} primeBrowsing onPrimeRoomChange={onRoom} />));
+			expect(action()).toBeNull(); // The player is remounting on the same video.
+			pageLocation.href = origin + (provider === "crunchyroll" ? "/de" : provider === "netflix" ? "/browse" : provider === "disneyplus" ? "/home" : "/");
+			await act(async () => { window.dispatchEvent(new Event("popstate")); });
 			expect(action()?.textContent).toBe("Back to video");
 			await update({...state, playing: false});
 			if (provider === "disneyplus") {
@@ -237,6 +240,9 @@ describe("privileged overlay wiring", () => {
 				await click(action()!);
 				expect(navigate).toHaveBeenCalledExactlyOnceWith(provider === "crunchyroll" ? origin + "/de/watch/80025313" : sourceUrl);
 			}
+			expect(action()).toBeNull();
+			await update({...state, playing: false});
+			expect(action()).toBeNull();
 			await update({...state, playing: false, hostSurface: "catalog"});
 			expect(action()).toBeNull();
 			await update({...state, hostSurface: undefined});
@@ -244,6 +250,7 @@ describe("privileged overlay wiring", () => {
 			await update({...state, sourceUrl: origin + "/watch/99"});
 			expect(action()).toBeNull();
 			const seek = vi.spyOn(view.adapter, "seek");
+			pageLocation.href = origin + page;
 			await update({...state, hostTime: 83, playing: false});
 			await act(async () => view.root.render(<overlayApp.OverlayApp adapter={view.adapter} onPrimeRoomChange={onRoom} />));
 			expect(action()).toBeNull();

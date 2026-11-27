@@ -35,7 +35,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
       participantSessionId: "session", cameraEnabled: false, voiceMode: "push-to-talk" };
     const page = { href: home, fingerprint: null as string | null };
     const ctx = { provider: () => provider, session: () => record, href: () => page.href, playerFingerprint: () => page.fingerprint,
-      apply: vi.fn(), suspend: vi.fn(), offer: vi.fn(), continueEpisode: vi.fn(async () => true), navigate: vi.fn(async () => true),
+      apply: vi.fn(), suspend: vi.fn(), offer: vi.fn(), targetChanged: vi.fn(), continueEpisode: vi.fn(async () => true), navigate: vi.fn(async () => true),
       persist: vi.fn(async (_room: RoomSessionRecord, followingFingerprint: string | null) => {
         record = { ...record, followingFingerprint };
         return true;
@@ -55,7 +55,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
       page.fingerprint = fingerprint;
     }
     function leave() { page.href = home; page.fingerprint = null; }
-    return { ctx, mount, play, leave, timingSamples, machine: mount() };
+    return { ctx, mount, play, leave, page, timingSamples, machine: mount() };
   }
 
   it.each(["sleeve", "host sync"])("stays independent until %s, returns to the exact episode and syncs in place", async action => {
@@ -166,6 +166,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     machine.refresh();
     expect(machine.together()).toBe(true);
     expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal));
+    expect(ctx.offer).not.toHaveBeenCalled();
   });
 
   it("synchronizes in place when both players have advanced to the exact same episode", async () => {
@@ -181,18 +182,95 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.navigate).not.toHaveBeenCalled();
   });
 
-  it.each(["different series", "unknown series", "guest left", "guest chose another episode"])("offers playback without moving the guest: %s", async mode => {
+  if (provider !== "primevideo") it("keeps the offer hidden while the old player reattaches during a host episode change", async () => {
+    const { ctx, machine, play, page } = setup();
+    play(watchUrl, host.videoFingerprint);
+    machine.receive(state, episode(host));
+    page.fingerprint = null;
+    machine.receive(nextState, episode(personal));
+    expect(ctx.continueEpisode).not.toHaveBeenCalled();
+    page.fingerprint = host.videoFingerprint;
+    machine.refresh();
+    await Promise.resolve();
+    expect(ctx.continueEpisode).toHaveBeenCalledOnce();
+    play(personalUrl, personal.videoFingerprint);
+    machine.refresh();
+    expect(machine.together()).toBe(true);
+    expect(ctx.offer).not.toHaveBeenCalled();
+  });
+
+  it.each(["different series", "guest left", "guest chose another episode"])("offers playback without moving the guest: %s", async mode => {
     const { ctx, machine, play, leave } = setup();
     play(watchUrl, host.videoFingerprint);
     machine.receive(state, episode(host));
     if (mode === "guest left") leave();
     if (mode === "guest chose another episode") { play(personalUrl, personal.videoFingerprint); machine.refresh(); }
-    machine.receive(nextState, mode === "unknown series" ? personal : episode(personal, mode === "different series" ? second : first));
+    machine.receive(nextState, episode(personal, mode === "different series" ? second : first));
     await Promise.resolve();
     expect(ctx.navigate).not.toHaveBeenCalled();
     expect(ctx.continueEpisode).not.toHaveBeenCalled();
     expect(machine.together()).toBe(false);
     expect(ctx.offer).toHaveBeenLastCalledWith(personal.sourceUrl);
+  });
+
+  it.each(["click", "host sync"])("hides the offer immediately on %s and through player restoration", async action => {
+    const { ctx, machine, page, mount, play } = setup();
+    machine.receive(state, host);
+    expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
+    if (action === "click") void machine.join();
+    else machine.receive(state, host, true);
+    expect(ctx.offer).toHaveBeenLastCalledWith(null);
+    ctx.offer.mockClear();
+    machine.receive(state, host);
+    await Promise.resolve();
+    expect(ctx.navigate).toHaveBeenCalledOnce();
+    machine.bind(null);
+    page.href = watchUrl;
+    const restored = mount();
+    restored.receive(state, host);
+    expect(ctx.targetChanged).toHaveBeenLastCalledWith(host.sourceUrl);
+    expect(restored.together()).toBe(false);
+    play(watchUrl, host.videoFingerprint);
+    restored.refresh();
+    expect(restored.together()).toBe(true);
+    expect(ctx.offer).not.toHaveBeenCalled();
+  });
+
+  it("offers an unresolved title after the metadata wait, unless the room has ended", () => {
+    vi.useFakeTimers();
+    try {
+      const { ctx, machine, play } = setup();
+      play(watchUrl, host.videoFingerprint);
+      machine.receive(state, episode(host));
+      machine.receive(nextState, personal);
+      vi.advanceTimersByTime(6000);
+      machine.receive(nextState, personal);
+      expect(ctx.offer).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(4000);
+      expect(ctx.offer).toHaveBeenLastCalledWith(personal.sourceUrl);
+      expect(ctx.continueEpisode).not.toHaveBeenCalled();
+      machine.receive(state, episode(host));
+      machine.receive(nextState, personal);
+      machine.bind(null);
+      ctx.offer.mockClear();
+      vi.runAllTimers();
+      expect(ctx.offer).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("allows retry when the browser accepts the return but never opens the video", async () => {
+    vi.useFakeTimers();
+    try {
+      const { machine, ctx } = setup();
+      machine.receive(state, host);
+      await machine.join();
+      expect(ctx.offer).toHaveBeenLastCalledWith(null);
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
+      await machine.join();
+      expect(ctx.navigate).toHaveBeenCalledTimes(2);
+      machine.bind(null);
+    } finally { vi.useRealTimers(); }
   });
 
   it("respects a guest leaving while the new episode choice is being saved", async () => {
@@ -216,6 +294,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     machine.receive(state, host);
     ctx.navigate.mockResolvedValueOnce(false);
     await machine.join();
+    expect(ctx.offer.mock.calls).toEqual([[host.sourceUrl], [null], [host.sourceUrl]]);
     expect(ctx.persist).toHaveBeenLastCalledWith(expect.anything(), null);
     play(watchUrl, host.videoFingerprint);
     const restored = mount();
