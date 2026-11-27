@@ -109,6 +109,7 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
     "/api/me/room-quota",
     "/api/me/hosting-status",
     "/api/watch-history/v3/access",
+    "/api/watch-history/poster",
     "/api/watch-history/v3/capacity",
   ].includes(pathname)) return true;
   if (pathname === "/api/me/free20-context" && method === "POST") return true;
@@ -168,6 +169,7 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
     return true;
   }
   if (pathname === "/api/account/inbox" && method === "GET") return true;
+  if (pathname === "/api/account/room-history" && method === "GET") return true;
   if (pathname === "/api/account/inbox/seen" && method === "POST") return true;
   if (pathname === "/api/devices/push-subscription" && method === "POST") {
     return true;
@@ -210,6 +212,7 @@ function canBearerBypassStagingGate(pathname: string, method: string): boolean {
     return true;
   }
   if (pathname === "/api/watch-history/v3" && method === "GET") return true;
+  if (pathname === "/api/watch-history/v3/disney-portraits" && (method === "GET" || method === "POST")) return true;
   if (method === "GET" && [
     "/api/watch-history/v3/browse",
     "/api/watch-history/v3/browse/title-episodes",

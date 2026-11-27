@@ -1,3 +1,6 @@
+import { ROOMS_PILOT } from "./popup-room-launch";
+import { PopupRoomHistory } from "./popup-room-history";
+import { PopupRooms } from "./popup-rooms";
 import { PopupNavigation } from "./popup-navigation";
 import { PopupRetainedPanel, usePopupNavigation } from "./use-popup-navigation";
 import { forgetPopupView } from "./popup-view-state";
@@ -48,6 +51,7 @@ import {
 import { WEB_HTTP_BASE } from "./constants";
 import { logDebug } from "./debug-log";
 import { PanelAccountTitle } from "./panel-account-title";
+import { ProfilePlansLink } from "./profile-plans-link";
 import { useHostingAccess } from "./use-hosting-access";
 import {
   buildPopupInboxModel,
@@ -901,7 +905,10 @@ export function PopupApp() {
           </button>
           <span className="popup-profile-copy">
             {accountUser ? (
-              <PanelAccountTitle displayName={accountUser.displayName} plan={currentPlan} />
+              <>
+                <PanelAccountTitle displayName={accountUser.displayName} plan={currentPlan} />
+                {currentPlan === "free" && <ProfilePlansLink />}
+              </>
             ) : (
               <>
                 <span className="popup-profile-state-title">
@@ -949,6 +956,9 @@ export function PopupApp() {
         />
         </div>
       </PopupRetainedPanel>
+      {ROOMS_PILOT && activeTab === "rooms" && <div data-popup-tab="rooms"><PopupRooms key={accountUser?.id ?? "signed-out"} owner={accountUser?.id ?? null} onSignIn={() => void syncPopupData({interactive:true})} />
+        {authSession.status === "ready" && <PopupRoomHistory key={extensionAuthSessionKey(authSession.tokens)} tokens={authSession.tokens} />}
+      </div>}
       <PopupRetainedPanel key={`${accountUser?.id}:friends`} active={activeTab === "friends"} tab="friends">
         <PopupPeoplePanel
           actionNotice={peopleActionNotice}

@@ -7,10 +7,11 @@ import {
 } from "@anidachi/protocol";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { PopupHistorySettings } from "../src/popup-history-settings";
 import {
   PopupWatchHistoryPanel,
+  groupWatchHistoryItems,
   selectConfirmedPopupWatchHistorySnapshot,
   subscribeToPopupWatchHistorySnapshot,
   type PopupWatchHistoryClient,
@@ -112,6 +113,47 @@ describe("Popup Watch History v3", () => {
     } finally { await unmount(view.root); }
   });
 
+  it.each((["hbomax", "primevideo"] as const).flatMap(provider =>
+    (["missing", "broken", "wide", "portrait"] as const).map(scenario => ({ provider, scenario }))))("renders $provider artwork for a $scenario cover", async ({ provider, scenario }) => {
+    vi.stubEnv("WXT_EXTENSION_CHANNEL", "staging");
+    onTestFinished(() => { vi.unstubAllEnvs(); });
+    const history = youtubeMovieHistoryFixture();
+    const item = history.items[0]!;
+    const hbo = provider === "hbomax";
+    const id = hbo ? "e7dc7b3a-a494-4ef1-8107-f4308aa6bbf7" : "0JYIPCYT3HVMUYMF0SY5XFGIQX";
+    const poster = hbo ? "https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/" + id + "/poster.jpeg" : "https://m.media-amazon.com/images/M/example.jpg";
+    item.provider = provider;
+    item.titleKey = item.latestActivity.episodeKey = provider + ":movie:" + id;
+    item.sourceUrl = (hbo ? "https://www.hbomax.com/video/watch/" : "https://www.primevideo.com/detail/") + id;
+    item.artworkUrl = scenario === "missing" ? null : hbo ? "https://images.cdn.prd.api.discomax.com/group/legacy.jpeg" : "https://m.media-amazon.com/images/S/legacy.jpg";
+    const lookup = vi.fn(async () => ({ ok: true as const, data: poster }));
+    const normal = requestForHistory(history);
+    const view = await renderPanel(clientFixture({ cached: snapshotFixture(history), request: message => {
+      if (message.command !== "title-poster") return normal(message);
+      expect(message.titleKey).toBe(item.titleKey);
+      return lookup();
+    } }));
+    const image = () => view.container.querySelector<HTMLImageElement>(".popup-watch-artwork img");
+    try {
+      if (scenario !== "missing") {
+        expect(lookup).not.toHaveBeenCalled();
+        const legacy = image()!;
+        expect(legacy.getAttribute("src")).toBe(item.artworkUrl + (hbo ? "?w=500&f=webp" : ""));
+        Object.defineProperties(legacy, { naturalWidth: { value: 500 }, naturalHeight: { value: scenario === "wide" ? 281 : 750 } });
+        await act(async () => { legacy.dispatchEvent(new Event(scenario === "broken" ? "error" : "load")); });
+      }
+      if (scenario === "portrait") {
+        expect(lookup).not.toHaveBeenCalled();
+      } else {
+        expect(lookup).toHaveBeenCalledTimes(1);
+        expect(image()?.getAttribute("src")).toBe(poster);
+        await act(async () => { image()!.dispatchEvent(new Event("error")); });
+        expect(image()?.getAttribute("src")).toBe(scenario === "wide" ? item.artworkUrl + (hbo ? "?w=500&f=webp" : "") : undefined);
+        expect(lookup).toHaveBeenCalledTimes(1);
+      }
+    } finally { await unmount(view.root); }
+  });
+
   it("initializes personal disclosures including historical shared titles", async () => {
     const history = multiSeasonHistoryFixture();
     history.items[0] = structuredClone(history.items[0]!);
@@ -161,7 +203,7 @@ describe("Popup Watch History v3", () => {
     } finally { await unmount(view.root); }
   });
 
-  it("keeps title positions and default disclosures when latest activity changes", async () => {
+  it("moves a newly watched title to the top and preserves open titles and their selected seasons", async () => {
     const history = multiSeasonHistoryFixture();
     let publish!: (snapshot: PopupWatchHistorySnapshot) => void;
     const client = {
@@ -174,15 +216,12 @@ describe("Popup Watch History v3", () => {
       expect((await findButton(view.container, "Season for Frieren: Season 2")).textContent).toBe("Season 2");
       const updated = structuredClone(history);
       updated.items[0]!.latestActivity.episodeKey = updated.items[0]!.seasons[0]!.episodes[0]!.episodeKey;
-      updated.items.reverse();
+      updated.items[1]!.lastWatchedAt = "2026-08-15T03:09:00.000Z";
       await act(async () => publish(snapshotFixture(updated)));
-      expect([...view.container.querySelectorAll(".popup-watch-item")]).toEqual(titles);
+      expect([...view.container.querySelectorAll(".popup-watch-item")]).toEqual([titles[1], titles[0]]);
       expect((await findButton(view.container, "Season for Frieren: Season 2")).textContent).toBe("Season 2");
       expect(view.container.querySelector(".popup-selected-episode-title")?.textContent).toBe("A New Beginning");
       expect((await findButton(view.container, "Toggle Another title history")).getAttribute("aria-expanded")).toBe("false");
-      await click(await findButton(view.container, "Toggle Crunchyroll history"));
-      await click(await findButton(view.container, "Toggle Crunchyroll history"));
-      expect((await findButton(view.container, "Season for Frieren: Season 2")).textContent).toBe("Season 2");
     } finally { await unmount(view.root); }
   });
 
@@ -465,7 +504,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("14:00"));
     expect(view.container.textContent).toContain("Pending sync");
     expect(client.loadCached).toHaveBeenCalledTimes(1);
-    expect(listRequests).toBe(3);
+    expect(listRequests).toBe(5);
     await unmount(view.root);
   });
 
@@ -1098,7 +1137,7 @@ describe("Popup Watch History v3", () => {
       );
     });
 
-    await waitFor(() => expect(listRequests).toBe(6));
+    await waitFor(() => expect(listRequests).toBe(10));
     expect(view.container.textContent).toContain("Stable Frieren");
     expect(view.container.textContent).not.toContain("Older cached Frieren");
     expect(view.container.textContent).not.toContain("Loading watch history");
@@ -1192,7 +1231,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("2000 observed episodes"));
     expect(view.container.textContent).toContain("Episode 1");
     expect(view.container.querySelector('[title="Episode 8"]')).not.toBeNull();
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(3);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(5);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1340,7 +1379,7 @@ describe("Popup Watch History v3", () => {
     await click(secondTitle);
     expect(secondTitle.getAttribute("aria-expanded")).toBe("true");
     expect(title.getAttribute("aria-expanded")).toBe("true");
-    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(3);
+    expect(request.mock.calls.filter(([message]) => message.command === "list")).toHaveLength(5);
     expect(request.mock.calls.some(([message]) => "titleKey" in message)).toBe(false);
     await unmount(view.root);
   });
@@ -1349,7 +1388,6 @@ describe("Popup Watch History v3", () => {
     const history = multiSeasonHistoryFixture();
     const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(history) }));
     await click(await findButton(view.container, "Toggle Frieren history"));
-    await click(await findButton(view.container, "Toggle Crunchyroll history"));
     const search = await findInput(view.container, "Search watch history");
     await setInputValue(search, "Journey");
     expect(view.container.textContent).toContain("Episode 1 - The Journey");
@@ -1360,9 +1398,6 @@ describe("Popup Watch History v3", () => {
     await setInputValue(search, "Beginning");
     expect(view.container.textContent).toContain("A New Beginning");
     await click(await findButton(view.container, "Clear watch history search"));
-    const provider = await findButton(view.container, "Toggle Crunchyroll history");
-    expect(provider.getAttribute("aria-expanded")).toBe("false");
-    await click(provider);
     expect((await findButton(view.container, "Toggle Frieren history")).getAttribute("aria-expanded"))
       .toBe("false");
     expect(history.items[0]?.seasons).toHaveLength(2);
@@ -1385,7 +1420,7 @@ describe("Popup Watch History v3", () => {
     const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(mixedSessionHistoryFixture()) }));
     expect(view.container.querySelectorAll(".popup-episode-cell")).toHaveLength(2);
     expect(view.container.querySelector('[aria-label="Watch history mode"]')).toBeNull();
-    expect(view.container.querySelector(".resource-provider-logo.crunchyroll svg")).not.toBeNull();
+    expect(view.container.querySelector(".popup-watch-meta")?.textContent).toContain("Crunchyroll");
     await unmount(view.root);
   });
   it("keeps canonical sessionless personal progress", async () => {
@@ -1431,7 +1466,7 @@ describe("Popup Watch History v3", () => {
     await click(retry);
 
     await waitFor(() => expect(view.container.textContent).toContain("Frieren"));
-    expect(listAttempts).toBe(4);
+    expect(listAttempts).toBe(6);
     expect(view.container.textContent).not.toContain("Could not refresh watch history.");
     await unmount(view.root);
   });
@@ -1489,7 +1524,7 @@ describe("Popup Watch History v3", () => {
     );
     expect(recoveryCall).toBeGreaterThan(-1);
     expect(secondListCall).toBeGreaterThan(recoveryCall);
-    expect(listAttempts).toBe(6);
+    expect(listAttempts).toBe(10);
     await unmount(view.root);
   });
 
@@ -1525,7 +1560,7 @@ describe("Popup Watch History v3", () => {
     await waitFor(() => expect(view.container.textContent).toContain("Browser storage is full."));
     expect(view.container.textContent).toContain("Cached Frieren");
     await findButton(view.container, "Retry watch history");
-    expect(listAttempts).toBe(5);
+    expect(listAttempts).toBe(9);
     await unmount(view.root);
   });
 
@@ -1547,17 +1582,11 @@ describe("Popup Watch History v3", () => {
     await unmount(view.root);
   });
 
-  it("keeps each redesigned provider section independently collapsible", async () => {
-    const view = await renderPanel(
-      clientFixture({ cached: null, request: requestForHistory(historyFixture()) }),
-    );
-    const provider = await findButton(view.container, "Toggle Crunchyroll history");
-
-    expect(provider.getAttribute("aria-expanded")).toBe("true");
+  it("shows titles directly when only one platform has history", async () => {
+    const view = await renderPanel(clientFixture({ cached: null, request: requestForHistory(historyFixture()) }));
+    await findButton(view.container, "Toggle Frieren history");
+    expect(view.container.querySelector(".popup-platform-carousel")).toBeNull();
     expect(view.container.textContent).toContain("Episode 1 - The Journey");
-    await click(provider);
-    expect(provider.getAttribute("aria-expanded")).toBe("false");
-    expect(provider.parentElement?.querySelector(".popup-provider-body")?.hasAttribute("hidden")).toBe(true);
     await unmount(view.root);
   });
 });
@@ -1576,7 +1605,7 @@ function fixtureFetch(fetch: typeof globalThis.fetch, initial: WatchHistoryRespo
       const page = fixtureBrowseDetail(latest, input);
       return page.ok ? Response.json(page.data) : new Response("unavailable", { status: 503 });
     }
-    if (parsedUrl.pathname.endsWith("/browse") && ["youtube", "netflix"].includes(String(input.provider)) && !latest.items.some(item => item.provider === input.provider)) {
+    if (parsedUrl.pathname.endsWith("/browse") && ["youtube", "netflix", "primevideo", "disneyplus"].includes(String(input.provider)) && !latest.items.some(item => item.provider === input.provider)) {
       const empty = fixtureBrowseTitles(latest, input);
       return Response.json(empty.ok ? empty.data : null);
     }
@@ -1648,8 +1677,8 @@ async function renderSettings(client: PopupWatchHistoryClient) {
   document.body.append(container);
   const root = createRoot(container);
   await act(async () => root.render(<PopupHistorySettings ownerUserId={OWNER_ID} client={client} />));
-  for (const provider of container.querySelectorAll(".popup-provider")) {
-    const title = provider.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
+  {
+    const title = container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
     if (title) await act(async () => title.click());
   }
   return { container, root };
@@ -2075,8 +2104,8 @@ async function renderPanel(client: PopupWatchHistoryClient) {
   await act(async () => {
     root.render(<PopupWatchHistoryPanel client={client} ownerUserId={OWNER_ID} />);
   });
-  for (const provider of container.querySelectorAll(".popup-provider")) {
-    const title = provider.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
+  {
+    const title = container.querySelector<HTMLButtonElement>('.popup-watch-title-toggle[aria-expanded="false"]');
     if (title) await act(async () => title.click());
   }
   return { container, root };
@@ -2144,3 +2173,11 @@ vi.mock("../src/history-recording-choice", async (importOriginal) => ({
   ...await importOriginal<typeof import("../src/history-recording-choice")>(),
   isHistoryRecordingEnabled: async () => true,
 }));
+
+
+it("keeps the legacy amazon placeholder separate from Prime Video", () => {
+  const base = historyFixture().items[0]!;
+  const groups = groupWatchHistoryItems([{ ...base, provider: "amazon" }, { ...base, provider: "primevideo" }]);
+  expect(groups.map(group => [group.provider, group.label])).toEqual([["amazon", "amazon"], ["primevideo", "Prime Video"]]);
+  expect(groups.map(group => group.items.length)).toEqual([1, 1]);
+});

@@ -54,11 +54,13 @@ export async function applyPersonalHistoryResume(
 		intent.intentId,
 	);
 	if (binding !== intent.ownerBinding) return "cancelled";
-	const matches = () =>
+	const ownerIsCurrent = () =>
 		input.isCurrent() &&
 		input.getOwner() === owner &&
 		!input.roomActive() &&
-		now() < intent.expiresAt &&
+		now() < intent.expiresAt;
+	const matches = () =>
+		ownerIsCurrent() &&
 		(() => {
 			const source = canonicalizeRoomSourceUrl(
 				input.adapter.getSourceDescriptor()?.sourceUrl ?? "",
@@ -67,15 +69,34 @@ export async function applyPersonalHistoryResume(
 			return source.ok && source.source.sourceUrl === intent.sourceUrl;
 		})() &&
 		input.adapter.provider === intent.provider;
-	const ready = () =>
-		input.adapter.getPlaybackSnapshot().phase === "content" &&
-		input.adapter.video.readyState >= 1 &&
-		Number.isFinite(input.adapter.video.duration) &&
-		input.adapter.video.duration > 0 &&
-		intent.currentTime <= input.adapter.video.duration;
+	const ready = () => {
+		const duration = intent.provider === "disneyplus"
+			? input.adapter.getSourceDescriptor()?.duration : input.adapter.video.duration;
+		return input.adapter.getPlaybackSnapshot().phase === "content" &&
+			input.adapter.video.readyState >= 1 && duration !== undefined && duration !== null &&
+			Number.isFinite(duration) && duration > 0 && intent.currentTime <= duration;
+	};
+	const phase = input.adapter.getPlaybackSnapshot().phase;
+	// These adapters bind the content ID before their first confirmed timeline.
+	// Only that exact binding may wait without a descriptor; it cannot seek yet.
+	if (
+		(intent.provider === "primevideo" || intent.provider === "disneyplus" || intent.provider === "hbomax") &&
+		input.adapter.provider === intent.provider &&
+		!input.adapter.getSourceDescriptor() &&
+		(phase === "transition" || (intent.provider === "hbomax" && (phase === "interstitial" || phase === "buffering")))
+	) {
+		const source = canonicalizeRoomSourceUrl(intent.sourceUrl, intent.provider);
+		return ownerIsCurrent() &&
+			now() >= intent.issuedAt &&
+			source.ok &&
+			source.source.sourceUrl === intent.sourceUrl &&
+			input.adapter.getFingerprint() === source.source.videoFingerprint
+			? "waiting"
+			: "cancelled";
+	}
 	if (!matches()) return "cancelled";
 	if (!ready()) return "waiting";
-	if (intent.provider === "crunchyroll" || intent.provider === "netflix") {
+	if (intent.provider === "crunchyroll" || intent.provider === "netflix" || intent.provider === "primevideo" || intent.provider === "disneyplus" || intent.provider === "hbomax") {
 		if (
 			!input.adapter.getPersonalResumeReadiness ||
 			!input.adapter.seekPersonalResume

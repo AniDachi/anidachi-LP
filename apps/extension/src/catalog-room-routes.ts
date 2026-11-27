@@ -1,0 +1,138 @@
+import { isHboMaxOrigin, hboMaxCatalogPath, hboMaxPlaybackId, localizeHboMaxUrl, canonicalizeRoomSourceUrl, disneyPlusRoutePath } from "@anidachi/protocol";
+import { isCrunchyrollCatalogOrigin, crunchyrollCatalogPath, localizedWatchUrl } from "./source-adapters/crunchyroll/url";
+import { YOUTUBE_CATALOG_ORIGINS, isYouTubeCatalogPath, youtubePageWatchSource } from "./source-adapters/youtube/url";
+import { netflixWatchId } from "./source-adapters/netflix/contract";
+import { disneyPlusWatchId, isDisneyPlusOrigin, localizeDisneyPlusWatchUrl } from "./source-adapters/disneyplus/url";
+import {
+	isPrimeRoomBrowsingPage,
+	isPrimePlayerPageSender,
+	parsePrimePageUrl,
+} from "./source-adapters/primevideo/url";
+
+export type CatalogRoomProvider = "netflix" | "primevideo" | "crunchyroll" | "youtube" | "disneyplus" | "hbomax";
+
+export function supportsCatalogReturn(provider: unknown): provider is Exclude<CatalogRoomProvider, "primevideo"> {
+	return provider === "netflix" || provider === "crunchyroll" || provider === "youtube" || provider === "disneyplus" || provider === "hbomax";
+}
+
+export function catalogWatchSource(provider: unknown, href: string) {
+	if (!supportsCatalogReturn(provider)) return null;
+	const result = canonicalizeRoomSourceUrl(href, provider);
+	return result.ok ? result.source : null;
+}
+
+/** All callers pass the canonical room source URL. YouTube stores its ID in the query. */
+export function catalogContentId(canonicalUrl: string) {
+	const url = new URL(canonicalUrl);
+	return url.searchParams.get("v") ?? url.pathname.split("/").at(-1);
+}
+
+/** A rendered episode card may carry the edition HBO serves in this browser. */
+export function renderedHboMaxWatchUrl(doc: Document, sourceUrl: string) {
+	const id = hboMaxPlaybackId(sourceUrl);
+	if (!id || !isHboMaxOrigin(doc.location.origin)) return undefined;
+	const editionLinks = new Map<string, string>();
+	let contentLink: string | undefined;
+	for (const link of doc.querySelectorAll<HTMLAnchorElement>('a[href*="/video/watch/"]')) {
+		if (link.origin !== doc.location.origin || hboMaxPlaybackId(link.href) !== id) continue;
+		const path = link.pathname.replace(/\/$/, "");
+		const edition = path.split("/video/watch/")[1]?.split("/")[1]?.toLowerCase();
+		const href = link.origin + path;
+		if (edition) {
+			if (!editionLinks.has(edition)) editionLinks.set(edition, href);
+		} else {
+			contentLink ??= href;
+		}
+	}
+	return editionLinks.size === 1 ? editionLinks.values().next().value : contentLink;
+}
+
+export function catalogWatchDestination(sourceUrl: string, currentHref: string, renderedUrl?: string) {
+	const target = new URL(sourceUrl);
+	const id = hboMaxPlaybackId(sourceUrl);
+	if (id) {
+		if (renderedUrl && hboMaxPlaybackId(renderedUrl) === id) {
+			const rendered = new URL(renderedUrl);
+			if (rendered.origin === new URL(currentHref).origin) return rendered.origin + rendered.pathname;
+		}
+		return localizeHboMaxUrl(sourceUrl, currentHref);
+	}
+	if (disneyPlusWatchId(sourceUrl)) return localizeDisneyPlusWatchUrl(target, currentHref).href;
+	return isCrunchyrollCatalogOrigin(target.origin) ? localizedWatchUrl(target, currentHref).href : target.href;
+}
+
+export function supportsCatalogRoom(
+	provider: unknown,
+): provider is CatalogRoomProvider {
+	return supportsCatalogReturn(provider) || provider === "primevideo";
+}
+
+export function catalogRoomProvider(value: string): CatalogRoomProvider | null {
+	if (isPrimeRoomBrowsingPage(value)) return "primevideo";
+	try {
+		const url = new URL(value);
+		if (url.username || url.password) return null;
+		if (isHboMaxOrigin(url.origin)) {
+			return hboMaxCatalogPath(value) || hboMaxPlaybackId(value) ? "hbomax" : null;
+		}
+		if (isDisneyPlusOrigin(value)) {
+			const path = disneyPlusRoutePath(url.pathname);
+			const catalog = path === "/" || /^\/(?:home|search|watchlist|browse(?:\/[a-z0-9_-]+)*)\/?$/i.test(path);
+			return catalog || disneyPlusWatchId(value) ? "disneyplus" : null;
+		}
+		if (YOUTUBE_CATALOG_ORIGINS.includes(url.origin)) {
+			return isYouTubeCatalogPath(url.pathname) || youtubePageWatchSource(url) ? "youtube" : null;
+		}
+		if (isCrunchyrollCatalogOrigin(url.origin)) {
+			return crunchyrollCatalogPath(url.pathname) || catalogWatchSource("crunchyroll", value) ? "crunchyroll" : null;
+		}
+		if (url.origin !== "https://www.netflix.com") return null;
+		const catalog =
+			/^\/(?:browse(?:\/[^/]+)*|search|latest|title\/[1-9][0-9]{0,19})\/?$/.test(
+				url.pathname,
+			);
+		return catalog || netflixWatchId(value) ? "netflix" : null;
+	} catch {
+		return null;
+	}
+}
+
+export function catalogPlayerProvider(
+	value: string,
+): CatalogRoomProvider | null {
+	try {
+		if (youtubePageWatchSource(new URL(value))) return "youtube";
+	} catch {
+		return null;
+	}
+	if (hboMaxPlaybackId(value)) return "hbomax";
+	if (netflixWatchId(value)) return "netflix";
+	if (disneyPlusWatchId(value)) return "disneyplus";
+	if (catalogWatchSource("crunchyroll", value)) return "crunchyroll";
+	return parsePrimePageUrl(value) ? "primevideo" : null;
+}
+
+export function isCatalogRoomSender(sender: chrome.runtime.MessageSender) {
+	const url = sender.tab?.url ?? sender.url;
+	if (
+		!url ||
+		!sender.url ||
+		sender.tab?.id === undefined ||
+		sender.frameId !== 0 ||
+		!catalogRoomProvider(url)
+	)
+		return false;
+	const origin = new URL(url).origin;
+	return (
+		sender.url.startsWith(origin + "/") &&
+		(sender.origin === undefined || sender.origin === origin)
+	);
+}
+
+export function isCatalogPlayerSender(sender: chrome.runtime.MessageSender) {
+	return (
+		isPrimePlayerPageSender(sender) ||
+		(isCatalogRoomSender(sender) &&
+			supportsCatalogReturn(catalogPlayerProvider(sender.tab?.url ?? sender.url!)))
+	);
+}

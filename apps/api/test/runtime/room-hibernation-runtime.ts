@@ -84,6 +84,40 @@ afterEach(async () => {
 	await reset();
 });
 
+describe("first host admission", () => {
+  const owner = "b0897822-7da2-41ec-9126-8b61272826ed";
+  for (const outcome of ["confirmed", "stale", "unavailable"] as const) {
+    it(`confirms a real host JOIN before sending its first snapshot: ${outcome}`, async () => {
+      const roomId = `host-admission-${outcome}`;
+      const ns = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+      const stub = ns.get(ns.idFromName(roomId));
+      const confirmations: unknown[] = [];
+      vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+        const path = new URL(String(input)).pathname;
+        if (path.endsWith("/admission")) return Response.json({ roomId, roomGeneration: 1, allowed: true, confirmHostJoin: true });
+        if (path.endsWith("/host-joined")) {
+          confirmations.push(JSON.parse(String(init?.body)));
+          if (outcome === "unavailable") return new Response(null, { status: 503 });
+          return Response.json({ confirmed: outcome === "confirmed" });
+        }
+        return runtimeFetch(input, init);
+      });
+      const session = { roomId, role: "host" as const, userId: owner, sessionId: "first-host" };
+      const opened = await openRoomSocket(stub, session);
+      opened.close();
+      expect(confirmations).toEqual([]);
+      const client = await connectRoomClient(stub, session);
+      if (outcome === "confirmed") {
+        await client.waitFor(e => e.type === "ROOM_SNAPSHOT", "confirmed host");
+      } else {
+        await client.waitForClose(outcome === "stale" ? 4002 : 1011, "host admission failed");
+        expect(client.hasEvent(e => e.type === "ROOM_SNAPSHOT")).toBe(false);
+      }
+      expect(confirmations).toEqual([{ userId: owner, participantSessionId: "first-host" }]);
+    });
+  }
+});
+
 describe("RoomDurableObject independent presence", () => {
 	const ids = [
 		"a4444444-4444-4444-8444-444444444441",
@@ -4288,6 +4322,29 @@ describe("RoomDurableObject media v2", () => {
 		expect(await readRoomRuntime(f.stub)).toMatchObject({ pendingSource: { attempts: 3 }, tombstone: null });
 		host.close(); guest.close();
 	});
+
+  it("delivers late Disney+ series identity to an already joined guest on the same generation", async () => {
+    const f = await fixture("plus", 3);
+    const host = await f.join(0);
+    const guest = await f.join(1);
+    await guest.waitFor(event => event.type === "ROOM_MEDIA_SNAPSHOT" && event.participants.length === 2, "joined");
+    const id = "2e6c6ae8-47b0-4382-a7ae-df89950eece3";
+    const url = `https://www.disneyplus.com/play/${id}`;
+    const state = playbackState(`disneyplus|play/${id}`, url);
+    const source = { provider: "disneyplus" as const, sourceUrl: url, canonicalUrl: url, videoFingerprint: state.videoFingerprint, title: "Episode" };
+    const identity = { kind: "episode" as const, providerSeriesId: "ba195597-9083-40d9-b9ac-71eaa632b69d", providerEpisodeIdentifier: id };
+    try {
+      host.send({ type: "HOST_STATE", roomId: f.roomId, state, source });
+      const initial = await guest.waitFor(event => event.type === "SOURCE_CHANGED", "initial playback");
+      host.send({ type: "HOST_STATE", roomId: f.roomId, state, source: { ...source, disneyplusIdentity: identity } });
+      const enriched = await guest.waitFor(event => event.type === "ROOM_SNAPSHOT" && !!event.source?.disneyplusIdentity, "late series metadata");
+      expect(initial.type === "SOURCE_CHANGED" && enriched.type === "ROOM_SNAPSHOT" && enriched.sourceGeneration === initial.sourceGeneration).toBe(true);
+      expect(enriched.type === "ROOM_SNAPSHOT" && enriched.source?.disneyplusIdentity).toEqual(identity);
+    } finally {
+      host.close();
+      guest.close();
+    }
+  });
 
   it.each([
     ["free", 1, false, false], ["free", 2, false, false], ["plus", 2, false, false], ["pro", 2, false, false],

@@ -1,6 +1,10 @@
 import type { Free20Request } from "./free20-abuse-client";
 import {
   ActiveRoomConflictResponseSchema,
+  PrimeMarketplaceSchema,
+  type PrimeMarketplace,
+  RoomLobbyProviderSchema,
+  type RoomLobbyProvider,
   ACCOUNT_HOSTING_OWNER_HEADER,
   FREE20_CLIENT_HEADER,
   FREE20_CLIENT_VERSION,
@@ -253,6 +257,7 @@ export interface RoomClientOptions {
   participantSessionId: string;
   reconnect?: boolean;
   onEvent: (event: ServerEvent) => void;
+  onRestoredChat?: (reaction: Extract<ServerEvent, {type: "REACTION"}>["reaction"]) => void;
   onStatus: (status: RoomConnectionStatus) => void;
   onHistoryAuthority?: (authority: RoomHistoryAuthority | null) => void;
   onTerminalClose?: (code: number) => void;
@@ -286,7 +291,10 @@ export interface AdmittedRoom extends CreatedRoom {
 }
 
 export interface CreateRoomInput {
+  lobbyProvider?: RoomLobbyProvider;
+  lobbyMarketplace?: PrimeMarketplace;
   sourceUrl?: string;
+  primeNavigation?: import("@anidachi/protocol").PrimeNavigation;
   videoFingerprint?: string;
   title?: string | null;
   showId?: string;
@@ -394,6 +402,7 @@ export type RoomHttpMessage =
   | {
       type: typeof ROOM_HTTP_MESSAGE_TYPE;
       command: "connect-room";
+      expectedLobby?: RoomLobbyProvider;
       accessToken: string;
       roomId: string;
       roomSession: PreparedRoomSession;
@@ -481,6 +490,8 @@ function isCreateRoomInput(value: unknown): value is CreateRoomInput {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
   const input = value as Record<string, unknown>;
   return (
+    (input.lobbyMarketplace === undefined || (input.lobbyProvider === "primevideo" && PrimeMarketplaceSchema.safeParse(input.lobbyMarketplace).success)) &&
+    (input.lobbyProvider === undefined || RoomLobbyProviderSchema.safeParse(input.lobbyProvider).success) &&
     (input.sourceUrl === undefined || typeof input.sourceUrl === "string") &&
     (input.videoFingerprint === undefined || typeof input.videoFingerprint === "string") &&
     (input.title === undefined || input.title === null || typeof input.title === "string") &&
@@ -508,10 +519,12 @@ export function connectRoomHttpMessage(
   roomId: string,
   accessToken: string,
   roomSession: PreparedRoomSession,
+  expectedLobby?: RoomLobbyProvider,
 ): RoomHttpMessage {
   return {
     type: ROOM_HTTP_MESSAGE_TYPE,
     command: "connect-room",
+    ...(expectedLobby && { expectedLobby }),
     roomId,
     accessToken,
     roomSession,
@@ -529,6 +542,7 @@ export function isRoomHttpMessage(value: unknown): value is RoomHttpMessage {
   }
   if (message.command === "connect-room") {
     return typeof message.accessToken === "string" &&
+      (message.expectedLobby === undefined || RoomLobbyProviderSchema.safeParse(message.expectedLobby).success) &&
       typeof message.roomId === "string" &&
       isPreparedRoomSession(message.roomSession) &&
       message.roomSession.roomId === message.roomId;
@@ -656,6 +670,7 @@ export async function connectWebsiteRoomFromApi(
   accessToken: string,
   participantSessionId: string,
   contextRequest?: RoomContextRequest,
+  expectedLobby?: RoomLobbyProvider,
 ): Promise<{
   roomToken: string;
   capabilities?: RoomCapabilities | RoomMediaCapabilities;
@@ -675,7 +690,7 @@ export async function connectWebsiteRoomFromApi(
       {
         method: "POST",
         headers: { ...createWebsiteRoomHeaders(accessToken), "X-Anidachi-Media-Protocol": "3", [FREE20_CLIENT_HEADER]: String(FREE20_CLIENT_VERSION), ...(contextRequest ? { [ACCOUNT_HOSTING_OWNER_HEADER]: contextRequest.ownerUserId } : {}) },
-        body: JSON.stringify(admission),
+        body: JSON.stringify({ ...admission, ...(expectedLobby && { expectedLobby }) }),
         signal: abortController.signal,
       },
     );
@@ -905,6 +920,7 @@ export async function handleRoomHttpMessage(
       message.accessToken,
       message.roomSession.participantSessionId,
       dependencies.request ? { request: dependencies.request, ownerUserId: message.roomSession.ownerUserId } : undefined,
+      message.expectedLobby,
     );
     admissionRequestConfirmedSettled = true;
     const roomSession = await confirmPreparedRoomSessionForSender(
@@ -1362,6 +1378,7 @@ export async function connectWebsiteRoom(
   roomId: string,
   accessToken: string,
   roomSession: PreparedRoomSession,
+  expectedLobby?: RoomLobbyProvider,
 ): Promise<{
   roomToken: string;
   capabilities?: RoomCapabilities | RoomMediaCapabilities;
@@ -1375,7 +1392,7 @@ export async function connectWebsiteRoom(
     roomId,
   });
   const response = assertRoomHttpResponse(
-    await sendRoomHttpMessage(connectRoomHttpMessage(roomId, accessToken, roomSession)),
+    await sendRoomHttpMessage(connectRoomHttpMessage(roomId, accessToken, roomSession, expectedLobby)),
   );
   if (!response.ok) throw bridgeError(response);
   if (!("connection" in response)) throw new Error("Room bridge response is missing connection");
@@ -1483,6 +1500,11 @@ export class RoomClient {
     return true;
   }
 
+  /** A new HTTP admission for the same live Prime socket still needs its own durable acknowledgement. */
+  rebindAdmissionHandoff(handoff: RoomAdmissionHandoff): void {
+    this.replaceAdmissionHandoff?.(handoff);
+  }
+  private replaceAdmissionHandoff: ((handoff: RoomAdmissionHandoff) => void) | null = null;
   private cancelCurrentAdmissionHandoffAck: (() => void) | null = null;
   private currentSenderConnectionId = createRoomConnectionId();
   private currentHistoryAuthority: RoomHistoryAuthority | null = null;
@@ -1559,6 +1581,8 @@ export class RoomClient {
     let handoffAckRetryCount = 0;
     let handoffAckRetryTimer: ReturnType<typeof setTimeout> | null = null;
     let handoffAckStarted = false;
+    let joined = false;
+    let currentHandoff = options.admissionHandoff;
 
     const isCurrentSocket = (): boolean =>
       this.ws === ws && !socketClosed;
@@ -1589,7 +1613,7 @@ export class RoomClient {
       }, delay);
     };
     const attemptAdmissionHandoffAck = (): void => {
-      const handoff = options.admissionHandoff;
+      const handoff = currentHandoff;
       if (
         !handoff ||
         !handoffAckActive ||
@@ -1618,6 +1642,10 @@ export class RoomClient {
             cancelAdmissionHandoffAck();
             return;
           }
+          if (handoff !== currentHandoff) {
+            attemptAdmissionHandoffAck();
+            return;
+          }
           if (acknowledged) {
             cancelAdmissionHandoffAck();
             return;
@@ -1631,7 +1659,7 @@ export class RoomClient {
       );
     };
     const startAdmissionHandoffAck = (): void => {
-      const handoff = options.admissionHandoff;
+      const handoff = currentHandoff;
       if (
         handoffAckStarted ||
         !handoff ||
@@ -1646,6 +1674,16 @@ export class RoomClient {
       handoffAckActive = true;
       this.cancelCurrentAdmissionHandoffAck = cancelAdmissionHandoffAck;
       attemptAdmissionHandoffAck();
+    };
+
+    this.replaceAdmissionHandoff = (handoff) => {
+      if (!isCurrentSocket() || handoff.roomId !== options.roomId ||
+        handoff.ownerUserId !== options.participant.id || handoff.participantSessionId !== options.participantSessionId) return;
+      cancelAdmissionHandoffAck();
+      currentHandoff = handoff;
+      handoffAckStarted = false;
+      handoffAckRetryCount = 0;
+      if (joined) startAdmissionHandoffAck();
     };
 
     ws.addEventListener("open", () => {
@@ -1697,17 +1735,12 @@ export class RoomClient {
           // Start the durable handoff independently from all consumers below:
           // their failure must not leave a healthy socket vulnerable to the
           // background handoff deadline.
+          joined = true;
           startAdmissionHandoffAck();
         }
         logDebug("room.recv", event.type, roomEventDebugSnapshot(event));
         const mediaAccepted = this.media?.consume(event);
-        if (mediaAccepted && event.type === "ROOM_SNAPSHOT") {
-          this.mediaParticipants = new Map(event.participants.map(p => [p.id, p]));
-        } else if (event.type === "PARTICIPANT_JOINED") {
-          this.mediaParticipants.set(event.participant.id, event.participant);
-        } else if (event.type === "PARTICIPANT_LEFT") {
-          this.mediaParticipants.delete(event.participant.id);
-        }
+        if (event.type !== "ROOM_SNAPSHOT" || mediaAccepted) this.observeParticipants(event);
         if (event.type === "ROOM_MEDIA_SNAPSHOT" && this.media?.snapshot?.roomId === event.roomId &&
           this.media.snapshot.roomGeneration === event.roomGeneration && this.media.snapshot.snapshotSequence === event.snapshotSequence) {
           for (const release of this.media?.releaseRestoredGrants() ?? []) this.send(release);
@@ -1773,6 +1806,16 @@ export class RoomClient {
       this.stopKeepalive();
       publishStatus("error");
     });
+  }
+
+  protected observeParticipants(event: ServerEvent): void {
+    if (event.type === "ROOM_SNAPSHOT") {
+      this.mediaParticipants = new Map(event.participants.map(p => [p.id, p]));
+    } else if (event.type === "PARTICIPANT_JOINED") {
+      this.mediaParticipants.set(event.participant.id, event.participant);
+    } else if (event.type === "PARTICIPANT_LEFT") {
+      this.mediaParticipants.delete(event.participant.id);
+    }
   }
 
   private consumeHistoryAuthorityEvent(event: ServerEvent, options: RoomClientOptions): void {
@@ -1847,6 +1890,7 @@ export class RoomClient {
   private closeSocket(reason: string, publishClosed: boolean): void {
     this.media?.interruptSeatCommands();
     this.stopKeepalive();
+    this.replaceAdmissionHandoff = null;
     this.cancelCurrentAdmissionHandoffAck?.();
     const ws = this.ws;
     const statusPublisher = this.currentStatusPublisher;

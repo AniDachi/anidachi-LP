@@ -97,39 +97,6 @@ export type PopupProviderGroup = {
   items: WatchHistoryItem[];
 };
 
-export type PopupHistoryLayout = {
-  scope: string;
-  titleKeys: string[];
-  defaults: Record<string, boolean>;
-};
-
-export function reconcileHistoryLayout(
-  previous: PopupHistoryLayout | null,
-  items: WatchHistoryItem[],
-  scope: string,
-): PopupHistoryLayout {
-  const current = previous?.scope === scope ? previous : null;
-  const byKey = new Map(items.map((item) => [pendingTitleKey(item.provider, item.titleKey), item]));
-  const keys = [...byKey.keys()];
-  const present = new Set(keys);
-  const retained = current?.titleKeys.filter((key) => present.has(key)) ?? [];
-  const known = new Set(retained);
-  const titleKeys = [...retained, ...keys.filter((key) => !known.has(key))];
-  const defaults: Record<string, boolean> = {};
-  for (const key of titleKeys) {
-    const item = byKey.get(key);
-    if (!item) continue;
-    const titleBranch = JSON.stringify([item.provider, item.titleKey]);
-    defaults[titleBranch] = current?.defaults[titleBranch] ?? false;
-
-  }
-  if (current && titleKeys.length === current.titleKeys.length &&
-    titleKeys.every((key, index) => key === current.titleKeys[index]) &&
-    Object.keys(defaults).length === Object.keys(current.defaults).length &&
-    Object.entries(defaults).every(([key, value]) => current.defaults[key] === value)) return current;
-  return { scope, titleKeys, defaults };
-}
-
 export function projectPendingWatchHistoryItems(
   items: WatchHistoryItem[],
   pendingByEpisode: Map<string, WatchProgressEvent>,
@@ -147,12 +114,15 @@ export function projectPendingWatchHistoryItems(
       continue;
     }
     let item = projected[itemIndex];
-    if (item && !item.artworkUrl && event.artworkUrl) {
-      const enriched = { ...item, artworkUrl: event.artworkUrl };
-      projected = projected.map((candidate, index) => index === itemIndex ? enriched : candidate);
-      item = enriched;
+    if (!item) continue;
+    const moreRecent = Date.parse(event.observedAt) > Date.parse(item.lastWatchedAt);
+    if (moreRecent || (!item.artworkUrl && event.artworkUrl)) {
+      item = { ...item, artworkUrl: item.artworkUrl ?? event.artworkUrl,
+        lastWatchedAt: moreRecent ? event.observedAt : item.lastWatchedAt };
+      projected = [...projected];
+      projected[itemIndex] = item;
     }
-    if (!item || item.seasons.some((season) =>
+    if (item.seasons.some((season) =>
       season.episodes.some((episode) => episode.episodeKey === event.episodeKey)
     ) || (item.seasons.length === 0 && item.latestActivity.episodeKey === event.episodeKey)) {
       continue;
@@ -175,9 +145,6 @@ export function projectPendingWatchHistoryItems(
       latestActivity: Date.parse(event.observedAt) >= Date.parse(item.latestActivity.lastWatchedAt)
         ? pendingWatchHistoryLatestActivity(event)
         : item.latestActivity,
-      lastWatchedAt: Date.parse(event.observedAt) >= Date.parse(item.lastWatchedAt)
-        ? event.observedAt
-        : item.lastWatchedAt,
     };
     projected = projected.map((candidate, index) => index === itemIndex ? nextItem : candidate);
   }
@@ -361,13 +328,16 @@ export function groupWatchHistoryItems(items: WatchHistoryItem[]): PopupProvider
       items: [item],
     });
   }
-  return [...groups.values()];
+  return [...groups.values()].sort((a, b) => a.label.localeCompare(b.label, "en"));
 }
 
-function providerLabel(provider: WatchHistoryItem["provider"]): string {
+export function providerLabel(provider: WatchHistoryItem["provider"]): string {
   if (provider === "crunchyroll") return "Crunchyroll";
   if (provider === "youtube") return "YouTube";
+  if (provider === "hbomax") return "HBO Max";
+  if (provider === "disneyplus") return "Disney+";
   if (provider === "netflix") return "Netflix";
+  if (provider === "primevideo") return "Prime Video";
   return provider;
 }
 

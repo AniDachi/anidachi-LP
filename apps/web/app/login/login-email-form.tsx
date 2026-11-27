@@ -18,7 +18,7 @@ const buttonClass =
 const inputClass =
 	"min-h-12 w-full rounded-xl border border-foreground/20 bg-background px-4 py-3 text-foreground outline-none focus:border-ani-orange focus:ring-1 focus:ring-ani-orange";
 
-export function LoginEmailForm({ returnTo }: { returnTo: string }) {
+export function LoginEmailForm({ returnTo, preview = false }: { returnTo: string; preview?: boolean }) {
 	const [open, setOpen] = useState(false);
 	const [email, setEmail] = useState("");
 	const [code, setCode] = useState("");
@@ -43,7 +43,7 @@ export function LoginEmailForm({ returnTo }: { returnTo: string }) {
 	const remaining = Math.max(0, Math.ceil((resendAt - now) / 1000));
 
 	async function submit(action: "send" | "verify") {
-		if (busy.current) return;
+		if (preview || busy.current) return;
 		busy.current = true;
 		setPending(action);
 		setError(null);
@@ -196,7 +196,7 @@ export function LoginEmailForm({ returnTo }: { returnTo: string }) {
 					<button
 						type="submit"
 						disabled={
-							!!pending ||
+							preview || !!pending ||
 							(!!challenge && code.length !== 6) ||
 							(!challenge && remaining > 0)
 						}

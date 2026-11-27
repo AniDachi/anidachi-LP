@@ -1,3 +1,7 @@
+import { roomTicketDetails } from "@/lib/room-ticket";
+import { InviteTicket } from "@/components/invite-ticket";
+import ticket from "@/components/invite-ticket.module.css";
+import { roomLobbyDestination } from "@/lib/room-lobby";
 import type { Metadata } from "next";
 import { TrackOnView } from "@/components/track-on-view";
 import { headers } from "next/headers";
@@ -9,6 +13,8 @@ import {
 } from "@/lib/anidachi-auth/db";
 import { RoomInviteShell as Shell, RoomInviteView } from "./room-invite-view";
 import { Button } from "@/components/ui/button";
+import { RoomInviteExtensionStep } from "@/components/room-invite-extension-step";
+import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
 import { ExtensionCheck } from "./extension-check";
 import { RoomMobileHandoff } from "./room-mobile-handoff";
 import { WaitingRefresh } from "./waiting-refresh";
@@ -22,7 +28,7 @@ export const dynamic = "force-dynamic";
 
 type Props = {
   params: Promise<{ roomId: string }>;
-  searchParams: Promise<{ joined?: string }>;
+  searchParams: Promise<{ joined?: string; lobby?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -35,10 +41,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RoomPage({ params, searchParams }: Props) {
   const { roomId } = await params;
-  const { joined } = await searchParams;
+  const { joined, lobby } = await searchParams;
+  const lobbyQuery = roomLobbyDestination(roomId, lobby) ? `?lobby=${lobby}` : "";
   const initialMobile = isMobileUserAgent((await headers()).get("user-agent"));
 
-  await requireAuth(`/room/${roomId}`);
+  await requireAuth(`/room/${roomId}${lobbyQuery}`);
   const session = await getSession();
 
   const room = await getRoomById(roomId);
@@ -76,45 +83,30 @@ export default async function RoomPage({ params, searchParams }: Props) {
   const source = deriveDurableRoomSource(room);
   const launchUrl = source
     ? buildRoomSourceLaunchUrl(source.source, roomId)
-    : null;
-  const roomTitle = room.title ?? room.show_id ?? "Anime Watchroom";
+    : roomLobbyDestination(roomId, room.lobby_provider ?? lobby, room.lobby_marketplace);
+  const details = roomTicketDetails({ ...room, source_provider: source?.source.provider ?? room.source_provider }, host?.display_name ?? null, lobby);
+  const extensionId = readApprovedExtensionClientId();
   const justJoined = joined === "1";
 
   // Joined, but the host has not opened a video yet: keep the guest informed
   // and auto-upgrade to "Open watchroom" once a source URL appears.
   if (isParticipant && !launchUrl) {
     return (
-      <Shell>
+      <>
         <TrackOnView event="invite_viewed" params={{ state: "waiting_for_host", mobile: initialMobile }} />
-        <div className="mb-1 flex items-center gap-2">
-          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-brand-orange" />
-          <span className="text-xs font-medium tracking-[-0.01em] text-ani-muted">
-            Waiting for host
-          </span>
-        </div>
-        <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ani-text">
-          {justJoined ? "You're in!" : roomTitle}
-        </h1>
-        <p className="mt-2 text-sm text-ani-muted">
-          The host hasn&apos;t opened a video yet. Keep this tab open — it updates
-          automatically the moment the watch party starts.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-4 text-sm text-ani-muted">
-          <span>
-            Host:{" "}
-            <span className="font-medium text-ani-text">
-              {host?.display_name ?? "Unknown"}
-            </span>
-          </span>
-        </div>
-        <ExtensionCheck initialMobile={initialMobile} />
-        <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
+        <InviteTicket details={details}>
+          <RoomInviteExtensionStep extensionId={extensionId} initialMobile={initialMobile}>
+            <h2>{justJoined ? "You’re in!" : "Waiting for host"}</h2>
+            <p className={ticket.note}>Keep this tab open. It updates when the host opens a video.</p>
+            {!extensionId && <ExtensionCheck initialMobile={initialMobile} />}
+            <RoomMobileHandoff variant="waiting" initialMobile={initialMobile} />
+          </RoomInviteExtensionStep>
+        </InviteTicket>
         <WaitingRefresh roomId={roomId} />
-      </Shell>
+      </>
     );
   }
 
-  const roomSubtitle = room.episode_id ?? null;
 
   return (
     <>
@@ -127,11 +119,12 @@ export default async function RoomPage({ params, searchParams }: Props) {
       />
       <RoomInviteView
         status={room.status}
-        roomTitle={roomTitle}
-        roomSubtitle={roomSubtitle}
-        hostName={host?.display_name ?? "Unknown"}
-        sourceProvider={source?.source.provider}
-        joinAction={`/api/rooms/${roomId}/join`}
+        roomTitle={details.title}
+        roomSubtitle={details.episode ?? null}
+        hostName={details.host ?? null}
+        extensionId={extensionId}
+        sourceProvider={details.provider ?? undefined}
+        joinAction={`/api/rooms/${roomId}/join${lobbyQuery}`}
         isParticipant={isParticipant}
         hasLaunchUrl={Boolean(launchUrl)}
         initialMobile={initialMobile}

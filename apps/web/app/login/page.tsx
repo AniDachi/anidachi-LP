@@ -7,6 +7,12 @@ import { getSession } from "@/lib/anidachi-auth/session";
 import { sanitizeAuthReturnTo } from "@/lib/anidachi-auth/return-to";
 import { getLoginContext } from "@/lib/login-context";
 import { isMobileUserAgent } from "@/lib/mobile-user-agent";
+import { readInviteTicket } from "@/lib/room-ticket";
+import { InviteTicket } from "@/components/invite-ticket";
+import { InviteSignIn } from "@/components/invite-sign-in";
+import { RoomInviteExtensionStep } from "@/components/room-invite-extension-step";
+import { readApprovedExtensionClientId } from "@/lib/anidachi-auth/extension-codes";
+import { isSafeInstallNextPath } from "@/lib/install-cta";
 import { LoginOAuthButtons } from "./login-oauth-buttons";
 import { LoginEmailForm } from "./login-email-form";
 import { emailLoginEnabled } from "@/lib/anidachi-auth/email-login";
@@ -39,61 +45,77 @@ export default async function LoginPage({ searchParams }: Props) {
 
   const safeNext = sanitizedNext ? encodeURIComponent(sanitizedNext) : "";
   const userAgent = (await headers()).get("user-agent");
+  const isMobile = isMobileUserAgent(userAgent);
   const loginContext = getLoginContext(sanitizedNext, {
-    isMobile: isMobileUserAgent(userAgent),
+    isMobile,
   });
 
   const errorMessage = error
     ? (ERROR_MESSAGES[error] ?? "An error occurred. Please try again.")
     : null;
 
+  if (isSafeInstallNextPath(sanitizedNext)) {
+    const details = await readInviteTicket(sanitizedNext).catch(() => {
+      // Optional invitation artwork and credits must not prevent sign-in.
+      console.warn("Room invitation details are temporarily unavailable");
+      return null;
+    });
+    return (
+      <InviteTicket details={details ?? { title: "Watch together" }}>
+        <RoomInviteExtensionStep extensionId={readApprovedExtensionClientId()} initialMobile={isMobile}>
+          <InviteSignIn error={errorMessage} returnTo={sanitizedNext} emailEnabled={emailLoginEnabled()} />
+        </RoomInviteExtensionStep>
+      </InviteTicket>
+    );
+  }
+
   return (
-    <AuthPageShell maxWidth="max-w-md">
-      <AuthPageCard>
-        <div className="mb-6 text-center">
-          <AnidachiLogo size={48} priority className="mx-auto" />
-          <h1 className="mt-4 text-xl font-bold tracking-tight text-foreground">
-            {loginContext.headline}
-          </h1>
-          <p className="mt-1.5 text-sm text-foreground/50">{loginContext.subtitle}</p>
-          {loginContext.extensionNote ? (
-            <p className="mt-2 text-xs font-medium text-ani-muted">
-              {loginContext.extensionNote}
-            </p>
-          ) : null}
-        </div>
-
-        {errorMessage ? (
-          <div
-            className="mb-5 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
-            role="alert"
-          >
-            <p>{errorMessage}</p>
-            <p className="mt-1.5 text-xs text-red-200/80">
-              Try again with Discord or Google below.
-            </p>
+      <AuthPageShell maxWidth="max-w-md">
+        <AuthPageCard>
+          <div className="mb-6 text-center">
+            <AnidachiLogo size={48} priority className="mx-auto" />
+            <h1 className="mt-4 text-xl font-bold tracking-tight text-foreground">
+              {loginContext.headline}
+            </h1>
+            <p className="mt-1.5 text-sm text-foreground/50">{loginContext.subtitle}</p>
+            {loginContext.extensionNote ? (
+              <p className="mt-2 text-xs font-medium text-ani-muted">
+                {loginContext.extensionNote}
+              </p>
+            ) : null}
           </div>
-        ) : null}
 
-        <LoginOAuthButtons safeNext={safeNext} />
-        {emailLoginEnabled() ? <LoginEmailForm returnTo={sanitizedNext} /> : null}
+          {errorMessage ? (
+            <div
+              className="mb-5 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+              role="alert"
+            >
+              <p>{errorMessage}</p>
+              <p className="mt-1.5 text-xs text-red-200/80">
+                Try again with Discord or Google below.
+              </p>
+            </div>
+          ) : null}
 
-        <p className="mt-5 text-center text-xs text-foreground/45">
-          Crunchyroll · YouTube · Netflix
-        </p>
+          <LoginOAuthButtons safeNext={safeNext} />
+          {emailLoginEnabled() ? <LoginEmailForm returnTo={sanitizedNext} /> : null}
 
-        <p className="mt-6 text-center text-xs text-foreground/45">
-          By continuing you agree to our{" "}
-          <a href="/terms" className="underline underline-offset-2 hover:text-foreground/70">
-            Terms
-          </a>{" "}
-          and{" "}
-          <a href="/privacy" className="underline underline-offset-2 hover:text-foreground/70">
-            Privacy Policy
-          </a>
-          .
-        </p>
-      </AuthPageCard>
-    </AuthPageShell>
+          <p className="mt-5 text-center text-xs text-foreground/45">
+            Crunchyroll · YouTube · Netflix
+          </p>
+
+          <p className="mt-6 text-center text-xs text-foreground/45">
+            By continuing you agree to our{" "}
+            <a href="/terms" className="underline underline-offset-2 hover:text-foreground/70">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="underline underline-offset-2 hover:text-foreground/70">
+              Privacy Policy
+            </a>
+            .
+          </p>
+        </AuthPageCard>
+      </AuthPageShell>
   );
 }

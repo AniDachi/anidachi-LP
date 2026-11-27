@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { NextRequest } from "next/server";
 import { POST as admission } from "../app/api/internal/rooms/[roomId]/admission/route";
+import { POST as hostJoined } from "../app/api/internal/rooms/[roomId]/host-joined/route";
 import { POST as drainRoute } from "../app/api/internal/rooms/cutover/drain/route";
 
 const originalFetch = globalThis.fetch;
@@ -41,6 +42,7 @@ beforeEach(() => {
 		calls.push({ path, body: JSON.parse(String(init?.body)) });
 		if (fail)
 			return Response.json({ message: "private diagnostic" }, { status: 500 });
+		if (path.endsWith("confirm_reserved_host_join_v1")) return Response.json(decision);
 		if (path.endsWith("check_room_hosting_socket_v1"))
 			return Response.json(decision);
 		if (path.endsWith("claim_room_hosting_cutover_v1"))
@@ -97,4 +99,22 @@ test("failed drain and missing dedicated secret never get a health acknowledgeme
 	assert.equal((await drainRoute(request("cutover"))).status, 503);
 	delete process.env.ANIDACHI_HOSTING_CUTOVER_DRAIN_SECRET;
 	assert.equal((await drainRoute(request("rooms"))).status, 401);
+});
+
+
+test("host JOIN requires service authorization, the exact session, and a valid database receipt", async () => {
+  const body = { userId, participantSessionId: "host-tab" };
+  assert.equal((await hostJoined(request("bad", body), context)).status, 401);
+  assert.equal((await hostJoined(request("rooms", { userId }), context)).status, 400);
+  assert.equal(calls.length, 0);
+  for (const confirmed of [true, false]) {
+    decision = confirmed;
+    const result = await hostJoined(request("rooms", body), context);
+    assert.deepEqual(await result.json(), { confirmed });
+    assert.deepEqual(calls.at(-1)?.body, {
+      p_room_id: "room-1", p_user_id: userId, p_participant_session_id: "host-tab",
+    });
+  }
+  decision = "invalid receipt";
+  assert.equal((await hostJoined(request("rooms", body), context)).status, 503);
 });

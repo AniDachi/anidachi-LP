@@ -274,6 +274,15 @@ Invite flow:
 
 1. Host copies the web invite link.
 2. Guest opens `/room/:roomId` on the website.
+   Anyone with an active invitation can see the host's display name, title,
+   episode and platform on the ticket before signing in. A room created in a
+   catalog shows its platform while the host chooses a title. Member details
+   and the launch destination require authentication. Installing, signing in
+   and joining are actions on the ticket stub.
+   On desktop, the invitation and its sign-in screen ask the configured AniDachi
+   extension whether it is available. If it does not respond, the guest sees an
+   install button and a reminder to return. Returning to the same tab checks
+   again and restores the original sign-in or room action when AniDachi responds.
 3. If needed, the website asks the guest to log in.
 4. The website records room membership.
 5. The website redirects to the source video URL with `#anidachiRoom=<roomId>`
@@ -430,6 +439,13 @@ Web/Worker/extension still deliver from `staging`; runtime flags and SQL policy
 activation follow separate checks. This is not a general feature-ref release
 permission or production approval. See the
 [Free20 activation runbook](superpowers/plans/2026-11-01-free20-staging-activation-runbook.md).
+
+The owner-authorized November 16 Prime Video staging delivery has the same
+bounded schema-first exception. After review and green CI, only `db-staging.yml`
+may run from its frozen feature ref against `cyppqpprkygjloyfvvvj`. First verify
+the current staging migration baseline and the sole additive Prime migration;
+Web/Worker/extension still deliver from `staging`. This grants no production or
+Store release permission. See [the Prime delivery procedure](prime-video-adapter-notes.md#ordered-delivery-and-rollback).
 
 Never push risky changes directly to `main`. Never mix unrelated P2P, billing,
 auth, UI, and migration changes in one large PR unless the change cannot be split.

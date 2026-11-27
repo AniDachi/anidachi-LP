@@ -2,6 +2,20 @@ import type { SourceAdapterDefinition } from "../core/types";
 import { YouTubeVideoAdapter } from "./adapter";
 import { ensureYouTubeSource } from "./navigation";
 import { youtubeHistoryPolicy } from "./progress";
+import { isUsableVideo } from "../core/video-discovery";
+import { matchesWatchMedia, matchesWatchPlayer, WATCH_PLAYER } from "./watch-player";
+
+export function detectYouTubeWatchAdapter(root: Document, videoId: string | null) {
+  for (const player of root.querySelectorAll<HTMLElement>(WATCH_PLAYER)) {
+    if (!matchesWatchPlayer(player, videoId)) continue;
+    for (const video of player.querySelectorAll("video")) {
+      if (videoId && video.closest("#movie_player, .html5-video-player") === player &&
+          isUsableVideo(video) && matchesWatchMedia(video, videoId))
+        return new YouTubeVideoAdapter(video, player);
+    }
+  }
+  return null;
+}
 
 export const youtubeDefinition: SourceAdapterDefinition = {
   id: "youtube",
