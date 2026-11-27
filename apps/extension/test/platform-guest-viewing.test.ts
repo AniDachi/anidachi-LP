@@ -60,7 +60,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
 
   it.each(["sleeve", "host sync"])("stays independent until %s, returns to the exact episode and syncs in place", async action => {
     expect(catalogRoomProvider(home)).toBe(provider);
-    const { ctx, mount, play, page, machine } = setup();
+    const { ctx, mount, play, machine } = setup();
     machine.catalog();
     machine.receive({ ...state, playing: true }, host);
     play(personalUrl, personal.videoFingerprint);
@@ -70,24 +70,13 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.apply).not.toHaveBeenCalled();
     expect(ctx.navigate).not.toHaveBeenCalled();
 
-    if (action === "sleeve") void machine.join();
-    else machine.receive(state, host, true);
-    expect(ctx.offer).toHaveBeenLastCalledWith(null);
-    ctx.offer.mockClear();
-    machine.receive(state, host);
-    await Promise.resolve();
+    if (action === "sleeve") await machine.join();
+    else { machine.receive(state, host, true); await Promise.resolve(); }
     expect(ctx.navigate).toHaveBeenCalledExactlyOnceWith(host.sourceUrl, expect.anything(), expect.any(AbortSignal));
-    machine.bind(null);
-    page.href = watchUrl;
-    page.fingerprint = null;
+    play(watchUrl, host.videoFingerprint);
     const restored = mount();
     restored.receive(state, host);
-    expect(ctx.targetChanged).toHaveBeenLastCalledWith(host.sourceUrl);
-    expect(ctx.offer).not.toHaveBeenCalled();
-    play(watchUrl, host.videoFingerprint);
-    restored.receive(state, host);
     expect(restored.together()).toBe(true);
-    expect(ctx.offer).not.toHaveBeenCalled();
     expect(ctx.apply).toHaveBeenLastCalledWith(state, host);
     const later = { ...state, hostTime: 82 };
     restored.receive(later, undefined, true);
@@ -214,6 +203,29 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.continueEpisode).not.toHaveBeenCalled();
     expect(machine.together()).toBe(false);
     expect(ctx.offer).toHaveBeenLastCalledWith(personal.sourceUrl);
+  });
+
+  it.each(["click", "host sync"])("hides the offer immediately on %s and through player restoration", async action => {
+    const { ctx, machine, page, mount, play } = setup();
+    machine.receive(state, host);
+    expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
+    if (action === "click") void machine.join();
+    else machine.receive(state, host, true);
+    expect(ctx.offer).toHaveBeenLastCalledWith(null);
+    ctx.offer.mockClear();
+    machine.receive(state, host);
+    await Promise.resolve();
+    expect(ctx.navigate).toHaveBeenCalledOnce();
+    machine.bind(null);
+    page.href = watchUrl;
+    const restored = mount();
+    restored.receive(state, host);
+    expect(ctx.targetChanged).toHaveBeenLastCalledWith(host.sourceUrl);
+    expect(restored.together()).toBe(false);
+    play(watchUrl, host.videoFingerprint);
+    restored.refresh();
+    expect(restored.together()).toBe(true);
+    expect(ctx.offer).not.toHaveBeenCalled();
   });
 
   it("offers an unresolved title after the metadata wait, unless the room has ended", () => {
