@@ -3,6 +3,7 @@ import { roomSessionIdentityMatches, type RoomSessionRecord } from "./room-sessi
 import { roomWatchSource, type CatalogRoomProvider } from "./catalog-room-routes";
 
 type HostPlayback = PlaybackState & { hostSurface?: "player" | "catalog" };
+export type GuestPlaybackTiming = { align: boolean; receivedAt: number };
 type ViewingContext = {
   session(): RoomSessionRecord | null;
   provider(): CatalogRoomProvider | null;
@@ -10,7 +11,7 @@ type ViewingContext = {
   playerFingerprint(): string | null;
   playerSource?(): WatchSourceDescriptor | undefined;
   continueEpisode?(source: WatchSourceDescriptor, room: RoomSessionRecord, signal: AbortSignal): Promise<boolean>;
-  apply(state: PlaybackState, source?: WatchSourceDescriptor): void;
+  apply(state: PlaybackState, source?: WatchSourceDescriptor, timing?: GuestPlaybackTiming): void;
   suspend(): void;
   persist(record: RoomSessionRecord, fingerprint: string | null): Promise<boolean>;
   navigate(url: string, room: RoomSessionRecord, signal: AbortSignal): void | Promise<boolean | void>;
@@ -33,7 +34,7 @@ function episodeSeries(source?: WatchSourceDescriptor) {
 export class GuestViewing {
   private room: RoomSessionRecord | null = null;
   private following: string | null | undefined;
-  private target: { url: string; state: HostPlayback; source?: WatchSourceDescriptor } | null = null;
+  private target: { url: string; state: HostPlayback; receivedAt: number; source?: WatchSourceDescriptor } | null = null;
   private navigating: AbortController | null = null;
   private awaitingArrival = false;
   private navigatingFrom: string | null = null;
@@ -89,12 +90,12 @@ export class GuestViewing {
     }
     const sameSource = previous?.state.videoFingerprint === target.videoFingerprint;
     const descriptor = source?.videoFingerprint === target.videoFingerprint ? source : sameSource ? previous.source : undefined;
-    this.target = { url: target.sourceUrl, state, source: descriptor };
+    this.target = { url: target.sourceUrl, state, receivedAt: Date.now(), source: descriptor };
     if (syncGuests) void this.join();
     else this.refresh();
   }
 
-  refresh() {
+  refresh(align = false) {
     const target = this.target;
     if (!this.active()) return;
     const localFingerprint = this.localFingerprint();
@@ -121,6 +122,7 @@ export class GuestViewing {
     }
     if (this.navigating) {
       if (!this.awaitingArrival || !this.together()) return;
+      align = true;
       this.cancelNavigation();
     }
     const fingerprint = target.state.videoFingerprint;
@@ -161,9 +163,14 @@ export class GuestViewing {
     if (this.together()) {
       const series = episodeSeries(target.source);
       if (series) this.episode = { fingerprint, series };
+      const firstPlayback = !this.playedHere;
       this.playedHere = true;
       this.show(null);
-      this.context.apply(target.state, target.source);
+      if (this.context.provider() === "hbomax") {
+        this.context.apply(target.state, target.source, { align: align || firstPlayback, receivedAt: target.receivedAt });
+      } else {
+        this.context.apply(target.state, target.source);
+      }
     } else {
       this.playedHere = false;
       this.context.suspend();
@@ -202,7 +209,7 @@ export class GuestViewing {
         this.lastFollowed = fingerprint;
         if (this.onTarget() && this.context.playerFingerprint()) {
           this.cancelNavigation();
-          this.refresh();
+          this.refresh(true);
           return;
         }
         this.awaitingArrival = true;

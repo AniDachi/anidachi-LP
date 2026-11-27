@@ -2,6 +2,7 @@ import "../src/zod-csp";
 import { HBO_MAX_BROWSER_HOSTS } from "@anidachi/protocol";
 import { defineContentScript } from "wxt/utils/define-content-script";
 import { startHboNativeCatalog } from "../src/source-adapters/hbomax/native-catalog";
+import { startHboClock } from "../src/source-adapters/hbomax/native-clock";
 
 export default defineContentScript({
 	matches: HBO_MAX_BROWSER_HOSTS.map(host => `https://${host}/*`),
@@ -12,6 +13,8 @@ export default defineContentScript({
 		const key = "__anidachiHboCatalogDispose";
 		const previous = Reflect.get(window, key);
 		if (typeof previous === "function") previous();
-		Reflect.set(window, key, startHboNativeCatalog(window));
+		const stopCatalog = startHboNativeCatalog(window);
+		const stopClock = startHboClock(document);
+		Reflect.set(window, key, () => { stopClock(); stopCatalog(); });
 	},
 });

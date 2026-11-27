@@ -15,6 +15,7 @@ import {
 	shouldThrottleRemoteSeekAttempt,
 	waitForMediaReady,
 } from "./playback-control";
+import type { GuestPlaybackTiming } from "./guest-viewing";
 import { logDebug } from "./debug-log";
 import type { RoomSendDisposition } from "./media-types";
 import type { PlaybackSyncStatus } from "./playback-sync-status";
@@ -29,6 +30,7 @@ import type {
 } from "./source-adapters/core/types";
 
 const HEARTBEAT_INTERVAL_MS = 1500;
+const EXPLICIT_ALIGNMENT_TOLERANCE_SECONDS = 0.15;
 const REMOTE_EVENT_SUPPRESSION_MS = 1800;
 const REMOTE_COMMAND_DEDUPE_MS = 800;
 const SOURCE_TRANSITION_TIMEOUT_MS = 10_000;
@@ -126,6 +128,7 @@ export class PlaybackSyncController {
 	private lastRemoteCommand: { key: string; receivedAt: number } | null = null;
 	private lastRemoteSeekAttempt: RemoteSeekAttempt | null = null;
 	private latestHostState: PlaybackState | null = null;
+	private alignFingerprint: string | null = null;
 	private confirmedHostFingerprint: string | null = null;
 	private pendingLocalSeek: PendingLocalSeek | null = null;
 	private pendingPlayWait = false;
@@ -172,6 +175,7 @@ export class PlaybackSyncController {
 		this.invalidateAsyncWork();
 		this.unsubscribeFromAdapter();
 		this.clearPendingLocalSeek();
+		this.alignFingerprint = null;
 		this.adapter = adapter;
 		this.adapterActive = adapter !== null;
 		this.lastLocalSeekBroadcast = null;
@@ -212,6 +216,7 @@ export class PlaybackSyncController {
 		this.lastRemoteCommand = null;
 		this.lastRemoteSeekAttempt = null;
 		this.latestHostState = null;
+		this.alignFingerprint = null;
 		this.confirmedHostFingerprint = null;
 		this.authoritativeRoomSource = null;
 		this.pendingRemoteSeek = null;
@@ -296,6 +301,7 @@ export class PlaybackSyncController {
 	handleHostState(
 		state: PlaybackState,
 		source?: WatchSourceDescriptor,
+		timing?: GuestPlaybackTiming,
 	): Promise<void> {
 		const adapter = this.getActiveAdapter();
 		if (
@@ -315,6 +321,7 @@ export class PlaybackSyncController {
 			}
 			this.rememberAuthoritativeRoomSource(adapter, source);
 		}
+		if (this.alignFingerprint !== state.videoFingerprint) this.alignFingerprint = null;
 		this.confirmedHostFingerprint = state.videoFingerprint;
 		const navigationSource =
 			source ?? this.getRememberedAuthoritativeRoomSource(state);
@@ -334,7 +341,10 @@ export class PlaybackSyncController {
 			return Promise.resolve();
 		}
 
-		const remoteState = normalizeRemotePlaybackState(state, this.now());
+		if (adapter.provider === "hbomax" && timing?.align && adapter.getFingerprint() === state.videoFingerprint) {
+			this.alignFingerprint = state.videoFingerprint;
+		}
+		const remoteState = normalizeRemotePlaybackState(state, timing?.receivedAt ?? this.now());
 		this.latestHostState = remoteState;
 		if (!remoteState.playing) {
 			this.clearResumeRequired();
@@ -350,7 +360,7 @@ export class PlaybackSyncController {
 			return Promise.resolve();
 		}
 
-		return this.applyHostState(state);
+		return this.applyHostState(remoteState);
 	}
 
 	pinRoomProvider(provider: SourceProvider): boolean {
@@ -379,7 +389,7 @@ export class PlaybackSyncController {
 			return Promise.resolve();
 		}
 
-		const remoteState = normalizeRemotePlaybackState(state, this.now());
+		const remoteState = adapter.provider === "hbomax" ? state : normalizeRemotePlaybackState(state, this.now());
 		this.applyAuthoritativePlaybackRate(adapter, remoteState.playbackRate);
 		const correction = getSyncCorrection(
 			adapter.getCurrentTime(),
@@ -397,9 +407,12 @@ export class PlaybackSyncController {
 			return Promise.resolve();
 		}
 
-		const shouldSeek = shouldSeekForHostState(correction.action, settling);
+		const align = this.alignFingerprint === state.videoFingerprint;
+		const alreadyAligned = Math.abs(correction.drift) <= EXPLICIT_ALIGNMENT_TOLERANCE_SECONDS;
+		const action = align && !alreadyAligned ? "seek" : correction.action;
+		const shouldSeek = shouldSeekForHostState(action, settling);
 		const shouldDeferSeek = shouldDeferHostStateSeek(
-			correction.action,
+			action,
 			settling,
 		);
 		const shouldChangePlayback =
@@ -424,6 +437,8 @@ export class PlaybackSyncController {
 		if (shouldSeek) {
 			didSeek = this.seekFromRemote(correction.expectedTime);
 		}
+
+		if (align && (didSeek || alreadyAligned)) this.alignFingerprint = null;
 
 		if (correction.action === "catch-up" && !didSeek) {
 			this.onStatus({
@@ -597,6 +612,7 @@ export class PlaybackSyncController {
 		}
 
 		this.adapterActive = false;
+		this.alignFingerprint = null;
 		this.invalidateAsyncWork();
 		this.unsubscribeFromAdapter();
 		this.clearHeartbeatTimer();
@@ -618,6 +634,7 @@ export class PlaybackSyncController {
 		this.clearPendingLocalSeek();
 		this.adapter = null;
 		this.latestHostState = null;
+		this.alignFingerprint = null;
 		this.confirmedHostFingerprint = null;
 		this.authoritativeRoomSource = null;
 		this.lastConfirmedContentState = null;

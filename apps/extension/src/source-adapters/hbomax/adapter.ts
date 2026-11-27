@@ -6,6 +6,7 @@ import { Html5VideoAdapter } from "../core/html5-video-adapter";
 import type { PlayerOverlayGeometryListener } from "../core/overlay-geometry";
 import type { AdapterPlaybackSnapshot, PersonalResumeTarget, PlayerEvent } from "../core/types";
 import { readHboMaxPlaybackMetadata, readHboMaxPlayerTitle } from "./metadata";
+import { readHboClock } from "./content-clock";
 import { isHboMaxAd } from "./player";
 import { hboMaxOverlayGeometry, subscribeHboMaxGeometry } from "./player-chrome";
 
@@ -18,22 +19,24 @@ export class HboMaxVideoAdapter extends Html5VideoAdapter {
 
   override getFingerprint() { return hboMaxFingerprint(this.playbackId ?? "unknown"); }
 
-  private phase(): AdapterPlaybackSnapshot["phase"] {
+  private phase(clock = readHboClock(this.video)): AdapterPlaybackSnapshot["phase"] {
     const video = this.video;
     if (!this.playbackId || this.playbackId !== hboMaxPlaybackId(location.href) ||
         !video.isConnected || video.parentElement !== this.container) return "transition";
     if (isHboMaxAd(this.container)) return "interstitial";
     if (!Number.isFinite(video.duration) || video.duration <= 0 || video.readyState < 1) return "transition";
     const max = this.container.querySelector('[data-testid="player-ux-scrubber-position"]')?.getAttribute("aria-valuemax");
-    if (max && Math.abs(Number(max) - video.duration) > 2) return "transition";
+    if (!clock || (max && Math.abs(Number(max) - video.duration) > 2 && Math.abs(Number(max) - clock.duration) > 2)) return "transition";
+    if (!clock.inMain) return "interstitial";
     return video.seeking || video.readyState < 3 ? "buffering" : "content";
   }
 
   override getPlaybackSnapshot(): AdapterPlaybackSnapshot {
-    const phase = this.phase();
+    const clock = readHboClock(this.video);
+    const phase = this.phase(clock);
     const content = phase === "content" || phase === "buffering";
     return {
-      phase, contentTime: content ? this.video.currentTime : 0, playing: content && !this.video.paused,
+      phase, contentTime: content && clock ? clock.position : 0, playing: content && !this.video.paused,
       capturedAt: Date.now(), playbackRate: this.video.playbackRate || 1,
     };
   }
@@ -54,13 +57,14 @@ export class HboMaxVideoAdapter extends Html5VideoAdapter {
   }
 
   override getSourceDescriptor(): WatchSourceDescriptor | undefined {
-    if (!this.playbackId || this.phase() !== "content") return undefined;
+    const clock = readHboClock(this.video);
+    if (!this.playbackId || !clock || this.phase(clock) !== "content") return undefined;
     const metadata = readHboMaxPlaybackMetadata(this.video.ownerDocument, this.playbackId);
     const url = hboMaxSourceUrl(this.playbackId);
     const posterUrl = metadata?.artworkUrl && hboMaxArtworkUrl(metadata.artworkUrl);
     return {
       provider: this.provider, videoFingerprint: this.getFingerprint(), sourceUrl: url, canonicalUrl: url,
-      title: (metadata?.displayTitle || this.getTitle() || this.name).slice(0, MAX_WATCH_TITLE_CHARS), duration: this.video.duration,
+      title: (metadata?.displayTitle || this.getTitle() || this.name).slice(0, MAX_WATCH_TITLE_CHARS), duration: clock.duration,
       ...(posterUrl && { posterUrl }),
       ...(metadata?.identity && { hbomaxIdentity: metadata.identity }),
       ...(metadata?.identity.kind === "episode" && {
@@ -76,27 +80,35 @@ export class HboMaxVideoAdapter extends Html5VideoAdapter {
     if (this.phase() !== "content") throw new Error("HBO Max content is not ready");
     await this.video.play();
   }
+  async resumeInterstitial(signal: AbortSignal) {
+    if (signal.aborted || this.phase() !== "interstitial") return;
+    await this.video.play();
+  }
   override pause() { if (this.phase() === "content") this.video.pause(); }
   override setPlaybackRate(rate: number) { if (this.phase() === "content") super.setPlaybackRate(rate); }
   override seek(time: number) {
-    if (Number.isFinite(time) && this.phase() === "content") {
-      this.video.currentTime = Math.max(0, Math.min(this.video.duration, time));
-    }
+    this.seekContent(time);
+  }
+  private seekContent(time: number) {
+    if (!Number.isFinite(time)) return false;
+    const clock = readHboClock(this.video, time);
+    if (clock?.streamTarget == null || this.phase(clock) !== "content") return false;
+    this.video.currentTime = clock.streamTarget;
+    return true;
   }
 
   async getPersonalResumeReadiness(target: PersonalResumeTarget) {
     if (target.expiresAt <= Date.now() || !this.playbackId || hboMaxPlaybackId(target.sourceUrl) !== this.playbackId ||
         this.playbackId !== hboMaxPlaybackId(location.href)) return "cancelled" as const;
-    return this.phase() === "content" && target.currentTime >= 0 && target.currentTime <= this.video.duration
+    const clock = readHboClock(this.video);
+    return clock && this.phase(clock) === "content" && target.currentTime >= 0 && target.currentTime <= clock.duration
       ? "ready" as const : "waiting" as const;
   }
   async seekPersonalResume(target: PersonalResumeTarget, guard: () => boolean) {
     const ready = await this.getPersonalResumeReadiness(target);
     if (ready !== "ready") return ready;
     if (!guard() || target.expiresAt <= Date.now()) return "cancelled" as const;
-    if (this.phase() !== "content") return "waiting" as const;
-    this.seek(target.currentTime);
-    return "consumed" as const;
+    return this.seekContent(target.currentTime) ? "consumed" as const : "waiting" as const;
   }
 
   override subscribe(callback: (event: PlayerEvent) => void) {

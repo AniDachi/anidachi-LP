@@ -67,6 +67,33 @@ describe("PlaybackSyncController", () => {
 		);
 	});
 
+	it("aligns small HBO drift on explicit sync and leaves later heartbeats undisturbed", async () => {
+		const h = createHarness({ provider: "hbomax", isHost: false, fingerprint: "hbomax|episode" });
+		const state = playbackState({ videoFingerprint: "hbomax|episode", hostTime: 171.6 });
+		h.adapter.setCurrentTime(171);
+		await h.controller.handleHostState(state);
+		expect(h.adapter.seek).not.toHaveBeenCalled();
+		await h.controller.handleHostState(state, undefined, { align: true, receivedAt: Date.now() });
+		expect(h.adapter.seek).toHaveBeenCalledWith(171.6, { resumeIfPlaying: false });
+		h.adapter.seek.mockClear();
+		h.adapter.setCurrentTime(171);
+		await h.controller.handleHostState(state);
+		expect(h.adapter.seek).not.toHaveBeenCalled();
+	});
+
+	it("retains the time of the HBO host sample while the returning guest buffers", async () => {
+		const h = createHarness({ provider: "hbomax", isHost: false, fingerprint: "hbomax|episode" });
+		h.adapter.setPhase("buffering");
+		h.adapter.setCurrentTime(103.4);
+		await h.controller.handleHostState(playbackState({ videoFingerprint: "hbomax|episode", hostTime: 100, playing: true }),
+			undefined, { align: true, receivedAt: Date.now() });
+		expect(h.adapter.seek).not.toHaveBeenCalled();
+		vi.advanceTimersByTime(4000);
+		h.adapter.setPhase("content");
+		h.adapter.emitPhase();
+		expect(h.adapter.seek).toHaveBeenCalledWith(104, { resumeIfPlaying: false });
+	});
+
 	it("rejects local guest control as authoritative state", () => {
 		const harness = createHarness({ isHost: false });
 

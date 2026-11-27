@@ -41,13 +41,21 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
         return true;
       }),
     };
-    function mount() { const machine = new GuestViewing(ctx); machine.bind(record); return machine; }
+    const timingSamples = vi.fn();
+    function mount() {
+      const machine = new GuestViewing({ ...ctx, apply: (sample, source, timing) => {
+        timingSamples(timing);
+        ctx.apply(sample, source);
+      } });
+      machine.bind(record);
+      return machine;
+    }
     function play(href: string, fingerprint: string) {
       page.href = home.includes("amazon.com") ? "https://www.amazon.com/gp/video/detail/B0FX2ZCPFK" : href;
       page.fingerprint = fingerprint;
     }
     function leave() { page.href = home; page.fingerprint = null; }
-    return { ctx, mount, play, leave, machine: mount() };
+    return { ctx, mount, play, leave, timingSamples, machine: mount() };
   }
 
   it.each(["sleeve", "host sync"])("stays independent until %s, returns to the exact episode and syncs in place", async action => {
@@ -89,6 +97,20 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
     restored.receive({ ...state, hostSurface: "catalog" }, host, true);
     expect(ctx.offer).toHaveBeenLastCalledWith(null);
+  });
+
+  if (provider === "hbomax") it("requests precise alignment on return and gather, once per action", async () => {
+    const { play, machine, timingSamples } = setup();
+    machine.catalog();
+    machine.receive(state, host);
+    await machine.join();
+    play(watchUrl, host.videoFingerprint);
+    machine.refresh();
+    expect(timingSamples).toHaveBeenLastCalledWith({ align: true, receivedAt: expect.any(Number) });
+    machine.receive(state, host);
+    expect(timingSamples).toHaveBeenLastCalledWith({ align: false, receivedAt: expect.any(Number) });
+    machine.receive(state, host, true);
+    expect(timingSamples).toHaveBeenLastCalledWith({ align: true, receivedAt: expect.any(Number) });
   });
 
   const nextState = { ...state, hostTime: 12, sourceUrl: personal.sourceUrl, videoFingerprint: personal.videoFingerprint };
