@@ -123,6 +123,19 @@ function expectRecord(response: RoomSessionResponse): RoomSessionRecord {
 }
 
 describe("background-owned room session storage", () => {
+  it("retains the YouTube choice across reload and ignores writes from a different membership", async () => {
+    const deps = backgroundDependencies();
+    const tab = sender(17);
+    const send = (value: MessageWithoutType<RoomSessionMessage>) => handleRoomSessionStorageMessage(message(value), tab, deps);
+    const persist = () => send({ command: "persist", ownerUserId: "guest", roomId: "room" });
+    const record = expectRecord(await persist());
+    expectRecord(await send({ command: "set-youtube-following", record, fingerprint: null }));
+    const loaded = expectRecord(await persist());
+    expect(loaded.youtubeFollowing).toBe(null);
+    await send({ command: "set-youtube-following", record: { ...loaded, participantSessionId: "retired" }, fingerprint: "youtube|abcdefghijk" });
+    expect(expectRecord(await send({ command: "load", currentUserId: "guest" })).youtubeFollowing).toBe(null);
+  });
+
   it("matches the exact room, account, and participant session identity", () => {
     const record: RoomSessionRecord = {
       version: 1,

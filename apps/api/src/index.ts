@@ -3102,6 +3102,16 @@ export class RoomDurableObject {
       this.state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
     }
 
+    // A manual sync is live-only. A reconnect replays ordinary playback state.
+    if (event.syncGuests && result.source?.provider === "youtube" &&
+      !("hostSurface" in normalizedState && normalizedState.hostSurface === "catalog") &&
+      this.room.currentHostId === userId &&
+      this.room.currentDurableSource?.videoFingerprint === normalizedState.videoFingerprint) {
+      this.broadcast({ type: "HOST_STATE", state: normalizedState, syncGuests: true }, socket);
+      if (result.sourceChanged) await this.refreshRoomHistoryAuthorities();
+      return;
+    }
+
     if (result.sourceChanged) {
       await this.refreshRoomHistoryAuthorities();
     }

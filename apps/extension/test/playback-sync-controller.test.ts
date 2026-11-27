@@ -167,6 +167,18 @@ describe("PlaybackSyncController", () => {
 		const harness = createHarness({ isHost: true, disposition });
 		expect(harness.controller.broadcastHostState()).toBe(disposition === "sent");
 	});
+  it("only the explicit YouTube host action requests that viewers join", () => {
+    const host = createHarness({ isHost: true, provider: "youtube" });
+    host.controller.heartbeat();
+    host.adapter.emit({ type: "pause", time: 30 });
+    expect(host.sent.some(event => "syncGuests" in event)).toBe(false);
+    host.controller.broadcastHostState();
+    expect(host.sent.at(-1)).toMatchObject({ type: "HOST_STATE", syncGuests: true });
+    const other = createHarness({ isHost: true, provider: "crunchyroll" });
+    other.controller.broadcastHostState();
+    expect(other.sent.at(-1)).not.toHaveProperty("syncGuests");
+  });
+
 	it("does not confirm manual sync for guests or a detached video", () => {
 		const guest = createHarness({ isHost: false });
 		expect(guest.controller.broadcastHostState()).toBe(false);

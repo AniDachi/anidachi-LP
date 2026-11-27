@@ -14,6 +14,20 @@ capabilities; it must not inspect YouTube selectors or infer YouTube state.
 - Navigation uses a canonical watch URL and a bounded room hash. It does not use
   undocumented YouTube player APIs.
 
+## Choosing shared playback
+
+In a YouTube catalog room, starting a video offers guests **Watch together** on
+the capsule. A guest can stay in the catalog or play a different video with local
+playback controls. The choice belongs to the current room tab and survives a page
+reload. A direct invitation to the host's current watch page starts synchronized.
+
+The existing host **Sync** action sends a live `HOST_STATE` with `syncGuests: true`.
+The Worker verifies the sender's host role and the current YouTube source. A guest
+already on that watch page applies the host's time and play/pause state in place.
+Other guests open the canonical watch URL in their room tabs. Ordinary source and
+playback updates never navigate an independent guest. Reconnect snapshots carry
+the latest playback position, without replaying an earlier Sync action.
+
 ## Ownership
 
 The YouTube folder owns:
