@@ -2,6 +2,7 @@ import {
 	type ClientEvent,
 	getSyncCorrection,
 	normalizeRemotePlaybackState,
+	SYNC_IGNORE_DRIFT_SECONDS,
 	type PlaybackState,
 	type ServerEvent,
 	type WatchSourceDescriptor,
@@ -409,10 +410,11 @@ export class PlaybackSyncController {
 
 		const align = this.alignFingerprint === state.videoFingerprint;
 		const alreadyAligned = Math.abs(correction.drift) <= ALIGNMENT_TOLERANCE_SECONDS;
-		// HBO may advance briefly while restoring its native resume point after our first seek.
-		// A paused host supplies a fixed target, including on subsequent room snapshots.
-		const holdPausedPosition = adapter.provider === "hbomax" && !remoteState.playing;
-		const action = (align || holdPausedPosition) && !alreadyAligned ? "seek" : correction.action;
+		// HBO startup may finish after the first seek. Recheck the running playhead
+		// on room updates, with a tighter tolerance for a stationary host or explicit Sync.
+		const tolerance = align || !remoteState.playing ? ALIGNMENT_TOLERANCE_SECONDS : SYNC_IGNORE_DRIFT_SECONDS;
+		const needsHboSeek = adapter.provider === "hbomax" && Math.abs(correction.drift) > tolerance;
+		const action = needsHboSeek ? "seek" : correction.action;
 		const shouldSeek = shouldSeekForHostState(action, settling);
 		const shouldDeferSeek = shouldDeferHostStateSeek(
 			action,

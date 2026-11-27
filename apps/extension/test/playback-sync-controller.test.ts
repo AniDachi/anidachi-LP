@@ -70,16 +70,28 @@ describe("PlaybackSyncController", () => {
 	it("aligns small HBO drift on explicit sync and leaves later heartbeats undisturbed", async () => {
 		const h = createHarness({ provider: "hbomax", isHost: false, fingerprint: "hbomax|episode" });
 		h.adapter.setPaused(false);
-		const state = playbackState({ videoFingerprint: "hbomax|episode", hostTime: 171.6, playing: true });
+		const state = playbackState({ videoFingerprint: "hbomax|episode", hostTime: 171.35, playing: true });
 		h.adapter.setCurrentTime(171);
 		await h.controller.handleHostState(state);
 		expect(h.adapter.seek).not.toHaveBeenCalled();
 		await h.controller.handleHostState(state, undefined, { align: true, receivedAt: Date.now() });
-		expect(h.adapter.seek).toHaveBeenCalledWith(171.6, { resumeIfPlaying: false });
+		expect(h.adapter.seek).toHaveBeenCalledWith(171.35, { resumeIfPlaying: false });
 		h.adapter.seek.mockClear();
 		h.adapter.setCurrentTime(171);
 		await h.controller.handleHostState(state);
 		expect(h.adapter.seek).not.toHaveBeenCalled();
+	});
+
+	it("recovers the running time lost while HBO resumed after a gather", async () => {
+		const h = createHarness({ provider: "hbomax", isHost: false, fingerprint: "hbomax|episode" });
+		h.adapter.setPaused(false);
+		h.adapter.setCurrentTime(232.701);
+		const state = playbackState({ videoFingerprint: "hbomax|episode", hostTime: 233.960, playing: true });
+		await h.controller.handleHostState(state);
+		expect(h.adapter.seek).toHaveBeenCalledExactlyOnceWith(233.960, { resumeIfPlaying: false });
+		h.adapter.setCurrentTime(233.8);
+		await h.controller.handleHostState(state);
+		expect(h.adapter.seek).toHaveBeenCalledTimes(1);
 	});
 
 	it("restores a paused HBO scene when native startup moves the guest after the initial seek", async () => {
