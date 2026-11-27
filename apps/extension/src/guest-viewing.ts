@@ -232,7 +232,10 @@ export class GuestViewing {
   private localFingerprint() {
     const provider = this.context.provider();
     // Prime can play an episode while its address still names the series or retail product.
-    if (provider === "primevideo") return this.context.playerFingerprint();
+    if (provider === "primevideo") {
+      const fingerprint = this.context.playerFingerprint();
+      return fingerprint === "primevideo|unknown" ? null : fingerprint;
+    }
     return roomWatchSource(provider, this.context.href())?.videoFingerprint ?? null;
   }
 
