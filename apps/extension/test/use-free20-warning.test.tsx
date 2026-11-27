@@ -12,6 +12,7 @@ function time(remaining = 299, sequence = 1, day = "2026-11-01", budgetSeconds: 
 }
 const response = (decision: "show" | "not_eligible" | "already_claimed" = "show"): Free20WarningResult => ({ kind: "server", response: { hostingWarningVersion: 1, ownerUserId: owner, roomId: "room", roomGeneration: 1, utcDay: "2026-11-01", serverTime: at, validUntil: at + 10000, decision, ...(decision === "show" ? { thresholdSeconds: 300 as const, claimId: crypto.randomUUID() } : {}) } } as Free20WarningResult);
 let host: HTMLElement, root: Root, input: Free20WarningInput, current: HostingTimeDisplay | null, dismiss: ReturnType<typeof useFree20Warning>["dismiss"];
+let claimFinalMinute: ReturnType<typeof vi.fn<NonNullable<Free20WarningInput["claimFinalMinute"]>>>;
 let request: ReturnType<typeof vi.fn<NonNullable<Free20WarningInput["request"]>>>;
 function Harness() { const warning = useFree20Warning(input); dismiss = warning.dismiss; return <output>{warning.visible ? "notice" : "hidden"}</output>; }
 const render = () => act(async () => root.render(<Harness />));
@@ -22,7 +23,13 @@ describe("Free20 warning lifecycle", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date", "performance"] }); vi.setSystemTime(at);
     vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
     current = time(); request = vi.fn().mockResolvedValue(response());
-    input = { ownerUserId: owner, sessionKey: login, credentialRevision: "revision-a", isHost: true, connected: true, roomId: "room", roomGeneration: 1, connectionGeneration: 1, reading: current, readFresh: () => current, request };
+    const seen = new Set<string>();
+    claimFinalMinute = vi.fn(async ({roomId}: {roomId: string}) => {
+      if (seen.has(roomId)) return false;
+      seen.add(roomId);
+      return true;
+    });
+    input = { claimFinalMinute, ownerUserId: owner, sessionKey: login, credentialRevision: "revision-a", isHost: true, connected: true, roomId: "room", roomGeneration: 1, connectionGeneration: 1, reading: current, readFresh: () => current, request };
     host = document.createElement("div"); document.body.append(host); root = createRoot(host);
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.restoreAllMocks(); vi.useRealTimers(); });
@@ -47,6 +54,50 @@ describe("Free20 warning lifecycle", () => {
     expect(host.textContent).toBe("hidden");
     expect(request).toHaveBeenCalledTimes(2);
   });
+  it.each(["suppressed", "already_claimed", "unavailable"])("starts at 02:10 with daily warning %s and shows the final minute independently", async outcome => {
+    request.mockResolvedValue(outcome === "already_claimed" ? response("already_claimed") :
+      outcome === "suppressed" ? {kind: "suppressed"} : {kind: "failed", retryable: false});
+    for (const seconds of [130, 61, 59, 1]) {
+      current = input.reading = time(seconds, 1, "2026-11-01", 1800);
+      await render();
+      expect(host.textContent).toBe(seconds > 60 ? "hidden" : "notice");
+    }
+    expect(claimFinalMinute).toHaveBeenCalledTimes(1);
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+  it("respects closing the visible countdown while the per-room claim is still pending", async () => {
+    let resolveClaim!: (show: boolean) => void;
+    claimFinalMinute.mockImplementationOnce(() => new Promise(resolve => { resolveClaim = resolve; }));
+    await render();
+    expect(host.textContent).toBe("notice");
+    current = input.reading = time(60);
+    await render();
+    await act(async () => dismiss());
+    await act(async () => resolveClaim(true));
+    expect(host.textContent).toBe("hidden");
+    expect(claimFinalMinute).toHaveBeenCalledTimes(1);
+  });
+  it.each([true, false])("starts at 40 seconds, then stays quiet after reload (dismissed %s)", async closed => {
+    current = input.reading = time(40, 1, "2026-11-01", 1800);
+    await render(); expect(host.textContent).toBe("notice");
+    if (closed) { await act(async () => dismiss()); await render(); expect(host.textContent).toBe("hidden"); }
+    await act(async () => root.unmount());
+    root = createRoot(host);
+    await render(); expect(host.textContent).toBe("hidden");
+    expect(request).not.toHaveBeenCalled();
+    input.roomId = "room-b"; current.snapshot.roomId = "room-b";
+    await render(); expect(host.textContent).toBe("notice");
+  });
+  it.each(["guest", "hidden", "disconnected", "expired", "zero", "paid"])("does not consume the final warning on %s", async reason => {
+    current = input.reading = time(reason === "zero" ? 0 : 35);
+    if (reason === "guest") input.isHost = false;
+    if (reason === "hidden") vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    if (reason === "disconnected") input.connected = false;
+    if (reason === "expired") current.resetSeconds = 0;
+    if (reason === "paid") current.snapshot.access = {kind: "confirmed_unlimited", source: "paid", validUntil: at + 60000};
+    await render(); expect(host.textContent).toBe("hidden");
+    expect(claimFinalMinute).not.toHaveBeenCalled();
+  });
   it("shows on the first below300 observation and never sends on ordinary ticks or focus", async () => {
     await render(); expect(host.textContent).toBe("notice"); expect(request).toHaveBeenCalledTimes(1);
     for (let remaining = 298; remaining > 280; remaining--) { current = time(remaining); input.reading = current; await render(); }
@@ -63,9 +114,9 @@ describe("Free20 warning lifecycle", () => {
     input.reading = current = time(1, 4); await render(); expect(host.textContent).toBe("hidden");
     expect(request).toHaveBeenCalledTimes(1);
   });
-  it("retires the notice when the host chooses plans", async () => {
+  it("still warns during the final minute when the host opened plans and remains Free", async () => {
     await render(); await act(async () => dismiss("plans"));
-    input.reading = current = time(60, 2); await render(); expect(host.textContent).toBe("hidden");
+    input.reading = current = time(60, 2); await render(); expect(host.textContent).toBe("notice");
     expect(request).toHaveBeenCalledTimes(1);
   });
   it("waits for a fresh clock when returning to the same tab after an early dismissal", async () => {
@@ -78,10 +129,10 @@ describe("Free20 warning lifecycle", () => {
     await act(async () => document.dispatchEvent(new Event("visibilitychange")));
     expect(host.textContent).toBe("notice"); expect(request).toHaveBeenCalledTimes(1);
   });
-  it("keeps an early dismissal scoped to the original room connection", async () => {
+  it("shows the independent final warning after reconnecting before the last minute", async () => {
     await render(); await act(async () => dismiss());
     input.connectionGeneration++; input.reading = current = time(60, 2);
-    await render(); expect(host.textContent).toBe("hidden"); expect(request).toHaveBeenCalledTimes(1);
+    await render(); expect(host.textContent).toBe("notice"); expect(claimFinalMinute).toHaveBeenCalledTimes(1);
   });
   it("retries transient failure once after five seconds and does not loop", async () => {
     request.mockResolvedValue({ kind: "failed", retryable: true }); await render();
