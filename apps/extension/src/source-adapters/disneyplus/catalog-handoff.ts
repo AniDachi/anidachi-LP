@@ -39,6 +39,8 @@ export async function forgetDisneyPlusCatalogTab(tab: number): Promise<void> {
 export async function discardUnrelatedDisneyLaunch(tab: number, href: string): Promise<void> {
 	if (!href.startsWith("https://www.disneyplus.com/")) return;
 	await inTab(tab, async () => {
+		// Leaving the player/detail handoff for a catalog section cancels the guest's return.
+		if (!disneyLaunchTitle(href)) await chrome.storage.session.remove(returnKey(tab));
 		const key = redirectKey(tab);
 		const record = redirectRecord.safeParse((await chrome.storage.session.get(key))[key]);
 		if (record.success && (record.data.playback !== (disneyLaunchTitle(href) ?? disneyRedirectKey(href)) || record.data.expires <= Date.now())) {
