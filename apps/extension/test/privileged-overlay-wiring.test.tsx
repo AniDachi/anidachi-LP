@@ -170,12 +170,16 @@ describe("privileged overlay wiring", () => {
 		const watchPath = provider === "disneyplus" ? "/play/" + disneyEpisode : provider === "youtube" ? "/watch?v=80025313" : "/watch/80025313";
 		const page = provider === "crunchyroll" ? "/de/watch/80025313/episode" : watchPath;
 		const navigate = vi.fn();
-		vi.stubGlobal("location", Object.assign(new URL(origin + page + "#anidachiRoom=room-a"), { assign: navigate }));
+		const pageLocation = Object.assign(new URL(origin + page + "#anidachiRoom=room-a"), { assign: navigate });
+		vi.stubGlobal("location", pageLocation);
+		vi.spyOn(document, "location", "get").mockImplementation(() => pageLocation as unknown as Location);
 		installActiveHostRoomRuntime();
 		const record = confirmedRoomSession();
 		const send = vi.mocked(chrome.runtime.sendMessage);
 		const original = send.getMockImplementation()!;
 		send.mockImplementation(async (...args: any[]) => {
+			if (args[0].command === "set-room-following")
+				return { ok: true, record: { ...record, followingFingerprint: args[0].fingerprint } };
 			if (args[0].command === "prepare")
 				return { ok: true, prepared: { ...preparedRoomSession(), roomId: record.roomId } };
 			if (args[0].command === "connect-room")

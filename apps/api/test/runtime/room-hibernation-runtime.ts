@@ -12,6 +12,7 @@ import {
 	type ServerEvent,
 	ServerEventSchema,
  RoomMediaCapabilityLeaseSchema,
+	canonicalizeRoomSourceUrl,
 	createEmptyRoomEndEventId,
 } from "@anidachi/protocol";
 import { jwtVerify } from "jose";
@@ -544,6 +545,40 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		host.close();
 		hostReconnect.close();
 		guest.close();
+	});
+
+	it.each([
+		"https://www.netflix.com/watch/81234567",
+		"https://www.crunchyroll.com/de/watch/G8WUNM123/pilot",
+		"https://www.disneyplus.com/pt-br/play/120ae1e6-2240-4924-a4ce-f8de6e28b0b1",
+		"https://play.max.com/br/pt-br/video/watch/4d269596-6871-4419-892a-ca2b801d447d",
+		"https://www.primevideo.com/detail/0AAAAAAAAAAAAAAAAAAAAAAAAA",
+		"https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+	])("sends an explicit gather only to current guests for %s", async url => {
+		const parsed = canonicalizeRoomSourceUrl(url);
+		if (!parsed.ok) throw new Error(parsed.code);
+		const source = { ...parsed.source, title: "Episode" };
+		const roomId = crypto.randomUUID();
+		const rooms = (env as unknown as { ROOMS: DurableObjectNamespace }).ROOMS;
+		const stub = rooms.get(rooms.idFromName(roomId));
+		stubWebFetch(async () => Response.json({ ok: true, outcome: "persisted", sourceGeneration: 2 }));
+		const connect = (role: "host" | "member", id: string) => connectRoomClient(stub, { roomId, role, userId: id, sessionId: id + "-session" });
+		const host = await connect("host", "host");
+		const guest = await connect("member", "guest");
+		const state = { ...playbackState(source.videoFingerprint, source.sourceUrl), hostSurface: "player" as const, playing: false };
+		host.send({ type: "HOST_STATE", roomId, source, state });
+		const ordinary = await guest.waitFor(e => e.type === "HOST_STATE" && e.state.hostTime === 42, "ordinary playback");
+		expect(ordinary).not.toHaveProperty("syncGuests");
+		host.send({ type: "HOST_STATE", roomId, source, state: { ...state, hostTime: 47 }, syncGuests: true });
+		const gather = await guest.waitFor(e => e.type === "HOST_STATE" && e.state.hostTime === 47, "live gather");
+		expect(gather).toMatchObject({ syncGuests: true, state: { playing: false, videoFingerprint: source.videoFingerprint } });
+		const lateGuest = await connect("member", "late");
+		const snapshot = await lateGuest.waitFor(e => e.type === "ROOM_SNAPSHOT" && e.hostState?.hostTime === 47, "ordinary late join");
+		expect(snapshot).not.toHaveProperty("syncGuests");
+		expect(snapshot).not.toHaveProperty("hostState.syncGuests");
+		lateGuest.close();
+		guest.close();
+		host.close();
 	});
 
 	it("broadcasts canonical source state without waiting for serialized Web delivery", async () => {

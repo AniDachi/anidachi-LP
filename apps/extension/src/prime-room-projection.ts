@@ -40,7 +40,7 @@ export class PrimeRoomProjection {
 			self.connected === false ||
 			!state ||
 			(manualReturn
-				? source.provider !== "primevideo" || state.hostSurface !== "player" || !this.baseline || !!this.follow ||
+				? source.provider !== "primevideo" || state.hostSurface !== "player" || !!this.follow ||
 					!snapshot?.participants.some(p => p.role === "host" && p.connected !== false)
 				: !state.playing) ||
 			source.sourceUrl !== url ||

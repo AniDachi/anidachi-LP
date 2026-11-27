@@ -8,6 +8,7 @@ import {
   handleRoomSessionStorageRuntimeMessage,
   handleRoomSessionStorageMessage,
   loadRoomSessionForTab,
+  parseRoomSessionRecord,
   prepareRoomSessionForTab,
   roomSessionIdentityMatches,
   ROOM_SESSION_INSTALL_ID_STORAGE_KEY as INSTALL_ID_STORAGE_KEY,
@@ -129,11 +130,14 @@ describe("background-owned room session storage", () => {
     const send = (value: MessageWithoutType<RoomSessionMessage>) => handleRoomSessionStorageMessage(message(value), tab, deps);
     const persist = () => send({ command: "persist", ownerUserId: "guest", roomId: "room" });
     const record = expectRecord(await persist());
-    expectRecord(await send({ command: "set-youtube-following", record, fingerprint: null }));
+    const legacy = { ...record, youtubeFollowing: "youtube|abcdefghijk" };
+    expect(parseRoomSessionRecord(legacy)?.followingFingerprint).toBe(legacy.youtubeFollowing);
+    expect(parseRoomSessionRecord({ ...legacy, followingFingerprint: null })?.followingFingerprint).toBeNull();
+    expectRecord(await send({ command: "set-room-following", record, fingerprint: null }));
     const loaded = expectRecord(await persist());
-    expect(loaded.youtubeFollowing).toBe(null);
-    await send({ command: "set-youtube-following", record: { ...loaded, participantSessionId: "retired" }, fingerprint: "youtube|abcdefghijk" });
-    expect(expectRecord(await send({ command: "load", currentUserId: "guest" })).youtubeFollowing).toBe(null);
+    expect(loaded.followingFingerprint).toBe(null);
+    await send({ command: "set-room-following", record: { ...loaded, participantSessionId: "retired" }, fingerprint: "youtube|abcdefghijk" });
+    expect(expectRecord(await send({ command: "load", currentUserId: "guest" })).followingFingerprint).toBe(null);
   });
 
   it("matches the exact room, account, and participant session identity", () => {

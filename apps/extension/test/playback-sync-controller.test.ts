@@ -167,14 +167,14 @@ describe("PlaybackSyncController", () => {
 		const harness = createHarness({ isHost: true, disposition });
 		expect(harness.controller.broadcastHostState()).toBe(disposition === "sent");
 	});
-  it("only the explicit YouTube host action requests that viewers join", () => {
-    const host = createHarness({ isHost: true, provider: "youtube" });
+  it.each(["youtube", "crunchyroll", "netflix", "disneyplus", "primevideo", "hbomax"] as const)("only the explicit %s host action requests that viewers join", provider => {
+    const host = createHarness({ isHost: true, provider });
     host.controller.heartbeat();
     host.adapter.emit({ type: "pause", time: 30 });
     expect(host.sent.some(event => "syncGuests" in event)).toBe(false);
     host.controller.broadcastHostState();
     expect(host.sent.at(-1)).toMatchObject({ type: "HOST_STATE", syncGuests: true });
-    const other = createHarness({ isHost: true, provider: "crunchyroll" });
+    const other = createHarness({ isHost: true, provider: "generic" });
     other.controller.broadcastHostState();
     expect(other.sent.at(-1)).not.toHaveProperty("syncGuests");
   });
@@ -1156,8 +1156,8 @@ interface HarnessOptions {
 	fingerprint?: string;
 	isHost: boolean;
 	playImplementation?: () => Promise<void>;
-	provider?: "crunchyroll" | "youtube" | "generic" | "primevideo";
-	roomProvider?: "crunchyroll" | "youtube" | "generic" | "primevideo" | null;
+	provider?: VideoAdapter["provider"];
+	roomProvider?: VideoAdapter["provider"] | null;
 }
 
 function createHarness(options: HarnessOptions) {

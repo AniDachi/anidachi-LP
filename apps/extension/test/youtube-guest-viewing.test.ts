@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { RoomSessionRecord } from "../src/room-session-storage";
-import { YouTubeGuestViewing } from "../src/source-adapters/youtube/guest-viewing";
+import { GuestViewing } from "../src/guest-viewing";
 
 const home = "https://www.youtube.com/";
 const hostVideo = home + "watch?v=aaaaaaaaaaa";
@@ -13,15 +13,16 @@ function setup(href = home) {
   const local = { href, record: { version: 1, revision: 0, roomId: "room", ownerUserId: "viewer",
     participantSessionId: "session", cameraEnabled: false, voiceMode: "push-to-talk" } as RoomSessionRecord };
   const ctx = {
+    provider: () => "youtube" as const,
     session: () => local.record, href: () => local.href,
     playerFingerprint: () => local.href.includes("/watch?") ? playback(local.href).videoFingerprint : null,
     apply: vi.fn(), suspend: vi.fn(), offer: vi.fn(), navigate: vi.fn(),
     persist: vi.fn(async (_record: RoomSessionRecord, fingerprint: string | null) => {
-      local.record = { ...local.record, youtubeFollowing: fingerprint };
+      local.record = { ...local.record, followingFingerprint: fingerprint };
       return true;
     }),
   };
-  const mount = () => { const viewing = new YouTubeGuestViewing(ctx); viewing.bind(local.record); return viewing; };
+  const mount = () => { const viewing = new GuestViewing(ctx); viewing.bind(local.record); return viewing; };
   return { local, ctx, mount, viewing: mount() };
 }
 
@@ -48,12 +49,12 @@ describe("YouTube viewing in a room", () => {
     if (action === "sleeve") await viewing.join();
     else { viewing.receive(state, undefined, true); await Promise.resolve(); }
     viewing.receive(state);
-    expect(ctx.navigate.mock.calls).toEqual([[hostVideo]]);
+    expect(ctx.navigate.mock.calls).toEqual([[hostVideo, expect.objectContaining({ roomId: "room" }), expect.any(AbortSignal)]]);
     local.href = hostVideo;
     const restored = mount();
     restored.receive(state);
     expect(restored.together()).toBe(true);
-    expect(ctx.apply).toHaveBeenLastCalledWith(state);
+    expect(ctx.apply).toHaveBeenLastCalledWith(state, undefined);
   });
 
   it("keeps a direct invite synchronized when its first snapshot is empty and ignores an old update after the host exits", () => {
@@ -73,7 +74,7 @@ describe("YouTube viewing in a room", () => {
     viewing.receive(playback());
     expect(viewing.together()).toBe(true);
     viewing.receive(playback(hostVideo, false), undefined, true);
-    expect(ctx.apply).toHaveBeenLastCalledWith(playback(hostVideo, false));
+    expect(ctx.apply).toHaveBeenLastCalledWith(playback(hostVideo, false), undefined);
     local.href = otherVideo;
     expect(viewing.together()).toBe(false);
     viewing.refresh();
@@ -81,7 +82,7 @@ describe("YouTube viewing in a room", () => {
     viewing.receive(playback(otherVideo));
     expect(viewing.together()).toBe(false);
     await viewing.join();
-    expect(ctx.apply).toHaveBeenLastCalledWith(playback(otherVideo));
+    expect(ctx.apply).toHaveBeenLastCalledWith(playback(otherVideo), undefined);
     expect(ctx.navigate).not.toHaveBeenCalled();
   });
 
