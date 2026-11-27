@@ -97,6 +97,24 @@ it("accepts personal resume only on matching ready content, with a live intent",
   expect(await adapter.getPersonalResumeReadiness({ ...target, sourceUrl: url(nextId) })).toBe("cancelled");
 });
 
+it("pauses confirmed episode content during a seek, while ignoring promos and stale episodes", () => {
+  const { adapter, video } = fixture(15);
+  video.currentTime = 90;
+  Object.defineProperty(video, "seeking", { configurable: true, value: true });
+  Object.defineProperty(video, "readyState", { configurable: true, value: 1 });
+  const pause = vi.spyOn(video, "pause").mockImplementation(() => {});
+  expect(adapter.getPlaybackSnapshot().phase).toBe("buffering");
+  adapter.pause();
+  expect(pause).toHaveBeenCalledOnce();
+
+  video.currentTime = 3;
+  adapter.pause();
+  go(url(nextId));
+  video.currentTime = 90;
+  adapter.pause();
+  expect(pause).toHaveBeenCalledOnce();
+});
+
 it("reserves space for the native toolbar only while its ancestor is visible", () => {
   const { adapter, player } = fixture();
   const footer = player.querySelector<HTMLElement>('[data-testid="control_footer"]')!;

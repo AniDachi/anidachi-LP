@@ -84,7 +84,11 @@ export class HboMaxVideoAdapter extends Html5VideoAdapter {
     if (signal.aborted || this.phase() !== "interstitial") return;
     await this.video.play();
   }
-  override pause() { if (this.phase() === "content") this.video.pause(); }
+  override pause() {
+    const phase = this.phase();
+    // Seeking immediately puts the same episode into buffering. Its pause must still take effect.
+    if (phase === "content" || phase === "buffering") this.video.pause();
+  }
   override setPlaybackRate(rate: number) { if (this.phase() === "content") super.setPlaybackRate(rate); }
   override seek(time: number) {
     this.seekContent(time);
