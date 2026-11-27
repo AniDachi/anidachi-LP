@@ -18,6 +18,7 @@ export function Free20WarningNotice({ kind, remainingSeconds, open, onDismiss, r
   const notice = useRef<HTMLElement>(null);
   const seconds = remainingSeconds !== null && Number.isFinite(remainingSeconds) && remainingSeconds >= 0
     ? Math.ceil(remainingSeconds) : null;
+  const closingSoon = kind === "warning" && isFinalHostingMinute(seconds);
   const minutesText = seconds === null ? "--" : String(Math.floor(seconds / 60)).padStart(2, "0");
   const secondsText = seconds === null ? "--" : String(seconds % 60).padStart(2, "0");
   const holdsFocus = () => {
@@ -32,7 +33,7 @@ export function Free20WarningNotice({ kind, remainingSeconds, open, onDismiss, r
     if (heldFocus) restoreFocus();
   };
   return <aside ref={notice} className="free20-warning-notice" aria-label={kind === "warning" ? "Hosting time warning" : "Room closed notification"}
-    data-kind={kind} data-open={open} data-urgent={kind === "warning" && isFinalHostingMinute(seconds)}
+    data-kind={kind} data-open={open} data-urgent={closingSoon}
     inert={!open} aria-hidden={!open || undefined}
     {...overlayHotkeyBoundaryProps} {...overlayInteractionBoundaryProps}
     onKeyDown={event => {
@@ -40,7 +41,7 @@ export function Free20WarningNotice({ kind, remainingSeconds, open, onDismiss, r
       overlayInteractionBoundaryProps.onKeyDown(event);
     }}>
     <span className="free20-notice-announcement" role="status" aria-live="polite" aria-atomic="true">
-      {open ? kind === "warning" ? "Free hosting time is running low" : "Room closed. Daily limit reached." : ""}
+      {open ? kind === "closed" ? "Room closed. Daily limit reached." : closingSoon ? "Final minute. The room will close when free hosting time runs out." : "Free hosting time is running low" : ""}
     </span>
     <div className="free20-notice-layout">
       <div className="free20-notice-sleeve">
@@ -58,7 +59,7 @@ export function Free20WarningNotice({ kind, remainingSeconds, open, onDismiss, r
                 <Clock3 className="free20-notice-clock" size={16} strokeWidth={1.5} aria-hidden="true" />
                 <span className="free20-notice-digits" aria-hidden="true"><span>{minutesText}</span><span className="free20-notice-colon">:</span><span>{secondsText}</span></span>
               </span>
-              <span className="free20-notice-context" aria-hidden="true">left today</span>
+              <span className="free20-notice-context" aria-hidden="true">{closingSoon ? "until close" : "left today"}</span>
             </> : <>
               <Clock3 className="free20-notice-clock" size={18} strokeWidth={1.65} aria-hidden="true" />
               <span className="free20-notice-context" aria-hidden="true"><strong>Room closed</strong><span>Daily limit reached</span></span>

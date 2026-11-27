@@ -1967,7 +1967,8 @@ describe("privileged overlay wiring", () => {
       hostingWarningVersion: 1, ownerUserId: "22222222-2222-4222-8222-222222222222", roomId: "room-a", roomGeneration: 1,
       utcDay: "2026-11-01", serverTime: at, validUntil: at + 10000, decision: "show", thresholdSeconds: 300, claimId: "11111111-1111-4111-8111-111111111111",
     } };
-    const room = await renderActiveFree20Timer();
+    const final = vi.spyOn(free20WarningClient, "claimFinalHostingMinute").mockResolvedValue(true);
+    const room = await renderActiveFree20Timer(false, 70);
     const changeVideo = (generation: number) => {
       const videoFingerprint = `youtube|clip-${generation}`;
       const sourceUrl = `https://www.youtube.com/watch?v=clip-${generation}`;
@@ -1992,7 +1993,11 @@ describe("privileged overlay wiring", () => {
       expect(notice.parentElement?.classList.contains("free20-notice-present")).toBe(true);
       await act(async () => { await new Promise(resolve => setTimeout(resolve, 40)); });
       expect(notice.getAttribute("data-open")).toBe("true");
+      expect(notice.querySelector('[role="timer"]')?.textContent).toBe("01:10");
       await changeVideo(3);
+      await act(async () => room.options.onEvent(room.time(2, 10)));
+      expect(final).toHaveBeenCalledTimes(1);
+      expect(notice.textContent).toContain("until close");
       expect(room.view.container.querySelector(".free20-warning-notice")).toBe(notice);
       expect(notice.getAttribute("data-open")).toBe("true");
       expect(notice.querySelector('[role="timer"]')?.textContent).toBe("00:10");
@@ -2008,21 +2013,21 @@ describe("privileged overlay wiring", () => {
       await act(async () => { await new Promise(resolve => setTimeout(resolve, 350)); });
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
       await changeVideo(4);
-      await act(async () => room.options.onEvent(room.time(2, 8)));
+      await act(async () => room.options.onEvent(room.time(3, 8)));
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
       expect(claim).toHaveBeenCalledTimes(1);
       room.setSession({ ...room.session!, authRevision: "credential-revision-2", accessToken: "rotated-access", refreshToken: "rotated-refresh" });
       await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, room.session));
       await flushMountedWork();
       await act(async () => room.options.onEvent({ ...room.snapshot, serverSeq: 5, sourceGeneration: 4 }));
-      await act(async () => room.options.onEvent(room.time(3, 7)));
+      await act(async () => room.options.onEvent(room.time(4, 7)));
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
       expect(claim).toHaveBeenCalledTimes(1);
       room.setSession({ ...room.session!, authSessionId: "login-b" });
       await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, room.session));
       await flushMountedWork();
       // A real new login retires the connection and its pending warning context.
-      await act(async () => room.options.onEvent(room.time(4, 6)));
+      await act(async () => room.options.onEvent(room.time(5, 6)));
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
       expect(claim).toHaveBeenCalledTimes(1);
     } finally { vi.useRealTimers(); await unmount(room.view.root); }
@@ -5071,7 +5076,7 @@ function createAdapter(
 
 type Free20TimerTestSession = ReturnType<typeof sessionFor> & { authSessionId?: string; authRevision?: string };
 
-async function renderActiveFree20Timer(legacy = false) {
+async function renderActiveFree20Timer(legacy = false, initialSeconds = 10) {
   const owner = "22222222-2222-4222-8222-222222222222";
   let currentSession: Free20TimerTestSession | null = { ...sessionFor(owner),
     ...(legacy ? {} : { authSessionId: "login-a", authRevision: "credential-revision-1" }) };
@@ -5114,9 +5119,9 @@ async function renderActiveFree20Timer(legacy = false) {
       access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 1200 - remainingSeconds, remainingSeconds, metering: true } },
   });
   await act(async () => options.onEvent(snapshot));
-  await act(async () => options.onEvent(time(1, 10)));
+  await act(async () => options.onEvent(time(1, initialSeconds)));
   const timer = () => view.container.querySelector(".panel-action-timer strong")?.textContent;
-  expect(timer()).toBe("00:10");
+  expect(timer()).toBe([Math.floor(initialSeconds / 60), initialSeconds % 60].map(n => String(n).padStart(2, "0")).join(":"));
   return { at, view, options, snapshot, time, timer, wire, send,
     get session() { return currentSession; },
     setSession(next: Free20TimerTestSession | null) { currentSession = next; },
