@@ -148,6 +148,31 @@ describe("HBO catalog data in the content script", () => {
 		expect(readHboMaxCatalogContext(document, seriesId, playbackId)).toBeNull();
 	});
 
+	it("keeps the series identity on an in-player episode switch while the page heading still names the previous episode", () => {
+		const player = document.querySelector('[data-testid="playerContainer"]')!;
+		const main = document.createElement("main");
+		main.setAttribute("aria-label", metadata.episodeTitle);
+		document.body.append(main);
+		main.append(player);
+		stop = startHboMaxCatalogCapture(document);
+		emit(packet);
+		expect(readHboMaxPlaybackMetadata(document, playbackId)?.identity).toEqual(metadata.identity);
+
+		route(nextId);
+		const next = { ...metadata, identity: { ...metadata.identity, providerEpisodeIdentifier: nextId },
+			episodeTitle: "Segundo", episodeNumber: 2 };
+		emit({ ...packet, playbackId: nextId, metadata: next, episodes: [first, second] });
+		const info = player.querySelector('[data-testid="content-metadata"]')!;
+		info.setAttribute("aria-hidden", "true");
+		document.title = next.episodeTitle + " • HBO Max";
+		expect(readHboMaxPlaybackMetadata(document, nextId)).toBeNull();
+		info.querySelector('[data-testid="player-ux-asset-subtitle"]')!.textContent = next.episodeTitle;
+		info.querySelector('[data-testid="player-ux-season-episode"]')!.textContent = "S1 E2";
+		expect(readHboMaxPlaybackMetadata(document, nextId)?.identity).toEqual(next.identity);
+		document.title = metadata.episodeTitle + " • HBO Max";
+		expect(readHboMaxPlaybackMetadata(document, nextId)).toBeNull();
+	});
+
 	it.each(["room", "saved"] as const)("rejects an exact %s identity for a different series", async authority => {
 		const conflicting = { ...metadata, identity: { kind: "episode" as const, providerSeriesId: nextId, providerEpisodeIdentifier: playbackId } };
 		stop = startHboMaxCatalogCapture(document, authority === "saved" ? async () => conflicting : undefined);

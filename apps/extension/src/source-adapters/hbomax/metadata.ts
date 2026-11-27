@@ -301,7 +301,10 @@ function corroborateHboCmsPlayback(doc: Document, playbackId: string, cms: HboCm
 			if (!collapsed || row.subtitle) collapsed = row;
 		}
 		const expectedTitle = independentIdentity ? collapsed?.subtitle ?? cms.episodeTitle : cms.episodeTitle;
-		if ((mainTitle && !sameTitle(mainTitle, expectedTitle)) || (documentEpisode && !sameTitle(documentEpisode, expectedTitle))) return null;
+		if (documentEpisode && !sameTitle(documentEpisode, expectedTitle)) return null;
+		// In-player Next and autoplay can leave <main> on the first episode for the entire visit.
+		const playerMatchesTab = documentEpisode && collapsed?.subtitle && sameTitle(collapsed.subtitle, documentEpisode);
+		if (!playerMatchesTab && mainTitle && !sameTitle(mainTitle, expectedTitle)) return null;
 		if (!independentIdentity && (!(mainTitle || documentEpisode) || (!collapsed?.subtitle && !(mainTitle && documentEpisode)))) return null;
 		if (collapsed) {
 			labels = collapsed;
