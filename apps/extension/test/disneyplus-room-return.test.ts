@@ -34,6 +34,23 @@ function setupBridge() {
 }
 afterEach(() => { document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
+it("launches the requested episode when the catalog body arrives after the room is restored", async () => {
+  const send = setupBridge();
+  page("/browse/movies");
+  await send({ type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF", action: "prepare-return", payload: intent });
+  page("/browse/entity-" + series);
+  const body = document.body;
+  body.remove();
+  try {
+    await finishDisneyRoomReturn(document, intent, signal(), null);
+    document.documentElement.append(body);
+    const play = link("set-item", "/play/" + episode);
+    await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
+  } finally {
+    if (!body.isConnected) document.documentElement.append(body);
+  }
+});
+
 it("keeps a host Sync pending when the series page remounts before its episode links load", async () => {
   const send = setupBridge();
   const destination = origin + "/play/" + episode;
