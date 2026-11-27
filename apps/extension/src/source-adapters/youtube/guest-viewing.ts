@@ -24,6 +24,8 @@ export class YouTubeGuestViewing {
   private following: string | null | undefined;
   private target: { url: string; state: HostPlayback } | null = null;
   private navigating: object | null = null;
+  private lastFollowed: string | null = null;
+  private hostInCatalog = false;
   private offered: string | null = null;
 
   constructor(private readonly context: ViewingContext) {}
@@ -32,6 +34,8 @@ export class YouTubeGuestViewing {
     if (record && this.room && roomSessionIdentityMatches(this.room, record)) return;
     this.room = record;
     this.following = record?.youtubeFollowing;
+    this.lastFollowed = this.following ?? null;
+    this.hostInCatalog = false;
     this.target = null;
     this.navigating = null;
     this.show(null);
@@ -41,7 +45,7 @@ export class YouTubeGuestViewing {
     if (!this.active()) return;
     this.target = null;
     this.navigating = null;
-    if (this.following !== null) {
+    if (this.following === undefined && !watchSource(this.context.href())) {
       this.following = null;
       void this.context.persist(this.room!, null).catch(() => false);
     }
@@ -51,11 +55,12 @@ export class YouTubeGuestViewing {
 
   receive(state: HostPlayback, source?: WatchSourceDescriptor, syncGuests = false) {
     if (!this.active()) return;
+    if (state.hostSurface) this.hostInCatalog = state.hostSurface === "catalog";
     const previous = this.target;
     const url = state.sourceUrl ?? source?.sourceUrl ??
       (previous?.state.videoFingerprint === state.videoFingerprint ? previous.url : "");
     const target = watchSource(url);
-    if (state.hostSurface === "catalog" || !target || target.videoFingerprint !== state.videoFingerprint) {
+    if (this.hostInCatalog || !target || target.videoFingerprint !== state.videoFingerprint) {
       this.catalog();
       return;
     }
@@ -74,6 +79,7 @@ export class YouTubeGuestViewing {
       const initialDirectJoin = this.following === undefined && onTarget;
       const next = initialDirectJoin ? fingerprint : null;
       this.following = next;
+      if (next) this.lastFollowed = next;
       void this.context.persist(this.room!, next).catch(() => false);
     }
     if (this.together()) {
@@ -81,8 +87,12 @@ export class YouTubeGuestViewing {
       this.context.apply(target.state);
     } else {
       this.context.suspend();
-      this.show(onTarget && this.following === fingerprint ? null : target.url);
+      this.show(target.url);
     }
+  }
+
+  get returning() {
+    return !!this.target && this.lastFollowed === this.target.state.videoFingerprint;
   }
 
   together() {
@@ -104,9 +114,12 @@ export class YouTubeGuestViewing {
       if (!this.active() || this.navigating !== pending || this.target?.url !== target.url) return;
       if (!saved) {
         this.following = previous;
-      } else if (!this.onTarget()) {
-        this.context.navigate(target.url);
-        return;
+      } else {
+        this.lastFollowed = fingerprint;
+        if (!this.onTarget() || !this.context.playerFingerprint()) {
+          this.context.navigate(target.url);
+          return;
+        }
       }
     } catch {
       if (this.navigating === pending) this.following = previous;

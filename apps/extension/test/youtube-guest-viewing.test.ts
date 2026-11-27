@@ -56,6 +56,18 @@ describe("YouTube viewing in a room", () => {
     expect(ctx.apply).toHaveBeenLastCalledWith(state);
   });
 
+  it("keeps a direct invite synchronized when its first snapshot is empty and ignores an old update after the host exits", () => {
+    const { ctx, viewing } = setup(hostVideo);
+    viewing.catalog();
+    viewing.receive({ ...playback(), hostSurface: "player" });
+    expect(viewing.together()).toBe(true);
+    expect(ctx.offer).not.toHaveBeenCalled();
+    viewing.receive({ ...playback(), hostSurface: "catalog" });
+    viewing.receive(playback());
+    expect(viewing.together()).toBe(false);
+    expect(ctx.offer).not.toHaveBeenCalled();
+  });
+
   it("syncs in place after a direct invite, offers a new host title and leaves a different guest title under local control", async () => {
     const { ctx, local, viewing } = setup(hostVideo);
     viewing.receive(playback());

@@ -6544,7 +6544,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
         {youtubeRoomSurface && youtubeOffer && roomId && isConnected && roomSnapshotReady &&
           currentParticipant?.role === "viewer" && !capsuleNotice.present &&
           participants.some(p => p.role === "host" && p.connected !== false) &&
-          <YouTubeWatchTogetherTab key={youtubeOffer} onJoin={() => void youtubeViewing.join()} />}
+          <YouTubeWatchTogetherTab key={youtubeOffer} returning={youtubeViewing.returning} onJoin={() => void youtubeViewing.join()} />}
 				<button
 					aria-controls="anidachi-mini-panel"
 					aria-expanded={panelOpen}

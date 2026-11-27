@@ -1,13 +1,13 @@
 import { Play } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";
 
-export function YouTubeWatchTogetherTab({ onJoin }: { onJoin(): void }) {
+export function YouTubeWatchTogetherTab({ returning, onJoin }: { returning: boolean; onJoin(): void }) {
   const tab = useRef<HTMLButtonElement>(null);
   useLayoutEffect(() => {
     const button = tab.current;
     const pill = button?.parentElement?.querySelector<HTMLElement>(".top-bubble");
     if (!button || !pill) return;
-    const measure = () => { button.style.setProperty("--capsule-width", pill.offsetWidth + "px"); };
+    const measure = () => { if (pill.offsetWidth > 0) button.style.setProperty("--capsule-width", pill.offsetWidth + "px"); };
     measure();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
     observer?.observe(pill);
@@ -31,7 +31,7 @@ export function YouTubeWatchTogetherTab({ onJoin }: { onJoin(): void }) {
       @media (prefers-reduced-motion: reduce) { .yt-watch-together { animation: none; } }
     `}</style>
     <button type="button" ref={tab} className="catalog-return-to-video yt-watch-together" onClick={onJoin}>
-      <Play size={12} fill="currentColor" aria-hidden="true" />Watch together
+      <Play size={12} fill="currentColor" aria-hidden="true" />{returning ? "Back to video" : "Watch together"}
     </button>
   </>;
 }
