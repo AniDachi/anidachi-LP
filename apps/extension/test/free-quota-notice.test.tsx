@@ -31,7 +31,7 @@ describe("Free quota notice", () => {
       expect(host.querySelector('h2')?.textContent).toBe('Daily limit reached');
       expect(host.querySelector('time')?.textContent).toBe(expected);
       expect(host.querySelector('time')?.dateTime).toBe(new Date(resetAt).toISOString());
-      expect(host.textContent).toContain('20 free minutes');
+      expect(host.textContent).toContain('Free minutes renew');
       expect(host.textContent).not.toContain('Renews in');
       expect(host.querySelector('[role="timer"]')).toBeNull();
     } finally { vi.restoreAllMocks(); }
@@ -47,7 +47,7 @@ describe("Free quota notice", () => {
           state={{ownerUserId:'user-a',kind:'exhausted',remainingSeconds:0}} renewal={value} onRetry={retry} />));
         expect(host.querySelector('h2')?.textContent).toBe('Daily limit reached');
         expect(host.querySelector('time')).toBeNull();
-        expect(host.textContent).not.toContain('20 free minutes');
+        expect(host.textContent).not.toContain('Free minutes renew');
         expect(host.textContent).not.toContain('00:00');
       }
       await act(async () => root.render(<FreeQuotaNotice compact dailyFree

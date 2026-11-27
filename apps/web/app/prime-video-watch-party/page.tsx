@@ -161,7 +161,7 @@ export default function PrimeVideoWatchPartyPage() {
       heroLead="Prime Video removed its watch party in 2024. AniDachi's Prime Video support is coming in an update."
       heroWorksOn={["Netflix", "Crunchyroll", "YouTube"]}
       heroWorksOnLabel="Works today on"
-      heroFinePrint="20 free minutes a day. Friends join free."
+      heroFinePrint="30 free minutes a day. Friends join free."
       answer={
         <>
           <strong>
@@ -215,7 +215,7 @@ export default function PrimeVideoWatchPartyPage() {
           { feature: "Chat", values: { amazon: "Before removal", anidachi: "yes" } },
           { feature: "Voice and video calls", values: { amazon: "no", anidachi: "yes" } },
           { feature: "Prime Video", values: { amazon: "Before removal", anidachi: "Coming in an update" } },
-          { feature: "Cost", values: { amazon: "Was included with Prime", anidachi: "20 free minutes a day; Plus and Pro" } },
+          { feature: "Cost", values: { amazon: "Was included with Prime", anidachi: "30 free minutes a day; Plus and Pro" } },
         ]}
       />
 
@@ -311,7 +311,7 @@ export default function PrimeVideoWatchPartyPage() {
       <HubCtaBand
         pagePath={PAGE_PATH}
         heading="Get AniDachi before Prime Video lands"
-        body="Use it today for Netflix, Crunchyroll and YouTube. Prime Video support arrives in the same install. 20 free minutes a day, and friends join free."
+        body="Use it today for Netflix, Crunchyroll and YouTube. Prime Video support arrives in the same install. 30 free minutes a day, and friends join free."
       />
 
       <h2 id="discord" className="scroll-mt-24">

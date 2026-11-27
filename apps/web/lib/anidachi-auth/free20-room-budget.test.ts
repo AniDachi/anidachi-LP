@@ -62,6 +62,7 @@ function fixture() {
 			if (failAfterCommit) throw new Error("ACK lost after DB commit");
 			return { day: usage.day, seconds: accepted };
 		},
+		readBudgetSeconds: async () => 1200 as const,
 		resolveAuthority: async (userId: string) => {
 			assert.equal(userId, owner);
 			calls.push("authority");

@@ -222,7 +222,7 @@ export default function NetflixWatchPartyPage() {
         heroLead="Netflix has no watch party button. AniDachi adds one."
         heroCtaLabel="Start a Netflix Watch Party"
         heroWorksOn={["Netflix", "Crunchyroll", "YouTube"]}
-        heroFinePrint="20 free minutes a day. Friends join free."
+        heroFinePrint="30 free minutes a day. Friends join free."
         answer={
           <>
             <strong>
@@ -553,7 +553,7 @@ export default function NetflixWatchPartyPage() {
           pagePath={PAGE_PATH}
           ctaLabel="Start a Netflix Watch Party"
           heading="Start your Netflix watch party"
-          body="Install AniDachi, open a movie or episode and send the invite. 20 free minutes a day, and friends join free."
+          body="Install AniDachi, open a movie or episode and send the invite. 30 free minutes a day, and friends join free."
         />
 
         <h2 id="plan" className="scroll-mt-24">

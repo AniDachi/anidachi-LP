@@ -29,9 +29,11 @@ export function useFree20Warning(input: Free20WarningInput) {
   const reminder = useRef<string | null>(null);
   const drive = useRef<() => void>(() => {});
   const day = input.reading?.snapshot.period.utcDay ?? null;
-  const budgetKey = JSON.stringify([input.ownerUserId, input.sessionKey, day]);
+  const access = input.reading?.snapshot.access;
+  const budgetSeconds = access?.kind === "daily_free" ? access.budgetSeconds : null;
+  const budgetKey = JSON.stringify([input.ownerUserId, input.sessionKey, day, budgetSeconds]);
   const roomSession = JSON.stringify([input.ownerUserId, input.sessionKey, input.credentialRevision, input.roomId, input.roomGeneration, input.connectionGeneration, input.isHost, input.connected]);
-  const scope = JSON.stringify([roomSession, day]);
+  const scope = JSON.stringify([roomSession, day, budgetSeconds]);
   const currentScope = useRef(scope); currentScope.current = scope;
   const stop = useCallback(() => {
     if (retry.current !== null) { clearTimeout(retry.current); retry.current = null; }
@@ -62,7 +64,7 @@ export function useFree20Warning(input: Free20WarningInput) {
       time.snapshot.access.kind !== "daily_free" || time.remainingSeconds === 0 ||
       time.resetSeconds <= 0 || (day && reminder.current !== scope)
     )) reminder.current = null;
-    if (!eligible(value, time) || time.snapshot.period.utcDay !== day) { stop(); setShown(previous => previous === null ? previous : null); return; }
+    if (!eligible(value, time) || (time.snapshot.period.utcDay !== day || time.snapshot.access.kind !== "daily_free" || time.snapshot.access.budgetSeconds !== budgetSeconds)) { stop(); setShown(previous => previous === null ? previous : null); return; }
     if ((reminder.current === scope || (shown?.scope === scope && shown.phase === "open")) && isFinalHostingMinute(time.remainingSeconds)) {
       reminder.current = null;
       setShown({ scope, phase: "final" });
@@ -93,14 +95,14 @@ export function useFree20Warning(input: Free20WarningInput) {
     active.current = { controller, budget: own };
     void (value.request ?? requestFree20Warning)({
       ownerUserId: value.ownerUserId!, loginKey: value.sessionKey!, credentialRevision: value.credentialRevision!, reason,
-      snapshotSequence: time.snapshot.snapshotSequence,
+      snapshotSequence: time.snapshot.snapshotSequence, budgetSeconds: time.snapshot.access.budgetSeconds,
       request: { hostingWarningVersion: 1, roomId: value.roomId!, roomGeneration: value.roomGeneration, utcDay: time.snapshot.period.utcDay },
     }, controller.signal).then(result => {
       if (controller.signal.aborted || currentScope.current !== scope) return;
       active.current = null;
       const current = latest.current, fresh = current.readFresh();
       const elapsed = Math.max(0, performance.now() - started);
-      if (!eligible(current, fresh) || fresh.snapshot.period.utcDay !== day || Math.abs(Date.now() - wall - elapsed) > 2_000) { own.phase = "done"; return; }
+      if (!eligible(current, fresh) || fresh.snapshot.period.utcDay !== day || fresh.snapshot.access.kind !== "daily_free" || fresh.snapshot.access.budgetSeconds !== budgetSeconds || Math.abs(Date.now() - wall - elapsed) > 2_000) { own.phase = "done"; return; }
       if (result.kind === "failed") {
         own.phase = result.retryable && own.attempts < 2 ? "retry" : "done";
         if (own.phase === "retry") drive.current();

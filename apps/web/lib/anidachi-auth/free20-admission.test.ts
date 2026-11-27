@@ -75,6 +75,7 @@ async function request(
 	);
 }
 type Options = {
+ budgetSeconds?:1200|1800;
  abuse?:boolean;
  protected?:boolean;
  contextError?:string;
@@ -237,6 +238,7 @@ async function fixture(
  }
 			if (options.enabled === false) return Response.json({ enabled: false });
 			const used = options.used ?? 420;
+            const budgetSeconds = options.budgetSeconds ?? 1200;
 			return Response.json({
 				enabled: true,
 				ownerUserId: options.invalid
@@ -246,10 +248,12 @@ async function fixture(
 				serverTime: now.toISOString(),
 				resetAt,
 				usedSeconds: used,
-				remainingSeconds: options.paid ? null : Math.max(0, 1200 - used),
-				canHost: !!options.paid || used < 1200,
+                budgetSeconds,
+				remainingSeconds: options.paid ? null : Math.max(0, budgetSeconds - used),
+				canHost: !!options.paid || used < budgetSeconds,
 			});
 		}
+		if (url.pathname === "/rest/v1/hosting_commercial_policy") return Response.json({free_daily_host_seconds: options.budgetSeconds ?? 1200});
 		if (url.pathname === "/rest/v1/usage_daily") {
 			state.legacyQuotaReads++;
 			return Response.json({ host_seconds: options.used ?? 420 });
@@ -407,7 +411,7 @@ for (const kind of ["create", "connect"] as const) {
 			assert.deepEqual(state.versions, [1]);
 		}));
 	test(`${kind} returns friendly426 without token or room touch for unsupported marked host`, async () => {
-		for (const version of [null, "0", "2", "01", "1, 1"])
+		for (const version of [null, "0", "3", "01", "1, 1"])
 			await fixture({ sqlUpdate: true }, async (state) => {
 				const response = await request(kind, version);
 				const body = await response.json();
@@ -511,3 +515,15 @@ test("protected guest reads room-bound effective usage without any host context 
 test("host connect refreshes response quota after transfer attaches a higher scope floor",async()=>fixture({abuse:true,protected:true,used:720,transferredUsed:1100,contextError:"FREE20_CONTEXT_ATTACH_REQUIRED",transfer:"applied"},async(state)=>{
  const response=await request("connect","1",owner,await contextHeaders());assert.equal(response.status,200);const payload=await response.json();assert.equal(payload.quota.remainingSeconds,100);assert.equal(state.roomUsageReads,2);
 }));
+
+for (const kind of ["create", "connect"] as const) {
+  test(`${kind} admits a current host who already used 20 minutes and asks a v1 Free host to update`, async () => {
+    await fixture({ budgetSeconds: 1800, used: 1200 }, async () => {
+      const old = await request(kind, "1");
+      assert.equal(old.status, 426);
+      assert.equal((await old.json()).code, "ROOM_UPDATE_REQUIRED");
+      const current = await request(kind, "2");
+      assert.equal(current.status, 200, JSON.stringify(await current.json()));
+    });
+  });
+}

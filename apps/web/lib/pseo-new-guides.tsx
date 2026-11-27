@@ -488,7 +488,7 @@ export const guidePages: Record<string, GuidePage> = {
 				title: "Free Crunchyroll watch party options",
 				body: [
 					"Discord screen share is the lowest-friction free option, but it can reduce video quality and does not sync everyone's own Crunchyroll player.",
-					"AniDachi is built around a host model: Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit, while friends can join free.",
+					"AniDachi is built around a host model: Free includes 30 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit, while friends can join free.",
 				],
 				bullets: [
 					"Best free quick test: Discord screen share.",
@@ -509,7 +509,7 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "Can I make a Crunchyroll watch party for free?",
 				answer:
-					"AniDachi supports Free daily hosting and free joining. Free hosts get 20 host minutes per UTC day for up to 4 people, including the host. Other tools may offer free hosting with different limitations.",
+					"AniDachi supports Free daily hosting and free joining. Free hosts get 30 host minutes per UTC day for up to 4 people, including the host. Other tools may offer free hosting with different limitations.",
 			},
 			{
 				question: "Do friends pay to join AniDachi?",
@@ -671,7 +671,7 @@ export const guidePages: Record<string, GuidePage> = {
 			{
 				question: "Can friends join an anime watch party app for free?",
 				answer:
-					"AniDachi supports Free daily hosting and free joining. Free hosts get 20 host minutes per UTC day for up to 4 people, including the host.",
+					"AniDachi supports Free daily hosting and free joining. Free hosts get 30 host minutes per UTC day for up to 4 people, including the host.",
 			},
 		],
 	},
@@ -801,7 +801,7 @@ export function PseoListiclePage({
 				<li>Open the episode on Crunchyroll.</li>
 				<li>Create an AniDachi watchroom and share the invite link.</li>
 				<li>
-						Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit;
+						Free includes 30 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit;
 						friends can join on Free accounts.
 				</li>
 				<li>

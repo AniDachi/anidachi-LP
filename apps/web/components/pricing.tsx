@@ -534,7 +534,7 @@ export function Pricing({
 					title="Watch together. Choose your plan."
 					description={
 						hostingModel === "daily_free20"
-							? "20 free minutes every day. No daily time limit with Plus or Pro."
+							? "30 free minutes every day. No daily time limit with Plus or Pro."
 							: "Watch together. Find the plan that fits your group."
 					}
 				/>

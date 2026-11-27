@@ -95,6 +95,8 @@ export async function POST(request: NextRequest) {
   const quota = free20Access?.quota ?? await getHostQuotaView(session.userId, hostPlan, now);
   // Unsupported Free20 candidates must reach the locked target lookup in SQL:
   // a same-request replay may target a marked room, even after a paid upgrade.
+  if (free20Access?.quota.limitSeconds === 1800 && free20ClientVersion === 1)
+    return NextResponse.json(roomUpdateRequiredBody(true), { status: 426 });
   if (!canStartHostSession(quota) && !(free20Access && free20ClientVersion === null)) {
 		return NextResponse.json(quotaExhaustedResponseBody(quota), {
 			status: 403,

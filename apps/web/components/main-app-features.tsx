@@ -8,7 +8,7 @@ import type { PageLocale } from "@/lib/locale/ui-strings";
 
 const COPY = {
 	en: {
-		title: "20 free minutes a day.",
+		title: "30 free minutes a day.",
 		accent: "Friends join free.",
 		body: "Start a room for up to 4 people, including you. Choose Plus or Pro for a larger group and no daily time limit.",
 		planLink: "Find your plan",
@@ -21,7 +21,7 @@ const COPY = {
 		caption: (plan: string, guests: number) => `${plan}: one host and up to ${guests} friends joining free.`,
 	},
 	de: {
-		title: "20 Minuten am Tag kostenlos.",
+		title: "30 Minuten am Tag kostenlos.",
 		accent: "Freunde treten kostenlos bei.",
 		body: "Starte einen Raum für bis zu 4 Personen, dich eingeschlossen. Mit Plus oder Pro wird die Gruppe größer, ohne tägliches Zeitlimit.",
 		planLink: "Plan finden",

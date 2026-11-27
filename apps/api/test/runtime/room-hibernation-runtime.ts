@@ -3362,6 +3362,7 @@ describe("RoomDurableObject media v2", () => {
 		const calls: Array<{ operation?: string; checkpointSequence?: number; settleOnly?: boolean; usage?: {day:string;seconds:number}[]; reason?: string }> = [];
 		let lostBudget = false;
 		let priorAccountSeconds = 0;
+		let issuedDailyBudget: 1200 | 1800 = 1200;
     let attachFloor = 1140;
     let loseAttach = false;
     let loseSettlement = false;
@@ -3394,7 +3395,7 @@ describe("RoomDurableObject media v2", () => {
 						checkpointSequence: body.checkpointSequence, utcDay: day, serverTime: now,
 						resetAt: (Math.floor(now / 86400000) + 1) * 86400000,
 						refreshBy: Math.min(now + 300000, (Math.floor(now / 86400000) + 1) * 86400000),
-						...(!unlimitedTime ? { budgetSeconds: 1200, committedSeconds: priorAccountSeconds + (ledger.get(day) ?? 0) } : {}), acknowledged: body.usage,
+						...(!unlimitedTime ? { budgetSeconds: issuedDailyBudget, committedSeconds: priorAccountSeconds + (ledger.get(day) ?? 0) } : {}), acknowledged: body.usage,
 					}, ...(unlimitedTime ? { displayTime: {
        access: { kind: "confirmed_unlimited", source: "paid", validUntil: now + 3600000 },
        validUntil: Math.min(now + 300000, (Math.floor(now / 86400000) + 1) * 86400000),
@@ -3487,6 +3488,7 @@ describe("RoomDurableObject media v2", () => {
       stallAttach: () => { attachGate = new Promise<void>(resolve => { releaseAttach = resolve; }); },
       releaseAttach: () => { releaseAttach?.(); attachGate = null; },
       token,
+      setDailyBudget: (value: 1200 | 1800) => { issuedDailyBudget = value; },
       setPriorUsage: (seconds: number) => { priorAccountSeconds = seconds; },
 			setUnlimited: (value = true) => { unlimitedTime = value; },
 			loseBudgetReply: () => { lostBudget = true; },
@@ -4276,6 +4278,33 @@ describe("RoomDurableObject media v2", () => {
    expect(result).toEqual({row:"null",ended:null});
    expect(host.countEvents(e=>e.type==="HOSTING_TIME")).toBe(before);
    host.close();
+ });
+ it("continues a running room at the old deadline and closes at the new exact deadline", async () => {
+  const start = (Math.floor(Date.now() / 86400000) + 1) * 86400000 + 43200000;
+  const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+  const f = await fixture("free", 3, 1200, true);
+  f.setPriorUsage(1080);
+  const host = await f.join(0);
+  await host.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT", "host at minute 18");
+  const guest = await f.join(1);
+  await guest.waitFor(e => e.type === "ROOM_MEDIA_SNAPSHOT" && e.participants.length === 2, "guest joined");
+  f.setDailyBudget(1800);
+  for (const seconds of [120, 300, 600, 719]) {
+    clock.mockReturnValue(start + seconds * 1000);
+    await runInDurableObject(f.stub, async instance => {
+      const room = free20Room(instance);
+      await room.serviceRoomPolicy(Date.now());
+      expect(room.endedTombstone).toBeFalsy();
+      expect(room.currentRoomSnapshot().quota?.remainingSeconds).toBe(720 - seconds);
+    });
+  }
+  clock.mockReturnValue(start + 720000);
+  await runInDurableObject(f.stub, async instance => {
+    const room = free20Room(instance);
+    await room.serviceRoomPolicy(Date.now());
+    expect(room.endedTombstone).toMatchObject({ reason: "quota_exhausted", endedAt: start + 720000 });
+  });
+  expect(f.ledger.get(new Date(start).toISOString().slice(0, 10))).toBe(720);
  });
  it("Free20 alarm ends exactly at twenty minutes without selecting a five-minute warning",async()=>{
   const start=(Math.floor(Date.now()/86400000)+1)*86400000+43200000;const clock=vi.spyOn(Date,"now").mockReturnValue(start);

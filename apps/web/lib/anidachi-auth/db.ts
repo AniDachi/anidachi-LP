@@ -687,7 +687,7 @@ export async function createRoomWithActiveSession(params: {
 	participantSessionId: string;
 	capabilities: RoomCapabilities;
 	mediaProtocolVersion?: number;
-	free20ClientVersion?: 1 | null;
+	free20ClientVersion?: 1 | 2 | null;
 	free20Context?: Free20AbuseContext | null;
 	showId?: string;
 	episodeId?: string;
@@ -818,7 +818,7 @@ export async function claimActiveRoomSession(params: {
 	role: ActiveRoomRole;
 	participantSessionId: string;
 	mediaProtocolVersion?: number;
-	free20ClientVersion?: 1 | null;
+	free20ClientVersion?: 1 | 2 | null;
 	free20Context?: Free20AbuseContext | null;
 }): Promise<ActiveRoomClaimResult> {
 	const abuseEnabled = process.env.ANIDACHI_FREE20_ABUSE_ENABLED === "true";

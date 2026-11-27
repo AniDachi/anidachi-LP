@@ -269,7 +269,7 @@ describe("authenticated room client", () => {
           Authorization: "Bearer access-1",
           "Content-Type": "application/json",
           "X-Anidachi-Media-Protocol": "3",
-          "x-anidachi-free20-client": "1",
+          "x-anidachi-free20-client": "2",
         },
         body: JSON.stringify({
           sourceUrl: "https://www.crunchyroll.com/watch/G8WUNM123",
@@ -401,7 +401,7 @@ describe("authenticated room client", () => {
           Authorization: "Bearer access-1",
           "Content-Type": "application/json",
           "X-Anidachi-Media-Protocol": "3",
-          "x-anidachi-free20-client": "1",
+          "x-anidachi-free20-client": "2",
         },
         body: JSON.stringify({ participantSessionId: "participant-session-1" }),
         signal: expect.any(AbortSignal),
@@ -1906,7 +1906,7 @@ describe("Free20 admission errors and repeated producers", () => {
 			RequestInit,
 		][]) {
 			const headers = new Headers(call[1].headers);
-			expect(headers.get("x-anidachi-free20-client")).toBe("1");
+			expect(headers.get("x-anidachi-free20-client")).toBe("2");
 			expect(headers.get("x-anidachi-media-protocol")).toBe("3");
 		}
 	});

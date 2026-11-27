@@ -7,8 +7,8 @@ import type { HostingTimeDisplay } from "../src/room-hosting-time";
 
 const owner = "11111111-1111-4111-8111-111111111111", at = Date.parse("2026-11-01T12:00:00Z");
 const login = JSON.stringify([owner, "login", "login-a"]);
-function time(remaining = 299, sequence = 1, day = "2026-11-01"): HostingTimeDisplay {
-  return { remainingSeconds: remaining, resetSeconds: 43200, snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room", roomGeneration: 1, snapshotSequence: sequence, serverTime: at, period: { utcDay: day, resetAt: at + 43200000 }, access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 1200 - remaining, remainingSeconds: remaining, metering: true } } };
+function time(remaining = 299, sequence = 1, day = "2026-11-01", budgetSeconds: 1200 | 1800 = 1200): HostingTimeDisplay {
+  return { remainingSeconds: remaining, resetSeconds: 43200, snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room", roomGeneration: 1, snapshotSequence: sequence, serverTime: at, period: { utcDay: day, resetAt: at + 43200000 }, access: { kind: "daily_free", budgetSeconds, usedSeconds: budgetSeconds - remaining, remainingSeconds: remaining, metering: true } } };
 }
 const response = (decision: "show" | "not_eligible" | "already_claimed" = "show"): Free20WarningResult => ({ kind: "server", response: { hostingWarningVersion: 1, ownerUserId: owner, roomId: "room", roomGeneration: 1, utcDay: "2026-11-01", serverTime: at, validUntil: at + 10000, decision, ...(decision === "show" ? { thresholdSeconds: 300 as const, claimId: crypto.randomUUID() } : {}) } } as Free20WarningResult);
 let host: HTMLElement, root: Root, input: Free20WarningInput, current: HostingTimeDisplay | null, dismiss: ReturnType<typeof useFree20Warning>["dismiss"];
@@ -26,6 +26,27 @@ describe("Free20 warning lifecycle", () => {
     host = document.createElement("div"); document.body.append(host); root = createRoot(host);
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.restoreAllMocks(); vi.useRealTimers(); });
+  it("rearms the five-minute claim once for the increased allowance and reminds at one minute", async () => {
+    await render();
+    expect(host.textContent).toBe("notice");
+    await act(async () => dismiss());
+    const observe = async (remaining: number, sequence: number) => {
+      current = time(remaining, sequence, "2026-11-01", 1800);
+      input.reading = current;
+      await render();
+    };
+    await observe(899, 2);
+    expect(host.textContent).toBe("hidden");
+    await observe(300, 3);
+    expect(host.textContent).toBe("notice");
+    await act(async () => dismiss());
+    await observe(60, 4);
+    expect(host.textContent).toBe("notice");
+    await act(async () => dismiss());
+    await observe(59, 5);
+    expect(host.textContent).toBe("hidden");
+    expect(request).toHaveBeenCalledTimes(2);
+  });
   it("shows on the first below300 observation and never sends on ordinary ticks or focus", async () => {
     await render(); expect(host.textContent).toBe("notice"); expect(request).toHaveBeenCalledTimes(1);
     for (let remaining = 298; remaining > 280; remaining--) { current = time(remaining); input.reading = current; await render(); }

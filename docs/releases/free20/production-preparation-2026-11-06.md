@@ -459,7 +459,7 @@ Private reviewer rollout note (keep this accurate at submission time):
 
 Listing content should describe synced watching on YouTube, Crunchyroll and
 Netflix, room links/friends, chat/reactions and optional voice/video. Explain the
-20-minute daily host allowance and paid plans in pricing details, without trial
+30-minute daily host allowance after the matching production cutover and paid plans in pricing details, without trial
 promises or implying the extension supplies paid streaming subscriptions. Watching
 alone does not spend the allowance; guests do not spend their own host allowance.
 

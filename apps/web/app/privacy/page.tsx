@@ -85,7 +85,7 @@ export default function PrivacyPage() {
               </p>
               <p>
                 Where daily abuse protection is enabled, accounts using the same
-                browser or extension installation share one 20-minute allowance.
+                browser or extension installation share one 30-minute allowance.
                 Each account also keeps its own allowance across devices; the
                 smallest remaining allowance applies and resets at 00:00 UTC.
                 Blocking the required cookie or signed proof may make free hosting

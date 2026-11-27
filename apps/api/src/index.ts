@@ -1062,14 +1062,32 @@ export class RoomDurableObject {
     return now >= at && at < midnight ? at : null;
   }
 
+  private canRefreshPreviousDailyLimit(policy: RoomPolicyState, now: number): boolean {
+    return this.free20Accounting?.budget?.checkpoint.budgetSeconds === 1200 &&
+      policy.budget?.day === new Date(now).toISOString().slice(0, 10);
+  }
+
+  // An open room may reach its cached 20-minute deadline just as the server
+  // activates 30. Only an authenticated same-day increase can supersede it.
+  private async recheckPreviousDailyDeadline(policy: RoomPolicyState, now: number): Promise<RoomPolicyState> {
+    const deadline = this.free20ExhaustedAt(policy, now);
+    if (deadline === null || !this.canRefreshPreviousDailyLimit(policy, now)) return policy;
+    try {
+      return await this.refreshFree20RoomPolicy(policy);
+    } catch {
+      return policy; // The original terminal time still governs settlement.
+    }
+  }
+
   private async refreshFree20RoomPolicy(policy: RoomPolicyState): Promise<RoomPolicyState> {
     // One extra attempt is allowed only when bounded I/O straddles UTC midnight.
     // This is an event-driven reconciliation, never a quota polling loop.
     for (let attempt = 0; attempt < 2; attempt++) {
       const now = Date.now();
       const expired = this.free20ExhaustedAt(policy, now);
-      if (expired !== null) throw new Free20QuotaExhausted(expired);
-      const meter = reconcileRoomMeter(reconcileRoomMeter(this.roomMeter, false, now), this.shouldMeterRoom(), now);
+      if (expired !== null && !this.canRefreshPreviousDailyLimit(policy, now)) throw new Free20QuotaExhausted(expired);
+      const materializeAt = expired ?? now;
+      const meter = reconcileRoomMeter(reconcileRoomMeter(this.roomMeter, false, materializeAt), this.shouldMeterRoom(), materializeAt);
       if (!this.free20Accounting) throw new Error("Free20 accounting not selected");
       const pending = prepareFree20Accounting(this.free20Accounting, meter, this.room);
       if (!pending.pending || !meter.day) throw new Error("Missing Free20 request");
@@ -1078,7 +1096,10 @@ export class RoomDurableObject {
       const response = await notifyWebFree20Budget(this.env, pending.pending);
       const receivedAt = Date.now();
       const expiredDuringRequest = this.free20ExhaustedAt(policy, receivedAt);
-      if (expiredDuringRequest !== null) throw new Free20QuotaExhausted(expiredDuringRequest);
+      const increased = this.canRefreshPreviousDailyLimit(policy, receivedAt) &&
+        "budgetSeconds" in response.checkpoint && response.checkpoint.budgetSeconds === 1800 &&
+        response.checkpoint.utcDay === meter.day && !response.policy.denied;
+      if (expiredDuringRequest !== null && !increased) throw new Free20QuotaExhausted(expiredDuringRequest);
       if (new Date(receivedAt).toISOString().slice(0, 10) !== meter.day) continue;
       if (response.policy.denied) throw new Error("Free20 media authority denied");
       const token = await verifyRoomToken(response.policy.roomToken, this.room.roomId, this.env);
@@ -1088,7 +1109,7 @@ export class RoomDurableObject {
       if (updated === policy) throw new Error("Stale Free20 renewal");
       const acceptedAt = Date.now();
       const expiredDuringVerification = this.free20ExhaustedAt(policy, acceptedAt);
-      if (expiredDuringVerification !== null) throw new Free20QuotaExhausted(expiredDuringVerification);
+      if (expiredDuringVerification !== null && (!increased || !this.canRefreshPreviousDailyLimit(policy, acceptedAt))) throw new Free20QuotaExhausted(expiredDuringVerification);
       if (new Date(acceptedAt).toISOString().slice(0, 10) !== meter.day) continue;
       const result = acknowledgeFree20Accounting(pending, meter, response.checkpoint, {
         ownerUserId: policy.hostId, roomId: this.room.roomId, roomGeneration: this.room.roomGeneration,
@@ -1198,6 +1219,10 @@ export class RoomDurableObject {
       if (now >= policy.alarmAt) await this.endRoomExclusive({ reason: policy.endingReason, endedAt: policy.closingAt });
       return;
     }
+		if (this.canRefreshPreviousDailyLimit(policy, now) && this.free20ExhaustedAt(policy, now) !== null) {
+			policy = this.roomPolicy = await this.recheckPreviousDailyDeadline(policy, now);
+			now = Date.now();
+		}
 		if (this.free20Accounting && this.roomMeter.activeSince === null && this.free20ExhaustedAt(policy, now) !== null) {
 			await this.endRoomExclusive({ reason: "quota_exhausted", endedAt: now });
 			return;
@@ -1627,6 +1652,7 @@ export class RoomDurableObject {
         }
         if (!this.roomPolicy || !this.free20Accounting || !this.isFreeRoom()) throw new Error("Missing marked room authority");
         const now = Date.now();
+        this.roomPolicy = await this.recheckPreviousDailyDeadline(this.roomPolicy, now);
         const exhaustedAt = this.free20ExhaustedAt(this.roomPolicy, now);
         if (exhaustedAt !== null) { await this.endRoomExclusive({ reason: "quota_exhausted", endedAt: exhaustedAt }); throw new Error("Exhausted"); }
         const previous = await readStoredParticipantDisconnects(this.state.storage);
