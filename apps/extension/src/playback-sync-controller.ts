@@ -1094,7 +1094,7 @@ export class PlaybackSyncController {
 			type: "HOST_STATE",
 			roomId,
 			state,
-			source: adapter.getSourceDescriptor(),
+			source: adapter.getSourceDescriptor(true),
 		});
 	}
 
@@ -1546,7 +1546,7 @@ export class PlaybackSyncController {
 			type: "HOST_STATE",
 			roomId,
 			state: outgoingState,
-			source: adapter.getSourceDescriptor(),
+			source: adapter.getSourceDescriptor(true),
 			...(syncGuests ? { syncGuests: true } : {}),
 		};
 		return (syncGuests && this.sendLiveHostSync ? this.sendLiveHostSync(event) : this.transport.send(event)) === "sent";

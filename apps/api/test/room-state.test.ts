@@ -1175,3 +1175,24 @@ it("retains HBO Max host authority and restores the latest confirmed episode aft
   expect(restored.toSnapshot().source?.hbomaxIdentity).toBeUndefined();
   expect(restored.currentDurableSource?.videoFingerprint).toBe(next.videoFingerprint);
 });
+
+it("preserves late episode series metadata only for the matching playback", () => {
+  const room = new RoomState("series");
+  room.join(participant("host", "host"));
+  const episode = (id: string): WatchSourceDescriptor => ({
+    provider: "netflix", title: "Title", videoFingerprint: "netflix|watch/" + id,
+    sourceUrl: "https://www.netflix.com/watch/" + id, canonicalUrl: "https://www.netflix.com/watch/" + id,
+  });
+  const first = episode("100");
+  const state = playbackState(first.videoFingerprint, first.sourceUrl);
+  room.updateHostState("host", state, first);
+  const enriched = room.updateHostState("host", state, { ...first, episodeSeriesId: "12345" });
+  expect(enriched.sourceChanged).toBe(false);
+  room.updateHostState("host", state, first);
+  expect(room.toSnapshot().source?.episodeSeriesId).toBe("12345");
+  const restored = new RoomState("series", undefined, room.toSnapshot());
+  const next = episode("101");
+  const result = restored.updateHostState("host", playbackState(next.videoFingerprint, next.sourceUrl), next);
+  expect(result.accepted && result.previousSource?.episodeSeriesId).toBe("12345");
+  expect(restored.toSnapshot().source?.episodeSeriesId).toBeUndefined();
+});

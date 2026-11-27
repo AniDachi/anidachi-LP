@@ -329,6 +329,9 @@ export class RoomState {
       return { accepted: false, sourceChanged: false, code: "INVALID_SOURCE" };
     }
     const nextSource = normalized.source;
+    if (nextSource && !nextSource.episodeSeriesId && previousSource?.videoFingerprint === nextSource.videoFingerprint && previousSource.episodeSeriesId) {
+      nextSource.episodeSeriesId = previousSource.episodeSeriesId;
+    }
     if (nextSource?.provider === "hbomax" && nextSource.hbomaxIdentity === undefined &&
       previousSource?.sourceUrl === nextSource.sourceUrl && previousSource.hbomaxIdentity) {
       nextSource.hbomaxIdentity = previousSource.hbomaxIdentity;

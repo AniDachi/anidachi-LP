@@ -11,6 +11,7 @@ export type CrunchyrollControlAction =
 	| "snapshot"
 	| "navigate"
 	| "seriesPoster"
+	| "episodeSeries"
 	| "historyIdentity"
 	| "historyCatalog"
 	| "cancelHistory";
@@ -72,6 +73,7 @@ export interface CrunchyrollControlResult {
 	timedOut?: boolean;
 	timeline?: CrunchyrollTimelineSnapshot | null;
 	video?: CrunchyrollVideoSnapshot;
+  episodeSeriesId?: string | null;
   metadata?: CrunchyrollHistoryMetadata;
   catalog?: WatchCatalogSnapshotInput;
 }
@@ -81,7 +83,6 @@ export function isCrunchyrollControlRequest(value: unknown): value is Crunchyrol
   const request = value as CrunchyrollControlRequest;
   if (request.source !== CRUNCHYROLL_CONTROL_SOURCE || typeof request.id !== "string" || !request.id || request.id.length > 128) return false;
   const fields = ["action", "id", "source"];
-  const guid = (id: unknown) => typeof id === "string" && /^[A-Za-z0-9_-]{1,190}$/.test(id);
   switch (request.action) {
     case "resumeReadiness": case "resumeSeek": {
       const source = typeof request.url === "string" ? canonicalizeRoomSourceUrl(request.url, "crunchyroll") : null;
@@ -89,7 +90,7 @@ export function isCrunchyrollControlRequest(value: unknown): value is Crunchyrol
         typeof request.time === "number" && Number.isFinite(request.time) && request.time >= 0 && request.time <= 604800 &&
         Number.isSafeInteger(request.expiresAt) && request.expiresAt! > 0 && typeof request.intentId === "string" && /^[a-f0-9-]{36}$/i.test(request.intentId);
     }
-    case "historyIdentity":
+    case "episodeSeries": case "historyIdentity":
       return exact(value, [...fields, "contentId", "locale"]) && guid(request.contentId) &&
         typeof request.locale === "string" && /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(request.locale) && request.locale.length <= 35;
     case "historyCatalog":
@@ -103,7 +104,13 @@ export function isCrunchyrollControlRequest(value: unknown): value is Crunchyrol
   }
 }
 
+const guid = (id: unknown) => typeof id === "string" && /^[A-Za-z0-9_-]{1,190}$/.test(id);
+
 export function isCrunchyrollMetadataResult(value: CrunchyrollControlResult): boolean {
+  if (value.action === "episodeSeries") {
+    return exact(value, ["action","id","source","ok","episodeSeriesId","error","timedOut"]) &&
+      (!value.ok || value.episodeSeriesId === null || guid(value.episodeSeriesId));
+  }
   if (!exact(value, ["action", "id", "source", "ok", "metadata", "catalog", "error", "timedOut"])) return false;
   if (!value.ok) return typeof value.error === "string" && /^[A-Z_]{1,64}$/.test(value.error);
   if (value.action === "historyCatalog") return value.metadata === undefined && WatchCatalogSnapshotInputSchema.safeParse(value.catalog).success;

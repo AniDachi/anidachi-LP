@@ -73,7 +73,7 @@ export interface VideoAdapter {
   getFingerprint(): string;
   getCurrentTime(): number;
   getState(): PlaybackState;
-  getSourceDescriptor(): WatchSourceDescriptor | undefined;
+  getSourceDescriptor(includeEpisodeSeries?: boolean): WatchSourceDescriptor | undefined;
   getPlaybackSnapshot(): AdapterPlaybackSnapshot;
   getPersonalResumeReadiness?(target: PersonalResumeTarget): Promise<PersonalResumeReadiness>;
   seekPersonalResume?(target: PersonalResumeTarget, guard: () => boolean): Promise<"consumed" | "waiting" | "cancelled">;

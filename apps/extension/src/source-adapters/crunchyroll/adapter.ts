@@ -23,6 +23,8 @@ import {
 	subscribeCrunchyrollPlayerOverlayGeometry,
 } from "./player-chrome";
 
+type RoomEpisodeLookup = { watchId: string; seriesId?: string; abort: AbortController; retryAt?: number };
+
 export class CrunchyrollVideoAdapter extends Html5VideoAdapter {
 	override readonly id = "crunchyroll";
 	override readonly provider = "crunchyroll" as const;
@@ -58,6 +60,30 @@ export class CrunchyrollVideoAdapter extends Html5VideoAdapter {
 		});
 		if (result.ok && result.resumeState === "consumed") return "consumed";
 		return result.resumeState === "waiting" ? "waiting" : "cancelled";
+	}
+
+	private roomEpisode?: RoomEpisodeLookup;
+
+	override getSourceDescriptor(includeEpisodeSeries = false) {
+		const source = super.getSourceDescriptor();
+		const watchId = location.pathname.match(/\/watch\/([A-Za-z0-9_-]+)(?:\/|$)/)?.[1];
+		if (!source || !watchId || !includeEpisodeSeries) return source;
+		const retryAt = this.roomEpisode?.retryAt;
+		const retry = this.roomEpisode?.watchId === watchId && retryAt !== undefined && Date.now() >= retryAt;
+		if (this.roomEpisode?.watchId !== watchId || retry) {
+			this.roomEpisode?.abort.abort();
+			const episode: RoomEpisodeLookup = { watchId, abort: new AbortController() };
+			this.roomEpisode = episode;
+			const locale = document.documentElement.lang || navigator.language || "en-US";
+			// One retry after a temporary failure. A completed lookup (including a movie) is cached.
+			const onFailure = () => { if (!retry) episode.retryAt = Date.now() + 10_000; };
+			void runCrunchyrollMainCommand("episodeSeries", { contentId: watchId, locale }, 30_000, episode.abort.signal)
+				.then(result => {
+					if (result.ok && result.episodeSeriesId) episode.seriesId = result.episodeSeriesId;
+					else if (!result.ok) onFailure();
+				}).catch(onFailure);
+		}
+		return this.roomEpisode.seriesId ? { ...source, episodeSeriesId: this.roomEpisode.seriesId } : source;
 	}
 
 	override getTitle(): string | null {

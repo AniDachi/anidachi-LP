@@ -144,6 +144,8 @@ export const WatchSourceProviderSchema = z.enum([
 
 export const WatchSourceDescriptorSchema = z.object({
   provider: WatchSourceProviderSchema,
+  // Stable series identifier of the current episode. Prime uses its verified season-one anchor.
+  episodeSeriesId: z.string().regex(/^[A-Za-z0-9_-]{1,190}$/).optional(),
   hbomaxIdentity: HboMaxHistoryIdentitySchema.optional(),
   disneyplusIdentity: DisneyPlusHistoryIdentitySchema.optional(),
   primeNavigation: PrimeNavigationSchema.optional(),
@@ -158,6 +160,9 @@ export const WatchSourceDescriptorSchema = z.object({
   duration: z.number().nonnegative().optional(),
   posterUrl: UrlSchema.optional(),
 }).superRefine((source, context) => {
+  if (source.episodeSeriesId && !["crunchyroll", "netflix", "primevideo"].includes(source.provider)) {
+    context.addIssue({ code: "custom", message: "Unexpected episode series identifier", path: ["episodeSeriesId"] });
+  }
   if (source.hbomaxIdentity) {
     const identity = source.hbomaxIdentity;
     const playId = identity.kind === "movie" ? identity.providerPlaybackId : identity.providerEpisodeIdentifier;

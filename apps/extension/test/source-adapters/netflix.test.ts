@@ -497,6 +497,7 @@ describe("Netflix subscribed adapter", () => {
 			expect(adapter.getPlaybackSnapshot().phase).toBe("content"),
 		);
 		expect(adapter.getSourceDescriptor()).toMatchObject({
+			episodeSeriesId: "70143836",
 			provider: "netflix",
 			videoFingerprint: "netflix|watch/70196260",
 			sourceUrl: "https://www.netflix.com/watch/70196260",

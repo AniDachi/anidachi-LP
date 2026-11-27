@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { canonicalizeRoomSourceUrl, primeVideoSourceUrl } from "@anidachi/protocol";
+import { WatchSourceDescriptorSchema, canonicalizeRoomSourceUrl, primeVideoSourceUrl } from "@anidachi/protocol";
 import { catalogRoomProvider, type CatalogRoomProvider } from "../src/catalog-room-routes";
 import { GuestViewing } from "../src/guest-viewing";
 import type { RoomSessionRecord } from "../src/room-session-storage";
@@ -35,7 +35,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
       participantSessionId: "session", cameraEnabled: false, voiceMode: "push-to-talk" };
     const page = { href: home, fingerprint: null as string | null };
     const ctx = { provider: () => provider, session: () => record, href: () => page.href, playerFingerprint: () => page.fingerprint,
-      apply: vi.fn(), suspend: vi.fn(), offer: vi.fn(), navigate: vi.fn(async () => true),
+      apply: vi.fn(), suspend: vi.fn(), offer: vi.fn(), continueEpisode: vi.fn(async () => true), navigate: vi.fn(async () => true),
       persist: vi.fn(async (_room: RoomSessionRecord, followingFingerprint: string | null) => {
         record = { ...record, followingFingerprint };
         return true;
@@ -46,7 +46,8 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
       page.href = home.includes("amazon.com") ? "https://www.amazon.com/gp/video/detail/B0FX2ZCPFK" : href;
       page.fingerprint = fingerprint;
     }
-    return { ctx, mount, play, machine: mount() };
+    function leave() { page.href = home; page.fingerprint = null; }
+    return { ctx, mount, play, leave, machine: mount() };
   }
 
   it.each(["sleeve", "host sync"])("stays independent until %s, returns to the exact episode and syncs in place", async action => {
@@ -80,6 +81,76 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
     restored.receive({ ...state, hostSurface: "catalog" }, host, true);
     expect(ctx.offer).toHaveBeenLastCalledWith(null);
+  });
+
+  const nextState = { ...state, hostTime: 12, sourceUrl: personal.sourceUrl, videoFingerprint: personal.videoFingerprint };
+  function episode(source: typeof host, series = first) {
+    const identity = { kind: "episode", providerSeriesId: series, providerEpisodeIdentifier: source.sourceUrl.split("/").at(-1) };
+    const ids = provider === "disneyplus" ? { disneyplusIdentity: identity } :
+      provider === "hbomax" ? { hbomaxIdentity: identity } : { episodeSeriesId: series };
+    return WatchSourceDescriptorSchema.parse({ ...source, ...ids });
+  }
+
+  it.each(["autoplay", "manual via catalog", "late identity"])("follows the same series once on %s", async mode => {
+    const { ctx, machine, play } = setup();
+    play(watchUrl, host.videoFingerprint);
+    machine.receive(state, episode(host));
+    expect(machine.together()).toBe(true);
+    if (mode === "manual via catalog") machine.receive({ ...state, hostSurface: "catalog" }, host);
+    if (mode === "late identity") {
+      machine.receive(nextState, personal);
+      expect(ctx.continueEpisode).not.toHaveBeenCalled();
+    }
+    machine.receive(nextState, episode(personal));
+    machine.receive(nextState);
+    await Promise.resolve();
+    expect(ctx.continueEpisode).toHaveBeenCalledExactlyOnceWith(episode(personal), expect.anything(), expect.any(AbortSignal));
+    play(personalUrl, personal.videoFingerprint);
+    machine.refresh();
+    expect(machine.together()).toBe(true);
+    expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal));
+  });
+
+  it("synchronizes in place when both players have advanced to the exact same episode", async () => {
+    const { ctx, machine, play } = setup();
+    play(watchUrl, host.videoFingerprint);
+    machine.receive(state, episode(host));
+    play(personalUrl, personal.videoFingerprint);
+    machine.receive(nextState, episode(personal));
+    await Promise.resolve();
+    expect(machine.together()).toBe(true);
+    expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal));
+    expect(ctx.continueEpisode).not.toHaveBeenCalled();
+    expect(ctx.navigate).not.toHaveBeenCalled();
+  });
+
+  it.each(["different series", "unknown series", "guest left", "guest chose another episode"])("offers playback without moving the guest: %s", async mode => {
+    const { ctx, machine, play, leave } = setup();
+    play(watchUrl, host.videoFingerprint);
+    machine.receive(state, episode(host));
+    if (mode === "guest left") leave();
+    if (mode === "guest chose another episode") { play(personalUrl, personal.videoFingerprint); machine.refresh(); }
+    machine.receive(nextState, mode === "unknown series" ? personal : episode(personal, mode === "different series" ? second : first));
+    await Promise.resolve();
+    expect(ctx.navigate).not.toHaveBeenCalled();
+    expect(ctx.continueEpisode).not.toHaveBeenCalled();
+    expect(machine.together()).toBe(false);
+    expect(ctx.offer).toHaveBeenLastCalledWith(personal.sourceUrl);
+  });
+
+  it("respects a guest leaving while the new episode choice is being saved", async () => {
+    const { ctx, machine, play, leave } = setup();
+    play(watchUrl, host.videoFingerprint);
+    machine.receive(state, episode(host));
+    let finish!: () => void;
+    ctx.persist.mockImplementationOnce(() => new Promise(resolve => { finish = () => resolve(true); }));
+    machine.receive(nextState, episode(personal));
+    leave();
+    finish();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ctx.continueEpisode).not.toHaveBeenCalled();
+    expect(ctx.persist).toHaveBeenLastCalledWith(expect.anything(), null);
   });
 
   it("restores independent playback after an unsuccessful handoff", async () => {

@@ -83,6 +83,7 @@ export class PrimeVideoAdapter extends Html5VideoAdapter {
 			canonicalUrl: sourceUrl,
 			videoFingerprint: this.getFingerprint(),
 			title: snapshot.metadata.title,
+			...(snapshot.metadata.identity?.kind === "episode" && { episodeSeriesId: snapshot.metadata.identity.seriesAnchorSeasonId }),
    ...(snapshot.metadata.primeNavigation ? {primeNavigation:snapshot.metadata.primeNavigation} : {}),
 			duration: snapshot.duration,
 		};

@@ -34,6 +34,14 @@ function checkHistoryAbort(signal: AbortSignal): void {
   if (signal.aborted) throw new Error("HISTORY_ABORTED");
 }
 
+export async function readCrunchyrollEpisodeSeries(watchId: string, context: WatchCatalogLocaleContext, load: HistoryJsonLoader, signal: AbortSignal) {
+  if (!safeGuid(watchId)) return null;
+  const response = await load(cmsPath(`objects/${watchId}`, context), signal);
+  const row = historyRows(response, 1).find(item => item.id === watchId);
+  const series = (row?.episode_metadata as Record<string, unknown> | undefined)?.series_id;
+  return safeGuid(series) ? series : null;
+}
+
 export async function resolveCrunchyrollHistoryMetadata(
   watchId: string, captured: WatchCatalogLocaleContext, load: HistoryJsonLoader, signal: AbortSignal,
 ): Promise<CrunchyrollHistoryMetadata | null> {
@@ -145,7 +153,7 @@ export function runCrunchyrollMainCommand(
 			complete(event.data);
 		};
     const cancel = () => {
-      if (action === "historyIdentity" || action === "historyCatalog") window.postMessage({ action: "cancelHistory", id, source: CRUNCHYROLL_CONTROL_SOURCE }, "*");
+      if (action === "episodeSeries" || action === "historyIdentity" || action === "historyCatalog") window.postMessage({ action: "cancelHistory", id, source: CRUNCHYROLL_CONTROL_SOURCE }, "*");
     };
     const onAbort = () => {
       cancel();
@@ -192,7 +200,7 @@ function isCrunchyrollControlResult(
 	return (
 		candidate.source === CRUNCHYROLL_CONTROL_RESULT_SOURCE &&
 		candidate.id === id && candidate.action === action && typeof candidate.ok === "boolean" &&
-    (action !== "historyIdentity" && action !== "historyCatalog" || isCrunchyrollMetadataResult(candidate as CrunchyrollControlResult))
+    (action !== "episodeSeries" && action !== "historyIdentity" && action !== "historyCatalog" || isCrunchyrollMetadataResult(candidate as CrunchyrollControlResult))
 	);
 }
 
