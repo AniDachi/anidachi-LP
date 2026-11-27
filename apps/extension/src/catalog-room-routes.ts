@@ -15,6 +15,16 @@ export function supportsCatalogReturn(provider: unknown): provider is Exclude<Ca
 	return provider === "netflix" || provider === "crunchyroll" || provider === "youtube" || provider === "disneyplus" || provider === "hbomax";
 }
 
+/** Validate a room target against the current platform before offering navigation. */
+export function roomWatchSource(provider: CatalogRoomProvider | null, href: string) {
+  if (!provider) return null;
+  if (provider === "youtube") {
+    try { return youtubePageWatchSource(new URL(href)); } catch { return null; }
+  }
+  const result = canonicalizeRoomSourceUrl(href, provider);
+  return result.ok ? result.source : null;
+}
+
 export function catalogWatchSource(provider: unknown, href: string) {
 	if (!supportsCatalogReturn(provider)) return null;
 	const result = canonicalizeRoomSourceUrl(href, provider);

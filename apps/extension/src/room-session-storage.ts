@@ -1,5 +1,6 @@
 import {
   MAX_PARTICIPANT_ID_CHARS,
+  MAX_VIDEO_FINGERPRINT_CHARS,
   MAX_ROOM_ID_CHARS,
   MAX_SESSION_ID_CHARS,
 } from "@anidachi/protocol";
@@ -33,7 +34,7 @@ const LEGACY_ROOM_SESSION_OWNER_STORAGE_KEY = "anidachi:room-owner-id";
 const LEGACY_PARTICIPANT_SESSION_STORAGE_KEY = "anidachi:participant-session-id";
 
 export interface RoomSessionRecord {
-  youtubeFollowing?: string | null;
+  followingFingerprint?: string | null;
   version: typeof ROOM_SESSION_RECORD_VERSION;
   revision: number;
   roomId: string;
@@ -157,7 +158,7 @@ export type RoomSessionStorageMessage =
     }
   | {
       type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
-      command: "set-youtube-following";
+      command: "set-room-following";
       record: RoomSessionRecord;
       fingerprint: string | null;
     }
@@ -235,8 +236,8 @@ export function isRoomSessionStorageMessage(value: unknown): value is RoomSessio
     case "clear-if-match":
     case "clear-departure-if-match":
       return parseRoomSessionRecord(value.record) !== null;
-    case "set-youtube-following":
-      return isYouTubeFollowing(value.fingerprint) && parseRoomSessionRecord(value.record) !== null;
+    case "set-room-following":
+      return isRoomFollowing(value.fingerprint) && parseRoomSessionRecord(value.record) !== null;
     case "set-voice-mode":
       return isVoiceMode(value.mode) &&
         parseRoomSessionRecord(value.record) !== null &&
@@ -388,13 +389,13 @@ export async function handleRoomSessionStorageMessage(
               message.record,
             ),
           };
-        case "set-youtube-following": {
+        case "set-room-following": {
           const key = roomSessionStorageKey(resolvedTabId);
           const current = parseRoomSessionRecord((await sessionStorage.get(key))[key]);
           if (!current || !roomSessionIdentityMatches(current, message.record)) return { ok: true, record: null };
-          if (current.youtubeFollowing === message.fingerprint) return { ok: true, record: current };
+          if (current.followingFingerprint === message.fingerprint) return { ok: true, record: current };
           // This preference is independent of revision-fenced camera/voice operations.
-          const record = { ...current, youtubeFollowing: message.fingerprint };
+          const record = { ...current, followingFingerprint: message.fingerprint };
           await sessionStorage.set({ [key]: record });
           return { ok: true, record };
         }
@@ -973,15 +974,16 @@ export async function clearRoomSessionDepartureIfMatch(
   );
 }
 
-export async function setRoomYouTubeFollowing(record: RoomSessionRecord, fingerprint: string | null): Promise<boolean> {
+export async function setRoomFollowing(record: RoomSessionRecord, fingerprint: string | null): Promise<boolean> {
   const response = await sendRoomSessionMessage({
-    type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "set-youtube-following", record, fingerprint,
+    type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "set-room-following", record, fingerprint,
   });
-  return response.record?.youtubeFollowing === fingerprint && roomSessionIdentityMatches(response.record, record);
+  return response.record?.followingFingerprint === fingerprint && roomSessionIdentityMatches(response.record, record);
 }
 
-function isYouTubeFollowing(value: unknown): value is string | null {
-  return value === null || (typeof value === "string" && /^youtube\|[A-Za-z0-9_-]{6,250}$/.test(value));
+function isRoomFollowing(value: unknown): value is string | null {
+  return value === null || (typeof value === "string" && value.length <= MAX_VIDEO_FINGERPRINT_CHARS &&
+    /^(?:youtube\|[A-Za-z0-9_-]{6,}|(?:netflix\|watch|crunchyroll\|watch|primevideo\|detail|hbomax\|video\/watch|disneyplus\|play)\/[A-Za-z0-9_-]+)$/.test(value));
 }
 
 export async function updateRoomSessionVoiceMode(
@@ -1212,7 +1214,7 @@ async function persistRecord(
       sameRoom
         ? existing.participantSessionId
         : createParticipantSessionId(randomUUID),
-    ...(sameRoom && existing.youtubeFollowing !== undefined ? { youtubeFollowing: existing.youtubeFollowing } : {}),
+    ...(sameRoom && existing.followingFingerprint !== undefined ? { followingFingerprint: existing.followingFingerprint } : {}),
     cameraEnabled: preferredMedia.cameraEnabled,
     voiceMode: preferredMedia.voiceMode,
   };
@@ -1317,8 +1319,8 @@ async function confirmRoomSessionForTabNow(
     roomId,
     ownerUserId: parsedPrepared.ownerUserId,
     participantSessionId: parsedPrepared.participantSessionId,
-    ...(sameRoom && confirmed.participantSessionId === parsedPrepared.participantSessionId && confirmed.youtubeFollowing !== undefined
-      ? { youtubeFollowing: confirmed.youtubeFollowing } : {}),
+    ...(sameRoom && confirmed.participantSessionId === parsedPrepared.participantSessionId && confirmed.followingFingerprint !== undefined
+      ? { followingFingerprint: confirmed.followingFingerprint } : {}),
     cameraEnabled: preferredMedia.cameraEnabled,
     voiceMode: preferredMedia.voiceMode,
   };
@@ -1647,13 +1649,14 @@ export function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null
     return null;
   }
 
+  const following = value.followingFingerprint === undefined ? value.youtubeFollowing : value.followingFingerprint;
   return {
     version: ROOM_SESSION_RECORD_VERSION,
     revision,
     roomId: value.roomId,
     ownerUserId: value.ownerUserId,
     participantSessionId: value.participantSessionId,
-    ...(isYouTubeFollowing(value.youtubeFollowing) ? { youtubeFollowing: value.youtubeFollowing } : {}),
+    ...(isRoomFollowing(following) ? { followingFingerprint: following } : {}),
     cameraEnabled: value.cameraEnabled === true,
     voiceMode: isVoiceMode(value.voiceMode) ? value.voiceMode : "push-to-talk",
   };

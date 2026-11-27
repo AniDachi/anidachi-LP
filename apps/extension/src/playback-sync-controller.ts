@@ -49,7 +49,8 @@ export interface PlaybackSyncTransport {
 
 export interface PlaybackSyncControllerOptions {
 	/** Explicit host sync also works when a restored player is paused before its first play. */
-	sendLiveYouTubeSync?: PlaybackSyncTransport["send"];
+	sendLiveHostSync?: PlaybackSyncTransport["send"];
+	guestPlaybackAllowed?(): boolean;
 	transport: PlaybackSyncTransport;
 	ensureRemoteSource(
 		source: WatchSourceDescriptor,
@@ -148,14 +149,16 @@ export class PlaybackSyncController {
 	private readonly onStatus: (status: PlaybackSyncStatus) => void;
 	private readonly ensureRemoteSource: PlaybackSyncControllerOptions["ensureRemoteSource"];
 	private readonly transport: PlaybackSyncTransport;
-	private readonly sendLiveYouTubeSync?: PlaybackSyncTransport["send"];
+	private readonly sendLiveHostSync?: PlaybackSyncTransport["send"];
+	private readonly guestPlaybackAllowed?: () => boolean;
 
 	constructor(options: PlaybackSyncControllerOptions) {
 		this.now = options.now ?? Date.now;
 		this.onStatus = options.onStatus;
 		this.ensureRemoteSource = options.ensureRemoteSource;
 		this.transport = options.transport;
-		this.sendLiveYouTubeSync = options.sendLiveYouTubeSync;
+		this.sendLiveHostSync = options.sendLiveHostSync;
+		this.guestPlaybackAllowed = options.guestPlaybackAllowed;
 	}
 
 	bindAdapter(adapter: VideoAdapter | null): void {
@@ -515,7 +518,7 @@ export class PlaybackSyncController {
 		if (!adapter || this.refreshPlaybackPhase(adapter)) {
 			return false;
 		}
-		return this.sendHostState(true, undefined, adapter.provider === "youtube");
+		return this.sendHostState(true, undefined, adapter.provider !== "generic");
 	}
 
 	suppressLocalEventsForRemoteTransition(): void {
@@ -817,6 +820,7 @@ export class PlaybackSyncController {
 	}
 
 	private getActiveAdapter(): VideoAdapter | null {
+		if (this.session.roomId && !this.session.isHost && this.guestPlaybackAllowed?.() === false) return null;
 		return this.adapterActive && !this.disposed ? this.adapter : null;
 	}
 
@@ -1545,7 +1549,7 @@ export class PlaybackSyncController {
 			source: adapter.getSourceDescriptor(),
 			...(syncGuests ? { syncGuests: true } : {}),
 		};
-		return (syncGuests && this.sendLiveYouTubeSync ? this.sendLiveYouTubeSync(event) : this.transport.send(event)) === "sent";
+		return (syncGuests && this.sendLiveHostSync ? this.sendLiveHostSync(event) : this.transport.send(event)) === "sent";
 	}
 
 	private sendLocalControlEvent(

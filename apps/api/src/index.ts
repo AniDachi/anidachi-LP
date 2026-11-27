@@ -3128,15 +3128,11 @@ export class RoomDurableObject {
       this.state.waitUntil(this.runRoomSourceDeliveryExclusively(false));
     }
 
-    // A manual sync is live-only. A reconnect replays ordinary playback state.
-    if (event.syncGuests && result.source?.provider === "youtube" &&
-      !("hostSurface" in normalizedState && normalizedState.hostSurface === "catalog") &&
-      this.room.currentHostId === userId &&
-      this.room.currentDurableSource?.videoFingerprint === normalizedState.videoFingerprint) {
-      this.broadcast({ type: "HOST_STATE", state: normalizedState, syncGuests: true }, socket);
-      if (result.sourceChanged) await this.refreshRoomHistoryAuthorities();
-      return;
-    }
+    // A gather is a live host command. A reconnect receives only the saved playback state.
+    const gather = event.syncGuests && result.source &&
+      !("hostSurface" in normalizedState && normalizedState.hostSurface === "catalog") && this.room.currentHostId === userId &&
+      this.room.currentDurableSource?.videoFingerprint === normalizedState.videoFingerprint;
+    if (gather) this.broadcast({ type: "HOST_STATE", state: normalizedState, syncGuests: true }, socket);
 
     if (result.sourceChanged) {
       await this.refreshRoomHistoryAuthorities();
@@ -3155,7 +3151,7 @@ export class RoomDurableObject {
       (!previousHboIdentity || hboMaxHistoryKeys(hboIdentity).titleKey !== hboMaxHistoryKeys(previousHboIdentity).titleKey)) {
       this.broadcast(this.currentRoomSnapshot(), socket);
     }
-    this.broadcast({ type: "HOST_STATE", state: normalizedState }, socket);
+    if (!gather) this.broadcast({ type: "HOST_STATE", state: normalizedState }, socket);
   }
 
   private async refreshRoomHistoryAuthorities(): Promise<void> {

@@ -59,6 +59,7 @@ describe("Prime room document rebind", () => {
 		room.setBaseline({ fingerprint: initial.source!.videoFingerprint, visit });
 		expect(room.reserveFollow("guest", contentId, visit)).toBeNull();
 		expect(room.reserveFollow("guest", nextId, visit, true)).toBeNull();
+		room.setBaseline(null); // A guest actively watching another title has no browsing baseline.
 		expect(room.reserveFollow("guest", contentId, undefined, true)?.source).toEqual(initial.source);
 		room.setBaseline(null);
 		room.consume({ ...initial, serverSeq: 2, hostState: { ...initial.hostState, hostSurface: "catalog" } });

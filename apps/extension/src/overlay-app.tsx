@@ -1,3 +1,4 @@
+import { navigateToGuestPlayback } from "./guest-playback-navigation";
 import { bindHboMaxGuestExit } from "./source-adapters/hbomax/navigation";
 import { observeHboMaxRoomSource, clearHboMaxRoomSource } from "./source-adapters/hbomax/metadata";
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
@@ -9,7 +10,7 @@ import { hasLivePrimeRoomSession, PrimeRoomClient, retireUnattachedPrimeRoom } f
 import type { LivePrimeRoomSession } from "./prime-room-contract";
 import { useSyncExternalStore } from "react";
 import { type captureHboLobbyInvite, ROOMS_PILOT, popupRoomProvider, lobbyRoomFromUrl, getPopupCreate, popupRoomInvite, setPopupCreate, subscribePopupCreate } from "./popup-room-launch";
-import { catalogRoomProvider, catalogWatchDestination, renderedHboMaxWatchUrl, catalogWatchSource, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
+import { catalogPlayerProvider, catalogRoomProvider, catalogWatchDestination, renderedHboMaxWatchUrl, catalogWatchSource, supportsCatalogReturn, supportsCatalogRoom } from "./catalog-room-routes";
 import { followPrimeRoom, returnToPrimePlayer } from "./prime-launch-client";
 import { PrimeBrowsingRoom, PrimeHostVisit } from "./source-adapters/primevideo/browsing-room";
 import { observeDisneyPlusRoomSource, clearDisneyPlusRoomSource } from "./source-adapters/disneyplus/metadata";
@@ -59,9 +60,8 @@ import {
 	useState,
 } from "react";
 import { storage } from "wxt/utils/storage";
-import { YOUTUBE_CATALOG_ORIGINS, isYouTubeCatalogPath, isYouTubeWatchPage } from "./source-adapters/youtube/url";
-import { YouTubeGuestViewing } from "./source-adapters/youtube/guest-viewing";
-import { YouTubeWatchTogetherTab } from "./youtube-watch-together-tab";
+import { GuestViewing } from "./guest-viewing";
+import { WatchTogetherTab } from "./watch-together-tab";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { CapsuleFriendsPanel, createCapsuleFriendLinkCache } from "./capsule-friends-panel";
 import { subscribeToAccountInboxForUser, accountInboxSocialSignature } from "./account-inbox-cache";
@@ -263,7 +263,7 @@ import {
 	prepareRoomSession,
 	rememberRoomSessionRecoveryHint,
 	roomSessionIdentityMatches,
-	setRoomYouTubeFollowing,
+	setRoomFollowing,
 	type RoomSessionRecord,
 	updateRoomSessionCameraEnabled,
 	updateRoomSessionVoiceMode,
@@ -873,10 +873,12 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		null,
 	);
 	const [resumeSyncRequired, setResumeSyncRequired] = useState(false);
+	const guestCanControlPlayer = useRef<() => boolean>(() => true);
 	const playbackSyncControllerRef = useRef<PlaybackSyncController | null>(null);
 	if (!playbackSyncControllerRef.current) {
 		playbackSyncControllerRef.current = new PlaybackSyncController({
-			sendLiveYouTubeSync: event => clientRef.current.send(event),
+			sendLiveHostSync: event => clientRef.current.send(event),
+			guestPlaybackAllowed: () => guestCanControlPlayer.current(),
 			ensureRemoteSource: (source, context) =>
 				ensureSourceForProvider(source, context, getDefinitionForProvider),
 			onStatus: (syncStatus) => {
@@ -3663,39 +3665,46 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		);
 	}, []);
 
-  const youtubeRoomSurface = adapter.provider === "youtube" && window.top === window &&
-    YOUTUBE_CATALOG_ORIGINS.includes(location.origin) && (isYouTubeCatalogPath(location.pathname) || isYouTubeWatchPage(new URL(location.href)));
-  const youtubePlayer = useRef(adapter);
-  youtubePlayer.current = adapter;
-  const [youtubeOffer, setYouTubeOffer] = useState<string | null>(null);
-  const [youtubeViewing] = useState(() => new YouTubeGuestViewing({
+  const choiceSurface = window.top === window && supportsCatalogRoom(adapter.provider) &&
+    (catalogRoomProvider(location.href) === adapter.provider || catalogPlayerProvider(location.href) === adapter.provider);
+  const [watchOffer, setWatchOffer] = useState<string | null>(null);
+  const [guestViewing] = useState(() => new GuestViewing({
+    provider: () => {
+      const provider = activePlayer.current?.provider;
+      return supportsCatalogRoom(provider) ? provider : null;
+    },
     session: () => {
       const record = storedRoomSessionRef.current;
       return record && record.roomId === roomIdRef.current && record.ownerUserId === participantRef.current?.id ? record : null;
     },
     href: () => location.href,
-    playerFingerprint: () => adapterActiveRef.current ? youtubePlayer.current.getFingerprint() : null,
-    apply: state => {
-      playbackSyncController.bindAdapter(youtubePlayer.current);
-      void playbackSyncController.handleHostState(state);
+    playerFingerprint: () => adapterActiveRef.current && !browseMode.current ? activePlayer.current?.getFingerprint() ?? null : null,
+    apply: (state, source) => {
+      if (source?.provider === "disneyplus") observeDisneyPlusRoomSource(document, source);
+      if (source?.provider === "hbomax") observeHboMaxRoomSource(document, source);
+      playbackSyncController.bindAdapter(activePlayer.current);
+      void playbackSyncController.handleHostState(state, source);
     },
     suspend: () => playbackSyncController.suspend(),
-    persist: setRoomYouTubeFollowing,
-    navigate: url => window.location.assign(url),
-    offer: setYouTubeOffer,
+    persist: setRoomFollowing,
+    navigate: (url, record, signal) => navigateToGuestPlayback(document, url, record, signal),
+    offer: setWatchOffer,
   }));
+  guestCanControlPlayer.current = () => !choiceSurface || guestViewing.together();
   useEffect(() => {
-    if (!youtubeRoomSurface) return;
-    const update = () => youtubeViewing.refresh();
+    if (!choiceSurface) return;
+    const update = () => guestViewing.refresh();
     window.addEventListener("popstate", update);
+    window.navigation?.addEventListener("currententrychange", update);
     document.addEventListener("yt-navigate-finish", update);
     update();
     return () => {
       window.removeEventListener("popstate", update);
+      window.navigation?.removeEventListener("currententrychange", update);
       document.removeEventListener("yt-navigate-finish", update);
     };
-  }, [youtubeViewing, youtubeRoomSurface, adapter, adapterActive]);
-  useEffect(() => () => youtubeViewing.bind(null), [youtubeViewing]);
+  }, [guestViewing, choiceSurface, adapter, adapterActive, primeBrowsing]);
+  useEffect(() => () => guestViewing.bind(null), [guestViewing]);
 
 	const triggerFlameBurst = useCallback(
 		(participantId: string | undefined, durationMs = 3200) => {
@@ -3793,9 +3802,12 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	);
 
   const applyHostState = useCallback((state: PlaybackState, source?: WatchSourceDescriptor, syncGuests = false) => {
-    if (youtubeRoomSurface && roomSourceProviderRef.current === "youtube") youtubeViewing.receive(state, source, syncGuests);
-    else void applyDefaultHostState(state, source);
-  }, [youtubeRoomSurface, youtubeViewing, applyDefaultHostState]);
+    if (choiceSurface) {
+      if (roomSourceProviderRef.current === activePlayer.current?.provider) guestViewing.receive(state, source, syncGuests);
+      return;
+    }
+    void applyDefaultHostState(state, source);
+  }, [choiceSurface, guestViewing, applyDefaultHostState]);
 
 	// Terminally end the local room session without a reconnect loop: used for
 	// server-terminal errors (ROOM_FULL / SESSION_TAKEN_OVER) and for graceful
@@ -4014,13 +4026,13 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					if (event.capabilities) {
 						setRoomCapabilities(current => current && "mediaProtocolVersion" in current ? current : event.capabilities ?? null);
 					}
-          if (youtubeRoomSurface) {
+          if (choiceSurface) {
             const record = storedRoomSessionRef.current;
             const local = event.participants.find(p => p.id === record?.ownerUserId);
             const hostPresent = event.participants.some(p => p.role === "host" && p.connected !== false);
-            youtubeViewing.bind(record && record.roomId === event.roomId && local?.role === "viewer" &&
+            guestViewing.bind(record && record.roomId === event.roomId && local?.role === "viewer" &&
               local.connected !== false && local.participantSessionId === record.participantSessionId && hostPresent ? record : null);
-            if (!event.hostState) youtubeViewing.catalog();
+            if (!event.hostState) guestViewing.catalog();
           }
 					setRoomSnapshotReady(true);
 					playbackSyncController.setSession({
@@ -4131,7 +4143,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				case "PLAY":
         case "PAUSE":
         case "SEEK":
-          if (youtubeRoomSurface && roomSourceProviderRef.current === "youtube" && !isCurrentHost() && !youtubeViewing.together()) return;
+          if (choiceSurface && !isCurrentHost() && !guestViewing.together()) return;
 					playbackSyncController.handleRemoteCommand(event);
 					return;
 				case "P2P_SIGNAL": {
@@ -4262,7 +4274,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		[
 			adapter.id,
 			adapter.video,
-			applyHostState, youtubeRoomSurface, youtubeViewing,
+			applyHostState, choiceSurface, guestViewing,
 			cueReactionParticipant,
 			isCurrentHost,
 			chatDisplayMode,
@@ -5567,7 +5579,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	]);
 
 	useActiveAdapterPlayback({
-		active: adapterActive && (!youtubeRoomSurface || !roomId || isHost || youtubeViewing.together()),
+		active: adapterActive && (!choiceSurface || !roomId || isHost || guestViewing.together()),
 		adapter,
 		controller: playbackSyncController,
 	});
@@ -5577,7 +5589,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	}, [roomId]);
 	useEffect(() => {
 		const pending = pendingCatalogPlayback.current;
-		if (!supportsCatalogReturn(adapter.provider) || !adapterActive || !pending || !roomSnapshotReady || !isConnected || isHost) return;
+		if (choiceSurface || !supportsCatalogReturn(adapter.provider) || !adapterActive || !pending || !roomSnapshotReady || !isConnected || isHost) return;
 		pendingCatalogPlayback.current = null;
 		if (pending.roomId === roomId && pending.state.videoFingerprint === adapter.getFingerprint()) {
 			if (pending.source?.provider === "disneyplus" && pending.source.videoFingerprint === pending.state.videoFingerprint) {
@@ -5588,7 +5600,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 			}
 			void playbackSyncController.handleHostState(pending.state, pending.source);
 		}
-	}, [adapter, adapterActive, roomId, roomSnapshotReady, isConnected, isHost, playbackSyncController]);
+	}, [adapter, adapterActive, roomId, roomSnapshotReady, isConnected, isHost, playbackSyncController, choiceSurface]);
 
 	const handleCreateRoom = async (reason: "manual" | "popup" = "manual", expectedOwner?: string) => {
 		if ((browseMode.current && !(ROOMS_PILOT && popupRoomProvider(location.href) === adapter.provider)) || roomCreatePending || initialPrimeLaunchRef.current?.waiting || canRetryPrimeInvite) {
@@ -6973,7 +6985,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		currentParticipant?.role === "viewer" && currentParticipant.connected !== false &&
 		storedRoomSession?.participantSessionId && currentParticipant.participantSessionId === storedRoomSession.participantSessionId &&
 		participants.some(p => p.role === "host" && p.connected !== false) ? catalogReturnUrl : null;
-	const catalogReturnTarget = primeBrowsing && !capsuleNotice.open ? guestPlayerUrl : null;
+	const catalogReturnTarget = !choiceSurface && primeBrowsing && !capsuleNotice.open ? guestPlayerUrl : null;
 	useLayoutEffect(() => {
 		const root = overlayRootRef.current, pill = topBubbleRef.current, dock = catalogDockRef.current;
 		if (primeBrowsing && !capsuleNotice.present && root && pill && dock) {
@@ -6982,9 +6994,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	}, [primeBrowsing, capsuleNotice.present, adapter.provider]);
 	const guestSessionId = storedRoomSession?.participantSessionId;
 	const disneyReturn = useMemo(() => {
-		const playback = adapter.provider === "disneyplus" && guestPlayerUrl && disneyPlusWatchId(guestPlayerUrl);
+		const target = choiceSurface ? watchOffer : guestPlayerUrl;
+		const playback = adapter.provider === "disneyplus" && target && disneyPlusWatchId(target);
 		return playback && roomId && guestSessionId ? { roomId, sessionId: guestSessionId, playback } : null;
-	}, [adapter.provider, guestPlayerUrl, roomId, guestSessionId]);
+	}, [adapter.provider, choiceSurface, watchOffer, guestPlayerUrl, roomId, guestSessionId]);
 	const returnController = useRef<AbortController | null>(null);
 	const disneyPath = disneyReturn ? location.pathname : "";
 	useLayoutEffect(() => {
@@ -7097,10 +7110,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				{capsuleNotice.present && capsuleNoticeKind ? <Free20WarningNotice
 					kind={capsuleNoticeKind} remainingSeconds={capsuleNoticeKind === "warning" ? liveHostingTime?.remainingSeconds ?? null : null}
 					open={capsuleNotice.open} onDismiss={capsuleNotice.dismiss} restoreFocus={() => topBubbleRef.current?.focus()} /> : null}
-        {youtubeRoomSurface && youtubeOffer && roomId && isConnected && roomSnapshotReady &&
+        {choiceSurface && watchOffer && roomId && isConnected && roomSnapshotReady &&
           currentParticipant?.role === "viewer" && !capsuleNotice.present &&
           participants.some(p => p.role === "host" && p.connected !== false) &&
-          <YouTubeWatchTogetherTab key={youtubeOffer} returning={youtubeViewing.returning} onJoin={() => void youtubeViewing.join()} />}
+          <WatchTogetherTab key={watchOffer} returning={guestViewing.returning} onJoin={() => void guestViewing.join()} />}
 				<button
 					aria-controls="anidachi-mini-panel"
 					aria-expanded={panelOpen}
