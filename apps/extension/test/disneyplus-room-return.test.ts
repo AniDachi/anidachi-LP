@@ -34,6 +34,50 @@ function setupBridge() {
 }
 afterEach(() => { document.body.replaceChildren(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
+it("keeps a host Sync pending when the series page remounts before its episode links load", async () => {
+  const send = setupBridge();
+  const destination = origin + "/play/" + episode;
+  page("/home");
+  await send({ type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF", action: "prepare-return", payload: intent });
+  page("/browse/entity-" + series);
+  const firstMount = new AbortController();
+  await finishDisneyRoomReturn(document, intent, firstMount.signal, false);
+  firstMount.abort();
+  await finishDisneyRoomReturn(document, intent, signal(), false);
+  const other = link("playback-action-button", "/play/" + series, "CONTINUE");
+  const play = link("set-item", destination);
+  await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
+  expect(other).not.toHaveBeenCalled();
+});
+
+it("does not launch a stale return after the signed-in guest changes while the links load", async () => {
+  const send = setupBridge();
+  page("/home");
+  await send({ type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF", action: "prepare-return", payload: intent });
+  page("/browse/entity-" + series);
+  await finishDisneyRoomReturn(document, intent, signal(), false);
+  vi.mocked(getStoredAuthTokens).mockResolvedValue(null);
+  const play = link("set-item", "/play/" + episode);
+  await vi.waitFor(() => expect(send.mock.calls.filter(([m]) => m.action === "read-return")).toHaveLength(2));
+  expect(play).not.toHaveBeenCalled();
+});
+
+it("waits for Disney to reveal its existing episode link", async () => {
+  const send = setupBridge();
+  page("/pt-br/home");
+  await send({ type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF", action: "prepare-return", payload: intent });
+  page("/pt-br/browse/entity-" + series);
+  const region = document.createElement("section");
+  region.setAttribute("aria-hidden", "true");
+  document.body.append(region);
+  const play = link("set-item", "/pt-br/play/" + episode);
+  region.append(document.querySelector("a")!);
+  await finishDisneyRoomReturn(document, intent, signal(), false);
+  expect(play).not.toHaveBeenCalled();
+  region.removeAttribute("aria-hidden");
+  await vi.waitFor(() => expect(play).toHaveBeenCalledOnce());
+});
+
 it("uses the native localized host episode even when Continue is for a different episode", async () => {
   page("/pt-br/browse/entity-" + series);
   const resume = link("playback-action-button", "/pt-br/play/" + series, "CONTINUAR");
