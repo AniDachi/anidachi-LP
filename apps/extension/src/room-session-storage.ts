@@ -33,6 +33,7 @@ const LEGACY_ROOM_SESSION_OWNER_STORAGE_KEY = "anidachi:room-owner-id";
 const LEGACY_PARTICIPANT_SESSION_STORAGE_KEY = "anidachi:participant-session-id";
 
 export interface RoomSessionRecord {
+  youtubeFollowing?: string | null;
   version: typeof ROOM_SESSION_RECORD_VERSION;
   revision: number;
   roomId: string;
@@ -154,6 +155,12 @@ export type RoomSessionStorageMessage =
       record: RoomSessionRecord;
       rememberPreference?: boolean;
     }
+  | {
+      type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE;
+      command: "set-youtube-following";
+      record: RoomSessionRecord;
+      fingerprint: string | null;
+    }
   | { type: typeof ROOM_SESSION_STORAGE_MESSAGE_TYPE; command: "clear" };
 
 export type RoomSessionStorageResponse =
@@ -228,6 +235,8 @@ export function isRoomSessionStorageMessage(value: unknown): value is RoomSessio
     case "clear-if-match":
     case "clear-departure-if-match":
       return parseRoomSessionRecord(value.record) !== null;
+    case "set-youtube-following":
+      return isYouTubeFollowing(value.fingerprint) && parseRoomSessionRecord(value.record) !== null;
     case "set-voice-mode":
       return isVoiceMode(value.mode) &&
         parseRoomSessionRecord(value.record) !== null &&
@@ -379,6 +388,16 @@ export async function handleRoomSessionStorageMessage(
               message.record,
             ),
           };
+        case "set-youtube-following": {
+          const key = roomSessionStorageKey(resolvedTabId);
+          const current = parseRoomSessionRecord((await sessionStorage.get(key))[key]);
+          if (!current || !roomSessionIdentityMatches(current, message.record)) return { ok: true, record: null };
+          if (current.youtubeFollowing === message.fingerprint) return { ok: true, record: current };
+          // This preference is independent of revision-fenced camera/voice operations.
+          const record = { ...current, youtubeFollowing: message.fingerprint };
+          await sessionStorage.set({ [key]: record });
+          return { ok: true, record };
+        }
         case "set-voice-mode": {
           const record = await setRoomSessionVoiceModeForTab(
             sessionStorage,
@@ -960,6 +979,17 @@ export async function clearRoomSessionDepartureIfMatch(
   );
 }
 
+export async function setRoomYouTubeFollowing(record: RoomSessionRecord, fingerprint: string | null): Promise<boolean> {
+  const response = await sendRoomSessionMessage({
+    type: ROOM_SESSION_STORAGE_MESSAGE_TYPE, command: "set-youtube-following", record, fingerprint,
+  });
+  return response.record?.youtubeFollowing === fingerprint && roomSessionIdentityMatches(response.record, record);
+}
+
+function isYouTubeFollowing(value: unknown): value is string | null {
+  return value === null || (typeof value === "string" && /^youtube\|[A-Za-z0-9_-]{6,250}$/.test(value));
+}
+
 export async function updateRoomSessionVoiceMode(
   record: RoomSessionRecord,
   mode: VoiceMode,
@@ -1188,6 +1218,7 @@ async function persistRecord(
       sameRoom
         ? existing.participantSessionId
         : createParticipantSessionId(randomUUID),
+    ...(sameRoom && existing.youtubeFollowing !== undefined ? { youtubeFollowing: existing.youtubeFollowing } : {}),
     cameraEnabled: preferredMedia.cameraEnabled,
     voiceMode: preferredMedia.voiceMode,
   };
@@ -1292,6 +1323,8 @@ async function confirmRoomSessionForTabNow(
     roomId,
     ownerUserId: parsedPrepared.ownerUserId,
     participantSessionId: parsedPrepared.participantSessionId,
+    ...(sameRoom && confirmed.participantSessionId === parsedPrepared.participantSessionId && confirmed.youtubeFollowing !== undefined
+      ? { youtubeFollowing: confirmed.youtubeFollowing } : {}),
     cameraEnabled: preferredMedia.cameraEnabled,
     voiceMode: preferredMedia.voiceMode,
   };
@@ -1626,6 +1659,7 @@ export function parseRoomSessionRecord(value: unknown): RoomSessionRecord | null
     roomId: value.roomId,
     ownerUserId: value.ownerUserId,
     participantSessionId: value.participantSessionId,
+    ...(isYouTubeFollowing(value.youtubeFollowing) ? { youtubeFollowing: value.youtubeFollowing } : {}),
     cameraEnabled: value.cameraEnabled === true,
     voiceMode: isVoiceMode(value.voiceMode) ? value.voiceMode : "push-to-talk",
   };

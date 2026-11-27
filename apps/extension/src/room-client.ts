@@ -1868,7 +1868,8 @@ export class RoomClient {
       return "sent";
     }
 
-    const shouldQueue = ws?.readyState === WebSocket.CONNECTING;
+    const shouldQueue = ws?.readyState === WebSocket.CONNECTING &&
+      !(parsed.type === "HOST_STATE" && parsed.syncGuests);
     if (shouldQueue) {
       this.pendingEvents = [...this.pendingEvents, parsed].slice(-40);
     }

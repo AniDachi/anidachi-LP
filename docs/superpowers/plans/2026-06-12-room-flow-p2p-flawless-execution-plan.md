@@ -91,6 +91,9 @@ in that task's delivery receipt; no production promotion is included.
 
 ---
 
+YouTube guest choice pilot (2026-11-27): [playback contract and staging scenarios](../../youtube-adapter-notes.md#choosing-shared-playback).
+Two-profile acceptance covers independent playback, voluntary return, host sync while paused and page reload.
+
 ## Follow-up: Free20 scope transfer candidate, 2026-11-03
 
 The approved [anti-abuse plan](2026-11-03-free20-abuse-adaptation.md) implements

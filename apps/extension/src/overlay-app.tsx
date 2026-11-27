@@ -59,6 +59,9 @@ import {
 	useState,
 } from "react";
 import { storage } from "wxt/utils/storage";
+import { YOUTUBE_CATALOG_ORIGINS, isYouTubeCatalogPath, isYouTubeWatchPage } from "./source-adapters/youtube/url";
+import { YouTubeGuestViewing } from "./source-adapters/youtube/guest-viewing";
+import { YouTubeWatchTogetherTab } from "./youtube-watch-together-tab";
 import { useActiveAdapterPlayback } from "./active-adapter-playback";
 import { CapsuleFriendsPanel, createCapsuleFriendLinkCache } from "./capsule-friends-panel";
 import { subscribeToAccountInboxForUser, accountInboxSocialSignature } from "./account-inbox-cache";
@@ -260,6 +263,7 @@ import {
 	prepareRoomSession,
 	rememberRoomSessionRecoveryHint,
 	roomSessionIdentityMatches,
+	setRoomYouTubeFollowing,
 	type RoomSessionRecord,
 	updateRoomSessionCameraEnabled,
 	updateRoomSessionVoiceMode,
@@ -872,6 +876,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	const playbackSyncControllerRef = useRef<PlaybackSyncController | null>(null);
 	if (!playbackSyncControllerRef.current) {
 		playbackSyncControllerRef.current = new PlaybackSyncController({
+			sendLiveYouTubeSync: event => clientRef.current.send(event),
 			ensureRemoteSource: (source, context) =>
 				ensureSourceForProvider(source, context, getDefinitionForProvider),
 			onStatus: (syncStatus) => {
@@ -3658,6 +3663,40 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		);
 	}, []);
 
+  const youtubeRoomSurface = adapter.provider === "youtube" && window.top === window &&
+    YOUTUBE_CATALOG_ORIGINS.includes(location.origin) && (isYouTubeCatalogPath(location.pathname) || isYouTubeWatchPage(new URL(location.href)));
+  const youtubePlayer = useRef(adapter);
+  youtubePlayer.current = adapter;
+  const [youtubeOffer, setYouTubeOffer] = useState<string | null>(null);
+  const [youtubeViewing] = useState(() => new YouTubeGuestViewing({
+    session: () => {
+      const record = storedRoomSessionRef.current;
+      return record && record.roomId === roomIdRef.current && record.ownerUserId === participantRef.current?.id ? record : null;
+    },
+    href: () => location.href,
+    playerFingerprint: () => adapterActiveRef.current ? youtubePlayer.current.getFingerprint() : null,
+    apply: state => {
+      playbackSyncController.bindAdapter(youtubePlayer.current);
+      void playbackSyncController.handleHostState(state);
+    },
+    suspend: () => playbackSyncController.suspend(),
+    persist: setRoomYouTubeFollowing,
+    navigate: url => window.location.assign(url),
+    offer: setYouTubeOffer,
+  }));
+  useEffect(() => {
+    if (!youtubeRoomSurface) return;
+    const update = () => youtubeViewing.refresh();
+    window.addEventListener("popstate", update);
+    document.addEventListener("yt-navigate-finish", update);
+    update();
+    return () => {
+      window.removeEventListener("popstate", update);
+      document.removeEventListener("yt-navigate-finish", update);
+    };
+  }, [youtubeViewing, youtubeRoomSurface, adapter, adapterActive]);
+  useEffect(() => () => youtubeViewing.bind(null), [youtubeViewing]);
+
 	const triggerFlameBurst = useCallback(
 		(participantId: string | undefined, durationMs = 3200) => {
 			if (!participantId) {
@@ -3712,7 +3751,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		);
 	}, []);
 
-	const applyHostState = useCallback(
+	const applyDefaultHostState = useCallback(
 		async (state: PlaybackState, source?: WatchSourceDescriptor) => {
 			if (roomIdRef.current && roomSourceProviderRef.current === "disneyplus" &&
 				source?.provider === "disneyplus" && source.videoFingerprint === state.videoFingerprint) {
@@ -3752,6 +3791,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		},
 		[playbackSyncController, catalogFollow, roomClient],
 	);
+
+  const applyHostState = useCallback((state: PlaybackState, source?: WatchSourceDescriptor, syncGuests = false) => {
+    if (youtubeRoomSurface && roomSourceProviderRef.current === "youtube") youtubeViewing.receive(state, source, syncGuests);
+    else void applyDefaultHostState(state, source);
+  }, [youtubeRoomSurface, youtubeViewing, applyDefaultHostState]);
 
 	// Terminally end the local room session without a reconnect loop: used for
 	// server-terminal errors (ROOM_FULL / SESSION_TAKEN_OVER) and for graceful
@@ -3970,6 +4014,14 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					if (event.capabilities) {
 						setRoomCapabilities(current => current && "mediaProtocolVersion" in current ? current : event.capabilities ?? null);
 					}
+          if (youtubeRoomSurface) {
+            const record = storedRoomSessionRef.current;
+            const local = event.participants.find(p => p.id === record?.ownerUserId);
+            const hostPresent = event.participants.some(p => p.role === "host" && p.connected !== false);
+            youtubeViewing.bind(record && record.roomId === event.roomId && local?.role === "viewer" &&
+              local.connected !== false && local.participantSessionId === record.participantSessionId && hostPresent ? record : null);
+            if (!event.hostState) youtubeViewing.catalog();
+          }
 					setRoomSnapshotReady(true);
 					playbackSyncController.setSession({
 						connectionGeneration: connectionGenerationRef.current,
@@ -4073,16 +4125,13 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 					return;
 				case "HOST_STATE":
 					if (!isCurrentHost()) {
-						void applyHostState(event.state);
+						applyHostState(event.state, undefined, event.syncGuests);
 					}
 					return;
 				case "PLAY":
-					playbackSyncController.handleRemoteCommand(event);
-					return;
-				case "PAUSE":
-					playbackSyncController.handleRemoteCommand(event);
-					return;
-				case "SEEK":
+        case "PAUSE":
+        case "SEEK":
+          if (youtubeRoomSurface && roomSourceProviderRef.current === "youtube" && !isCurrentHost() && !youtubeViewing.together()) return;
 					playbackSyncController.handleRemoteCommand(event);
 					return;
 				case "P2P_SIGNAL": {
@@ -4213,7 +4262,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		[
 			adapter.id,
 			adapter.video,
-			applyHostState,
+			applyHostState, youtubeRoomSurface, youtubeViewing,
 			cueReactionParticipant,
 			isCurrentHost,
 			chatDisplayMode,
@@ -5522,7 +5571,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	]);
 
 	useActiveAdapterPlayback({
-		active: adapterActive,
+		active: adapterActive && (!youtubeRoomSurface || !roomId || isHost || youtubeViewing.together()),
 		adapter,
 		controller: playbackSyncController,
 	});
@@ -7052,6 +7101,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				{capsuleNotice.present && capsuleNoticeKind ? <Free20WarningNotice
 					kind={capsuleNoticeKind} remainingSeconds={capsuleNoticeKind === "warning" ? liveHostingTime?.remainingSeconds ?? null : null}
 					open={capsuleNotice.open} onDismiss={capsuleNotice.dismiss} restoreFocus={() => topBubbleRef.current?.focus()} /> : null}
+        {youtubeRoomSurface && youtubeOffer && roomId && isConnected && roomSnapshotReady &&
+          currentParticipant?.role === "viewer" && !capsuleNotice.present &&
+          participants.some(p => p.role === "host" && p.connected !== false) &&
+          <YouTubeWatchTogetherTab key={youtubeOffer} returning={youtubeViewing.returning} onJoin={() => void youtubeViewing.join()} />}
 				<button
 					aria-controls="anidachi-mini-panel"
 					aria-expanded={panelOpen}

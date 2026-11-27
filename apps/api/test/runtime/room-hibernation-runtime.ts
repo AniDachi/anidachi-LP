@@ -619,6 +619,7 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 		host.send({
 			type: "HOST_STATE",
 			roomId,
+			syncGuests: true,
 			state: {
 				...playbackState("youtube|/dQw4w9WgXcQ", firstUrl),
 				hostTime: 84,
@@ -629,10 +630,10 @@ describe("RoomDurableObject WebSocket hibernation", () => {
 				firstUrl,
 			),
 		});
-		await guest.waitFor(
-			(event) => event.type === "HOST_STATE" && event.state.hostTime === 84,
-			"same-source playback during slow callback",
-		);
+		expect(await guest.waitFor(
+      event => event.type === "HOST_STATE" && event.state.hostTime === 84,
+      "live host sync during slow callback",
+    )).toMatchObject({ syncGuests: true });
 		expect(sourceBodies).toHaveLength(1);
 
 		const nextUrl = "https://youtu.be/M7lc1UVf-VE";
