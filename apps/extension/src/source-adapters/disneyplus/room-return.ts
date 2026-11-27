@@ -11,7 +11,7 @@ export function disneyRoomPlayLink(doc: Document, playback: string): HTMLAnchorE
 
 export type DisneyRoomReturn = { roomId: string; sessionId: string; playback: string };
 
-async function returnIntent(action: "prepare-return" | "take-return", payload: DisneyRoomReturn): Promise<number> {
+async function returnIntent(action: "prepare-return" | "read-return" | "take-return", payload: DisneyRoomReturn): Promise<number> {
   try {
     const expires = await chrome.runtime.sendMessage({ type: "ANIDACHI_DISNEYPLUS_CATALOG_HANDOFF", action, payload });
     return typeof expires === "number" ? expires : 0;
@@ -31,22 +31,35 @@ export async function returnToDisneyPlayer(doc: Document, destination: string, i
 export async function finishDisneyRoomReturn(doc: Document, intent: DisneyRoomReturn, signal: AbortSignal, inPlayer: boolean) {
   const entity = disneyPlusEntityId(doc.location.href);
   const playingTarget = inPlayer && disneyPlusPlaybackId(doc.location.href) === intent.playback;
-  if (!playingTarget && !entity) return;
-  const expires = await returnIntent("take-return", intent);
+  if (signal.aborted || (!playingTarget && !entity)) return;
+  const expires = await returnIntent(playingTarget ? "take-return" : "read-return", intent);
   if (playingTarget || signal.aborted || expires <= Date.now()) return;
-  const observer = new MutationObserver(tryLink);
+  const observer = new MutationObserver(() => void tryLink());
   const timer = setTimeout(stop, expires - Date.now());
+  let checking = false;
+  const stillHere = () => !signal.aborted && Date.now() < expires && disneyPlusEntityId(doc.location.href) === entity;
   function stop() {
     clearTimeout(timer);
     observer.disconnect();
     signal.removeEventListener("abort", stop);
   }
-  function tryLink() {
-    if (signal.aborted || Date.now() >= expires || disneyPlusEntityId(doc.location.href) !== entity) { stop(); return; }
+  async function tryLink() {
+    if (!stillHere()) { stop(); return; }
+    if (checking || !disneyRoomPlayLink(doc, intent.playback)) return;
+    checking = true;
+    // The room or account may have changed while Disney was rendering its links.
+    const pending = await returnIntent("read-return", intent);
+    checking = false;
+    if (pending !== expires || !stillHere()) { stop(); return; }
     const link = disneyRoomPlayLink(doc, intent.playback);
-    if (link) { stop(); link.click(); }
+    if (!link) return;
+    stop();
+    // Issue both actions in this turn so cleanup cannot consume a return without launching it.
+    void returnIntent("take-return", intent);
+    link.click();
   }
   signal.addEventListener("abort", stop, { once: true });
-  observer.observe(doc.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["href", "aria-disabled", "hidden"] });
-  tryLink();
+  observer.observe(doc.body, { subtree: true, childList: true, characterData: true, attributes: true,
+    attributeFilter: ["href", "data-testid", "aria-disabled", "disabled", "aria-hidden", "hidden", "inert"] });
+  await tryLink();
 }

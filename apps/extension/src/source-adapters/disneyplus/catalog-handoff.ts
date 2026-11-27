@@ -63,7 +63,7 @@ export async function handleDisneyPlusCatalogHandoff(message: { type?: unknown; 
 		const key = storageKey(tab);
 		const owner = await ownerKey();
 		if (!owner) return null;
-		if (message.action === "prepare-return" || message.action === "take-return") {
+		if (message.action === "prepare-return" || message.action === "read-return" || message.action === "take-return") {
 			const target = returnTarget.safeParse(message.payload);
 			if (!target.success) return null;
 			const key = returnKey(tab);
@@ -74,10 +74,11 @@ export async function handleDisneyPlusCatalogHandoff(message: { type?: unknown; 
 			}
 			const record = returnRecord.safeParse((await chrome.storage.session.get(key))[key]);
 			if (!record.success) return null;
-			await chrome.storage.session.remove(key);
 			const { roomId, sessionId, playback } = target.data;
-			return record.data.owner === owner && record.data.roomId === roomId && record.data.sessionId === sessionId &&
-				record.data.playback === playback && record.data.expires > Date.now() ? record.data.expires : null;
+			const matches = record.data.owner === owner && record.data.roomId === roomId && record.data.sessionId === sessionId &&
+				record.data.playback === playback && record.data.expires > Date.now();
+			if (!matches || message.action === "take-return") await chrome.storage.session.remove(key);
+			return matches ? record.data.expires : null;
 		}
 		if (message.action === "capture-launch" || message.action === "claim-launch") {
 			const playback = disneyLaunchTitle(sender.url ?? "");
