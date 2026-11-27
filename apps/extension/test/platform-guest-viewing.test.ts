@@ -113,6 +113,33 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(timingSamples).toHaveBeenLastCalledWith({ align: true, receivedAt: expect.any(Number) });
   });
 
+  if (provider === "hbomax") it("keeps the original receipt time when a room snapshot replays the preceding heartbeat", () => {
+    const now = vi.spyOn(Date, "now");
+    try {
+      const { machine, play, timingSamples } = setup();
+      play(watchUrl, host.videoFingerprint);
+      let sample = { ...state, playing: true, hostTime: 285.168 };
+      let arrival = 10_000;
+      now.mockReturnValue(arrival);
+      machine.receive(sample, host);
+      for (let i = 0; i < 6; i++) {
+        now.mockReturnValue(arrival + 1498);
+        machine.receive({ ...sample }, host);
+        expect(timingSamples).toHaveBeenLastCalledWith({ align: false, receivedAt: arrival });
+        arrival += 1500;
+        now.mockReturnValue(arrival);
+        sample = { ...sample, hostTime: sample.hostTime + 1.5, updatedAt: sample.updatedAt + 1500 };
+        machine.receive(sample);
+        expect(timingSamples).toHaveBeenLastCalledWith({ align: false, receivedAt: arrival });
+      }
+      now.mockReturnValue(arrival + 100);
+      machine.receive({ ...sample, playing: false }, host, true);
+      expect(timingSamples).toHaveBeenLastCalledWith({ align: true, receivedAt: arrival + 100 });
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   const nextState = { ...state, hostTime: 12, sourceUrl: personal.sourceUrl, videoFingerprint: personal.videoFingerprint };
   function episode(source: typeof host, series = first) {
     const identity = { kind: "episode", providerSeriesId: series, providerEpisodeIdentifier: source.sourceUrl.split("/").at(-1) };
