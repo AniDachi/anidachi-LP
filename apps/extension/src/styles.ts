@@ -149,7 +149,7 @@ ${extensionThemeTokens}
     pointer-events: auto;
     cursor: pointer;
   }
-  .catalog-return-to-video > svg { flex: none; }
+  .catalog-return-to-video > svg { flex: none; color: #7dd3a7; }
   .anidachi-overlay .top-bubble-reveal:has(> .catalog-return-to-video) > .top-bubble {
     background: #0c0c0e;
     border-color: #535357;
