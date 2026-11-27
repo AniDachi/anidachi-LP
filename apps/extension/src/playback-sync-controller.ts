@@ -30,7 +30,7 @@ import type {
 } from "./source-adapters/core/types";
 
 const HEARTBEAT_INTERVAL_MS = 1500;
-const EXPLICIT_ALIGNMENT_TOLERANCE_SECONDS = 0.15;
+const ALIGNMENT_TOLERANCE_SECONDS = 0.15;
 const REMOTE_EVENT_SUPPRESSION_MS = 1800;
 const REMOTE_COMMAND_DEDUPE_MS = 800;
 const SOURCE_TRANSITION_TIMEOUT_MS = 10_000;
@@ -408,8 +408,11 @@ export class PlaybackSyncController {
 		}
 
 		const align = this.alignFingerprint === state.videoFingerprint;
-		const alreadyAligned = Math.abs(correction.drift) <= EXPLICIT_ALIGNMENT_TOLERANCE_SECONDS;
-		const action = align && !alreadyAligned ? "seek" : correction.action;
+		const alreadyAligned = Math.abs(correction.drift) <= ALIGNMENT_TOLERANCE_SECONDS;
+		// HBO may advance briefly while restoring its native resume point after our first seek.
+		// A paused host supplies a fixed target, including on subsequent room snapshots.
+		const holdPausedPosition = adapter.provider === "hbomax" && !remoteState.playing;
+		const action = (align || holdPausedPosition) && !alreadyAligned ? "seek" : correction.action;
 		const shouldSeek = shouldSeekForHostState(action, settling);
 		const shouldDeferSeek = shouldDeferHostStateSeek(
 			action,
