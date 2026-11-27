@@ -317,6 +317,7 @@ export const ClientEventSchema = z
   }),
   RoomScopedSchema.extend({
     type: z.literal("HOST_STATE"),
+    syncGuests: z.literal(true).optional(),
     state: PlaybackStateSchema,
     source: WatchSourceDescriptorSchema.optional(),
   }),
@@ -436,6 +437,7 @@ export const ServerEventSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("HOST_STATE"),
+    syncGuests: z.literal(true).optional(),
     state: PlaybackStateSchema,
   }),
   RoomScopedSchema.extend({
