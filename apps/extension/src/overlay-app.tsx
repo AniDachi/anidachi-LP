@@ -2342,11 +2342,8 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		// The snapshot timeout belongs to the admitted room. Identity refresh and
 		// HTTP creation can take longer; they must not consume its recovery window.
 		if (!roomStartPending || roomCreatePending || !roomId) return;
-		// Start the display cap and recovery timeout together. Otherwise the old
-		// digits can expire a frame before the neutral cancellation action arrives.
-		const expiresAt = performance.now() + ROOM_START_PRESENTATION_TIMEOUT_MS;
-		setRoomStartTime(current => current?.roomId === roomId
-			? { ...current, expiresAt: Math.min(current.expiresAt, expiresAt) } : current);
+		// The escape action has its own deadline. Display freshness belongs to
+		// the account observation and can outlast this connection wait.
 		const timeout = setTimeout(() => setRoomStartPending(false), ROOM_START_PRESENTATION_TIMEOUT_MS);
 		return () => clearTimeout(timeout);
 	}, [roomStartPending, roomCreatePending, roomId]);
@@ -6613,7 +6610,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
 						idleTimeUnavailable={((hasFreeTimePresentation || accountHostingTime.mode === "legacy") && (roomClosing.unavailable || roomLeaving.unavailable)) || (idleTimePending && accountHostingTime.error && !accountHostingTime.busy)}
 						onRetryHosting={accountHostingTime.refresh}
-						startingTime={roomStartTime?.sessionKey === roomAuthSessionKeyRef.current && !hostingTimeClock.observed &&
+						startingTime={roomStartTime?.sessionKey === roomAuthSessionKeyRef.current &&
 							(roomId ? roomStartTime.roomId === roomId : roomCreatePending) ? roomStartTime : null}
 						roomStartInterrupted={!roomCreatePending && (status === "closed" || status === "error")}
 						disabled={!participant || extensionContextInvalidated || roomCreatePending || roomEndPending || roomLeavePending}
