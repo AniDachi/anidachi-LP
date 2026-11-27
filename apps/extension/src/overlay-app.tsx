@@ -3690,6 +3690,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
     suspend: () => playbackSyncController.suspend(),
     persist: setRoomFollowing,
     navigate: (url, record, signal) => navigateToGuestPlayback(document, url, record, signal),
+    targetChanged: setCatalogReturnUrl,
     offer: setWatchOffer,
   }));
   guestCanControlPlayer.current = () => !choiceSurface || guestViewing.together();
@@ -6996,10 +6997,9 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	}, [primeBrowsing, capsuleNotice.present, adapter.provider]);
 	const guestSessionId = storedRoomSession?.participantSessionId;
 	const disneyReturn = useMemo(() => {
-		const target = choiceSurface ? watchOffer : guestPlayerUrl;
-		const playback = adapter.provider === "disneyplus" && target && disneyPlusWatchId(target);
+		const playback = adapter.provider === "disneyplus" && guestPlayerUrl && disneyPlusWatchId(guestPlayerUrl);
 		return playback && roomId && guestSessionId ? { roomId, sessionId: guestSessionId, playback } : null;
-	}, [adapter.provider, choiceSurface, watchOffer, guestPlayerUrl, roomId, guestSessionId]);
+	}, [adapter.provider, guestPlayerUrl, roomId, guestSessionId]);
 	const returnController = useRef<AbortController | null>(null);
 	const disneyPath = disneyReturn ? location.pathname : "";
 	useLayoutEffect(() => {

@@ -3,6 +3,8 @@ import { roomSessionIdentityMatches, type RoomSessionRecord } from "./room-sessi
 import { roomWatchSource, type CatalogRoomProvider } from "./catalog-room-routes";
 
 type HostPlayback = PlaybackState & { hostSurface?: "player" | "catalog" };
+const EPISODE_IDENTITY_WAIT_MS = 10_000;
+const PLAYER_ARRIVAL_WAIT_MS = 60_000;
 export type GuestPlaybackTiming = { align: boolean; receivedAt: number };
 type ViewingContext = {
   session(): RoomSessionRecord | null;
@@ -15,6 +17,7 @@ type ViewingContext = {
   suspend(): void;
   persist(record: RoomSessionRecord, fingerprint: string | null): Promise<boolean>;
   navigate(url: string, room: RoomSessionRecord, signal: AbortSignal): void | Promise<boolean | void>;
+  targetChanged?(url: string | null): void;
   offer(url: string | null): void;
 };
 
@@ -43,6 +46,7 @@ export class GuestViewing {
   private lastFollowed: string | null = null;
   private hostInCatalog = false;
   private offered: string | null = null;
+  private deferredOffer: { url: string; timer: ReturnType<typeof setTimeout> } | null = null;
 
   constructor(private readonly context: ViewingContext) {}
 
@@ -55,12 +59,14 @@ export class GuestViewing {
     this.lastFollowed = this.following ?? null;
     this.hostInCatalog = false;
     this.target = null;
+    this.context.targetChanged?.(null);
     this.cancelNavigation();
     this.show(null);
   }
 
   catalog() {
     if (!this.active()) return;
+    if (this.target) this.context.targetChanged?.(null);
     this.target = null;
     if (this.navigatingFrom) this.restoreOrigin();
     this.cancelNavigation();
@@ -87,6 +93,7 @@ export class GuestViewing {
       // A second host switch can supersede a slow native episode handoff.
       if (this.navigatingFrom) this.restoreOrigin();
       this.cancelNavigation();
+      this.context.targetChanged?.(target.sourceUrl);
     }
     const sameSource = previous?.state.videoFingerprint === target.videoFingerprint;
     const descriptor = source?.videoFingerprint === target.videoFingerprint ? source : sameSource ? previous.source : undefined;
@@ -131,6 +138,13 @@ export class GuestViewing {
     }
     const fingerprint = target.state.videoFingerprint;
     const onTarget = this.onTarget();
+    if (this.episode && this.following === this.episode.fingerprint && localFingerprint === this.following &&
+        fingerprint !== this.following && !this.context.playerFingerprint()) {
+      // The provider can unbind the previous player before it announces the new episode.
+      this.context.suspend();
+      this.deferOffer(target.url, EPISODE_IDENTITY_WAIT_MS);
+      return;
+    }
     // A guest may still be watching the old episode while the host passes through
     // the catalogue or while the provider resolves the new episode's series.
     if (this.following && this.following !== fingerprint &&
@@ -150,7 +164,7 @@ export class GuestViewing {
         if (!series && !target.source?.disneyplusIdentity && !target.source?.hbomaxIdentity) {
           origin.pending = fingerprint;
           this.context.suspend();
-          this.show(target.url);
+          this.deferOffer(target.url, EPISODE_IDENTITY_WAIT_MS);
           return;
         }
       }
@@ -167,7 +181,7 @@ export class GuestViewing {
     if (this.together()) {
       const series = episodeSeries(target.source);
       if (series) this.episode = { fingerprint, series };
-      const firstPlayback = !this.playedHere;
+      const firstPlayback = !this.playedHere || this.deferredOffer?.url === target.url || this.offered === target.url;
       this.playedHere = true;
       this.show(null);
       if (this.context.provider() === "hbomax") {
@@ -176,9 +190,13 @@ export class GuestViewing {
         this.context.apply(target.state, target.source);
       }
     } else {
-      this.playedHere = false;
       this.context.suspend();
-      this.show(target.url);
+      // A fresh document can restore the follow choice before the native player attaches.
+      if (this.following === fingerprint) this.deferOffer(target.url, PLAYER_ARRIVAL_WAIT_MS);
+      else {
+        this.playedHere = false;
+        this.show(target.url);
+      }
     }
   }
 
@@ -197,12 +215,28 @@ export class GuestViewing {
     if (!target || !room || !this.active() || this.navigating) return;
     const pending = new AbortController();
     this.navigating = pending;
+    this.show(null);
     this.navigatingFrom = episodeOrigin ?? null;
     const previous = this.following;
     const lastFollowed = this.lastFollowed;
     let stored = false;
     const fingerprint = target.state.videoFingerprint;
     this.following = fingerprint;
+    const retry = async () => {
+      if (this.navigating !== pending || !this.active()) return;
+      if (this.awaitingArrival && this.together()) {
+        this.refresh(true);
+        return;
+      }
+      this.episode = null;
+      this.following = episodeOrigin ? null : previous;
+      this.lastFollowed = lastFollowed;
+      if (stored || episodeOrigin) await this.context.persist(room, this.following ?? null).catch(() => false);
+      if (this.navigating !== pending) return;
+      this.cancelNavigation();
+      this.refresh();
+      if (this.target?.url === target.url && !this.together()) this.show(target.url);
+    };
     try {
       const saved = previous === fingerprint || await this.context.persist(room, fingerprint);
       stored = saved && previous !== fingerprint;
@@ -211,7 +245,7 @@ export class GuestViewing {
         this.context.playerFingerprint() === episodeOrigin) || this.onTarget();
       if (saved && stillWatching) {
         this.lastFollowed = fingerprint;
-        if (this.onTarget() && this.context.playerFingerprint()) {
+        if (this.together()) {
           this.cancelNavigation();
           this.refresh(true);
           return;
@@ -220,19 +254,18 @@ export class GuestViewing {
         const arrived = episodeOrigin && target.source && this.context.continueEpisode
           ? await this.context.continueEpisode(target.source, room, pending.signal)
           : await this.context.navigate(target.url, room, pending.signal);
-        if (arrived !== false) return;
+        if (arrived !== false) {
+          if (this.navigating === pending) {
+            const timer = setTimeout(() => void retry(), PLAYER_ARRIVAL_WAIT_MS);
+            pending.signal.addEventListener("abort", () => clearTimeout(timer), { once: true });
+          }
+          return;
+        }
       }
     } catch {
       // A rejected browser handoff leaves the original choice available for retry.
     }
-    if (this.navigating !== pending || !this.active()) return;
-    this.episode = null;
-    this.following = episodeOrigin ? null : previous;
-    this.lastFollowed = lastFollowed;
-    if (stored || episodeOrigin) await this.context.persist(room, this.following ?? null).catch(() => false);
-    if (this.navigating !== pending) return;
-    this.cancelNavigation();
-    this.refresh();
+    await retry();
   }
 
   private active() {
@@ -265,8 +298,18 @@ export class GuestViewing {
   }
 
   private show(url: string | null) {
+    if (this.deferredOffer) clearTimeout(this.deferredOffer.timer);
+    this.deferredOffer = null;
     if (this.offered === url) return;
     this.offered = url;
     this.context.offer(url);
+  }
+
+  private deferOffer(url: string, wait: number) {
+    if (this.offered === url || this.deferredOffer?.url === url) return;
+    this.show(null);
+    this.deferredOffer = { url, timer: setTimeout(() => {
+      if (this.active() && this.target?.url === url) this.show(url);
+    }, wait) };
   }
 }
