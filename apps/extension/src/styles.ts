@@ -608,6 +608,7 @@ ${catalogPillStyles}
     background: linear-gradient(135deg, #ffc07a, #fb7c24);
   }
 
+  .panel-room-actions.room-empty[data-timer-in-button=true] .button.primary.panel-primary-action,
   .button.primary.panel-primary-action.room-exit {
     border-color: #842029;
     background: #58151c;

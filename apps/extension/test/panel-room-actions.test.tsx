@@ -287,7 +287,16 @@ describe("real room action feedback", () => {
 		await click("Create room");
 		await render({ roomId: "new-room", roomReady: false, label: "End room", remainingSeconds: null });
 		expect(host.querySelector(".panel-time-counter")).toBeNull();
-		expect(host.querySelector<HTMLElement>(".panel-room-actions")?.dataset.timedLayout).toBe("true");
+		expect(host.querySelector(".panel-time-placeholder")).toBeNull();
+		expect(host.querySelector<HTMLElement>(".panel-room-actions")?.dataset.timedLayout).toBe("false");
+	});
+	it("does not flash a late idle read or a loading bar after a start without time", async () => {
+		await render({ roomId: null, roomReady: false, remainingSeconds: null, retainIdleTimeWhileConnecting: false });
+		await click("Create room");
+		await render({ creating: true, remainingSeconds: 600 });
+		expect(host.querySelector(".panel-time-counter,.panel-time-placeholder")).toBeNull();
+		await render({ roomId: "new-room", roomReady: true, creating: false, remainingSeconds: 599 });
+		expect(host.querySelector(".panel-action-timer strong")?.textContent).toBe("09:59");
 	});
 	it("fills the final timer slot in place when no valid starting observation exists", async () => {
 		emulateLayoutAndAnimation();

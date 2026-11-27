@@ -2931,7 +2931,7 @@ describe("privileged overlay wiring", () => {
       await vi.waitFor(() => expect(send.mock.calls.filter(([m]: any) => m.command === "create-room")).toHaveLength(1));
       const expectPending = () => {
         const action = primaryRoomAction(view.container);
-        expect(action.textContent).toBe("Creating room");
+        expect(action.textContent).toBe(view.container.querySelector(".panel-idle-time strong") ? "Create room" : "Creating room");
         expect(action.getAttribute("aria-label")).toBe("Creating room");
         expect(action.disabled).toBe(true);
         expect(action.classList.contains("room-exit")).toBe(false);
@@ -2976,12 +2976,16 @@ describe("privileged overlay wiring", () => {
       }
       await act(async () => options.onStatus("connected"));
       expectPending(); // Socket open is not yet authoritative membership.
+      const counter = view.container.querySelector(".panel-action-timer strong");
       if (outcome === "slow-admission-timeout") {
-        await act(async () => vi.advanceTimersByTimeAsync(8_100));
-        expect(primaryRoomAction(view.container).disabled).toBe(false);
-        expect(primaryRoomAction(view.container).getAttribute("aria-label")).toBe("Cancel connection");
-        expect(view.container.querySelector(".panel-time-counter")).toBeNull();
-        return; // A genuinely stalled admitted connection still has a bounded escape.
+        expect(counter?.textContent).toBe("13:00");
+        await act(async () => vi.advanceTimersByTimeAsync(9_800));
+        const action = primaryRoomAction(view.container);
+        expect(action.disabled).toBe(false);
+        expect(action.getAttribute("aria-label")).toBe("Cancel connection");
+        expect(action.dataset.showAction).toBe("false");
+        expect(view.container.querySelector(".panel-action-timer strong")).toBe(counter);
+        expect(view.container.querySelector(".panel-time-placeholder,.panel-action-time-pending")).toBeNull();
       }
       await act(async () => options.onEvent({ type: "ROOM_SNAPSHOT", roomId: "room-a", roomGeneration: 1, sourceGeneration: 1, serverSeq: 1,
         participants: [{ ...hostParticipant(), id: owner, participantSessionId: options.participantSessionId }],
