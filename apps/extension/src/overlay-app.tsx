@@ -714,6 +714,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		roomId: string; ownerUserId: string | null; sequence: number; pending: boolean;
 		startedAt: number; presentationExpired: boolean;
 	} | null>(null);
+	const pendingStartBalanceLogin = useRef<string | null>(null);
 	const [roomStartTime, setRoomStartTime] = useState<(PanelStartingTime & { sessionKey: string | null; roomId: string | null }) | null>(null);
 	const [roomEndConfirmationPending, setRoomEndConfirmationPending] =
 		useState(false);
@@ -2488,6 +2489,16 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 	}, [roomId, isHost, hostingTimeSessionKey, liveHostingTime?.snapshot.ownerUserId, liveHostingTime?.snapshot.roomId,
 		liveHostingTime?.snapshot.roomGeneration, liveHostingTime?.snapshot.access.kind,
 		accountHostingTime.status?.access.kind, accountHostingTime.presentationPlanCode, accountHostingTime.reconcile]);
+	// A user can press Create before the idle balance request has finished.
+	// Bind that reading while still on the same login and before room admission.
+	useEffect(() => {
+		if (!roomCreatePending || roomId || !hostingTimeSessionKey || pendingStartBalanceLogin.current !== hostingTimeSessionKey ||
+			document.visibilityState === "hidden" || accountHostingTime.remainingSeconds === null ||
+			accountHostingTime.displayExpiresAt === null) return;
+		pendingStartBalanceLogin.current = null;
+		setRoomStartTime({ seconds: accountHostingTime.remainingSeconds, capturedAt: performance.now(),
+			wall: Date.now(), expiresAt: accountHostingTime.displayExpiresAt, sessionKey: hostingTimeSessionKey, roomId: null });
+	}, [roomCreatePending, roomId, hostingTimeSessionKey, accountHostingTime.remainingSeconds, accountHostingTime.displayExpiresAt]);
 	useEffect(() => {
 		// The snapshot timeout belongs to the admitted room. Identity refresh and
 		// HTTP creation can take longer; they must not consume its recovery window.
@@ -4910,7 +4921,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		}
 
 		function handleVisibilityChange(): void {
-			if (document.visibilityState === "hidden") setRoomStartTime(null);
+			if (document.visibilityState === "hidden") {
+				pendingStartBalanceLogin.current = null;
+				setRoomStartTime(null);
+			}
 			if (document.visibilityState === "visible") {
 				scheduleRoomReconnect("visible");
 			}
@@ -4922,6 +4936,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 		// browser to tear the socket down. A real navigation discards the page; a
 		// bfcache freeze resumes via pageshow/visibility below.
 		function handlePageHide(): void {
+			pendingStartBalanceLogin.current = null;
 			setRoomStartTime(null);
 			if (roomIdRef.current) {
 				const client = clientRef.current;
@@ -5620,6 +5635,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 
 		clearRoomActionFeedback();
 		const capturedAt = performance.now();
+		pendingStartBalanceLogin.current = accountHostingTime.remainingSeconds === null ? roomAuthSessionKeyRef.current : null;
 		setRoomStartTime(accountHostingTime.remainingSeconds !== null && accountHostingTime.displayExpiresAt !== null ? {
 			seconds: accountHostingTime.remainingSeconds, capturedAt, wall: Date.now(),
 			expiresAt: accountHostingTime.displayExpiresAt,
@@ -7244,6 +7260,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 						} : undefined}
 						connectionStalled={Boolean(roomId && !inviteMembershipReady && !roomCreatePending && !roomStartPending && !joiningRoom)}
 						creating={roomStartPending || roomCreatePending} idleTimePending={idleTimePending}
+						reserveFreeTimerSlot={authAuthenticated && (accountHostingTime.presentationPlanCode ?? accountUser?.plan) === "free"}
 						idleTimeUnavailable={((hasFreeTimePresentation || accountHostingTime.mode === "legacy") && (roomClosing.unavailable || roomLeaving.unavailable)) || (idleTimePending && accountHostingTime.error && !accountHostingTime.busy)}
 						onRetryHosting={accountHostingTime.refresh}
 						startingTime={roomStartTime?.sessionKey === roomAuthSessionKeyRef.current &&

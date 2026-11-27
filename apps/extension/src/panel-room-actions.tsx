@@ -44,6 +44,7 @@ export interface PanelRoomActionsProps {
 	closing?: boolean;
 	closingLabel?: "Closing room" | "Leaving room";
 	idleTimePending?: boolean;
+	reserveFreeTimerSlot?: boolean;
 	idleTimeUnavailable?: boolean;
 	onRetryHosting?(): void;
 	startingTime?: PanelStartingTime | null;
@@ -134,23 +135,22 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 		: !visibleActive ? (props.creating || waitingForRoom ? "Creating room" : "Create room")
 		: props.label;
 	const actionBusy = busy || waitingForRoom || joining || Boolean(props.closing);
-	// Our own admitted start can already move the confirmed balance into its
-	// final position while membership and the first room clock are in flight.
-	const admittedTimer = active && freshStart !== null && !joining && !props.closing &&
+	// Keep the account timer beside the create action until membership arrives.
+	const pendingHostTimer = active && freshStart !== null && !joining && !props.closing &&
 		!props.roomStartInterrupted && (waitingForRoom || connectionStalled);
-	const timerInButton = visibleActive || admittedTimer;
-	const continuingStart = admittedTimer || (!startInterrupted && (props.creating || (visibleActive && props.isHost && props.awaitingHostingTime)));
+	const timerInButton = visibleActive;
+	const continuingStart = pendingHostTimer || (!startInterrupted && (props.creating || (visibleActive && props.isHost && props.awaitingHostingTime)));
 	// An idle account read arriving after the click belongs to the idle screen.
 	// Only the observation captured for this start may bridge into the new room.
 	const currentSeconds = !active && props.creating && props.retainIdleTimeWhileConnecting === false
 		? freshStart?.seconds : remainingSeconds;
-	const displaySeconds = (pendingMembership && !admittedTimer) || props.closing || (!active && props.idleTimeUnavailable) ? null : currentSeconds ?? (continuingStart ? freshStart?.seconds : null) ??
+	const displaySeconds = (pendingMembership && !pendingHostTimer) || props.closing || (!active && props.idleTimeUnavailable) ? null : currentSeconds ?? (continuingStart ? freshStart?.seconds : null) ??
 		(waitingForRoom && props.retainIdleTimeWhileConnecting !== false ? startTime : null);
 	const timed = typeof displaySeconds === "number" && Number.isFinite(displaySeconds) && (!visibleActive || props.isHost);
 	const awaitingTimer = !props.closing && visibleActive && props.isHost && !timed && Boolean(props.awaitingHostingTime) && !props.roomStartInterrupted;
-	const idleSlot = !props.creating && !waitingForRoom && (props.idleTimePending || props.idleTimeUnavailable);
-	const timedLayout = admittedTimer || (!pendingMembership && Boolean(visibleActive || timed || idleSlot));
-	const keepCreateLabel = !active && props.creating && freshStart !== null;
+	const idleSlot = props.reserveFreeTimerSlot || props.idleTimePending || props.idleTimeUnavailable || startTime != null;
+	const timedLayout = pendingHostTimer || (!pendingMembership && Boolean(visibleActive || timed || idleSlot));
+	const quietCancel = pendingHostTimer && connectionStalled;
 	const motion = useRef<ReturnType<typeof animatePanelRoomStart> | null>(null);
 	const exitSnapshot = useRef<PanelRoomStart | null>(null);
 	const descriptionId = useId();
@@ -171,10 +171,10 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	}, [startingTime?.capturedAt, startDeadline]);
 	useLayoutEffect(() => {
 		// Reopening during admission recaptures the still-visible Create layout.
-		if (!start.current && !timerInButton && (props.creating || pendingMembership) && stripRef.current && buttonRef.current) {
+		if ((!start.current || (timed && !start.current.counter)) && !timerInButton && (props.creating || pendingMembership) && stripRef.current && buttonRef.current) {
 			start.current = capturePanelRoomStart(stripRef.current, buttonRef.current);
 		}
-	}, [timerInButton, props.creating, pendingMembership]);
+	}, [timerInButton, timed, props.creating, pendingMembership]);
 
 	useLayoutEffect(() => {
 		++sequence.current;
@@ -311,7 +311,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	};
 	const copied = visible && notice?.action === "copy" && !notice.error;
 	const synced = visible && notice?.action === "sync" && !notice.error;
-	const showLabel = props.confirming || (actionBusy && !admittedTimer) || (!timed && !awaitingTimer);
+	const showLabel = props.confirming || !visibleActive || actionBusy || (!timed && !awaitingTimer);
 	return (
 		<div
 			ref={stripRef}
@@ -320,9 +320,9 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			data-timed-layout={timedLayout}
 			data-awaiting-time={awaitingTimer}
 			data-timer-in-button={timerInButton}
-			data-joining={pendingMembership && !admittedTimer}
+			data-joining={pendingMembership && !pendingHostTimer}
 		>
-			{!timerInButton && !timed && timedLayout && !props.creating && !waitingForRoom && (
+			{!timerInButton && !timed && timedLayout && (props.idleTimePending || props.idleTimeUnavailable) && !props.creating && !waitingForRoom && (
 				<div className="panel-idle-time panel-time-loading" aria-label="Remaining time unavailable">
 					<Timer size={20} strokeWidth={1.8} aria-hidden="true" />
 					{props.idleTimeUnavailable ? <button type="button" className="panel-time-retry"
@@ -334,8 +334,10 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			<button
 				ref={buttonRef}
 				type="button"
-				className={`button primary panel-primary-action${visibleActive ? " room-exit" : ""}${props.confirming ? " confirming" : ""}${actionBusy && !admittedTimer && !keepCreateLabel ? " loading" : ""}`}
+				className={`button primary panel-primary-action${visibleActive ? " room-exit" : ""}${props.confirming ? " confirming" : ""}${actionBusy || quietCancel ? " loading" : ""}`}
 				aria-label={label}
+				title={quietCancel ? label : undefined}
+				data-cancel-ready={quietCancel}
 				aria-busy={actionBusy}
 				aria-describedby={active && timed ? descriptionId : undefined}
 				disabled={props.disabled || waitingForRoom || joining || props.closing || props.checkingPrime}
@@ -363,8 +365,8 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 							stripRef.current,
 							buttonRef.current,
 						);
-						// A quick restart can still show the previous room's close feedback.
-						start.current.label = "Create room";
+						// The action being handed off at membership confirmation.
+						start.current.label = "Creating room";
 						startRoomId.current = null;
 						setStartTime(remainingSeconds);
 					}
@@ -377,7 +379,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					</span>
 				)}
 				<span className="panel-action-label" aria-live="polite">
-					{keepCreateLabel ? "Create room" : label}
+					{quietCancel ? "Creating room" : label}
 				</span>
 			</button>
 			{timed && (
@@ -387,7 +389,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					<PanelTimeCounter seconds={displaySeconds!} />
 				</div>
 			)}
-			{visibleActive && timed && (
+			{active && timed && (
 				<span id={descriptionId} className="sr-only" aria-live="off">
 					{displaySeconds} seconds of free time remaining today
 				</span>
