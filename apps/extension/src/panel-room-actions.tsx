@@ -42,6 +42,7 @@ export interface PanelRoomActionsProps {
 	closing?: boolean;
 	closingLabel?: "Closing room" | "Leaving room";
 	idleTimePending?: boolean;
+	reserveFreeTimerSlot?: boolean;
 	idleTimeUnavailable?: boolean;
 	onRetryHosting?(): void;
 	startingTime?: PanelStartingTime | null;
@@ -111,8 +112,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	const [retiredStart, setRetiredStart] = useState<number | null>(null);
 	const startingTime = props.startingTime;
 	const now = performance.now();
-	// The owner caps this at the original observation expiry and eight seconds
-	// after admission. Time spent waiting for HTTP is not a live-room handoff.
+	// Keep the original server deadline through HTTP admission and socket setup.
 	const startDeadline = startingTime?.expiresAt ?? null;
 	const freshStart = startingTime && retiredStart !== startingTime.capturedAt &&
 		document.visibilityState !== "hidden" && now >= startingTime.capturedAt && now < startDeadline! &&
@@ -131,13 +131,22 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 		: !visibleActive ? (props.creating || waitingForRoom ? "Creating room" : "Create room")
 		: props.label;
 	const actionBusy = busy || waitingForRoom || joining || Boolean(props.closing);
-	const continuingStart = !startInterrupted && (props.creating || (visibleActive && props.isHost && props.awaitingHostingTime));
-	const displaySeconds = pendingMembership || props.closing || (!active && props.idleTimeUnavailable) ? null : remainingSeconds ?? (continuingStart ? freshStart?.seconds : null) ??
+	// Keep the account timer beside the create action until membership arrives.
+	const pendingHostTimer = active && freshStart !== null && !joining && !props.closing &&
+		!props.roomStartInterrupted && (waitingForRoom || connectionStalled);
+	const timerInButton = visibleActive;
+	const continuingStart = pendingHostTimer || (!startInterrupted && (props.creating || (visibleActive && props.isHost && props.awaitingHostingTime)));
+	// An idle account read arriving after the click belongs to the idle screen.
+	// Only the observation captured for this start may bridge into the new room.
+	const currentSeconds = !active && props.creating && props.retainIdleTimeWhileConnecting === false
+		? freshStart?.seconds : remainingSeconds;
+	const displaySeconds = (pendingMembership && !pendingHostTimer) || props.closing || (!active && props.idleTimeUnavailable) ? null : currentSeconds ?? (continuingStart ? freshStart?.seconds : null) ??
 		(waitingForRoom && props.retainIdleTimeWhileConnecting !== false ? startTime : null);
 	const timed = typeof displaySeconds === "number" && Number.isFinite(displaySeconds) && (!visibleActive || props.isHost);
 	const awaitingTimer = !props.closing && visibleActive && props.isHost && !timed && Boolean(props.awaitingHostingTime) && !props.roomStartInterrupted;
-	// Reserve the original slot while connecting, without retaining stale digits.
-	const timedLayout = !pendingMembership && (visibleActive || timed || Boolean(props.idleTimePending) || (!visibleActive && (props.idleTimeUnavailable || startTime != null)));
+	const idleSlot = props.reserveFreeTimerSlot || props.idleTimePending || props.idleTimeUnavailable || startTime != null;
+	const timedLayout = pendingHostTimer || (!pendingMembership && Boolean(visibleActive || timed || idleSlot));
+	const quietCancel = pendingHostTimer && connectionStalled;
 	const motion = useRef<ReturnType<typeof animatePanelRoomStart> | null>(null);
 	const exitSnapshot = useRef<PanelRoomStart | null>(null);
 	const descriptionId = useId();
@@ -158,10 +167,10 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	}, [startingTime?.capturedAt, startDeadline]);
 	useLayoutEffect(() => {
 		// Reopening during admission recaptures the still-visible Create layout.
-		if (!visibleActive && (props.creating || pendingMembership) && stripRef.current && buttonRef.current) {
+		if ((!start.current || (timed && !start.current.counter)) && !timerInButton && (props.creating || pendingMembership) && stripRef.current && buttonRef.current) {
 			start.current = capturePanelRoomStart(stripRef.current, buttonRef.current);
 		}
-	}, [visibleActive, props.creating, pendingMembership]);
+	}, [timerInButton, timed, props.creating, pendingMembership]);
 
 	useLayoutEffect(() => {
 		++sequence.current;
@@ -172,10 +181,9 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 		return () => {
 			++sequence.current;
 			cancelTimers();
-			motion.current?.cancel();
-			motion.current = null;
 		};
 	}, [scope]);
+	useLayoutEffect(() => () => motion.current?.cancel(), []);
 
 	useLayoutEffect(() => {
 		if (!waitingForRoom || props.creating !== undefined) return;
@@ -203,21 +211,18 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			setStartTime(undefined);
 			return;
 		}
-		if (!props.roomReady) return;
+		if (!timerInButton) return;
 		const snapshot = start.current;
 		start.current = null;
 		startRoomId.current = null;
 		setStartTime(undefined);
+		motion.current?.cancel();
 		motion.current = animatePanelRoomStart(
 			snapshot,
 			stripRef.current,
 			buttonRef.current,
 		);
-		return () => {
-			motion.current?.cancel();
-			motion.current = null;
-		};
-	}, [roomId, props.roomReady, startInterrupted]);
+	}, [roomId, timerInButton, startInterrupted]);
 	useLayoutEffect(() => {
 		if (props.confirming) motion.current?.cancel();
 	}, [props.confirming]);
@@ -232,13 +237,13 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	useLayoutEffect(() => {
 		const strip = stripRef.current, button = buttonRef.current;
 		if (!strip || !button) return;
-		if (visibleActive) {
+		if (timerInButton) {
 			exitSnapshot.current = capturePanelRoomStart(strip, button);
 		} else if (exitSnapshot.current) {
 			const from = exitSnapshot.current;
 			exitSnapshot.current = null;
 			motion.current?.cancel();
-			motion.current = animatePanelRoomStart(from, strip, button, "end");
+			if (!active) motion.current = animatePanelRoomStart(from, strip, button, "end");
 		}
 	});
 
@@ -302,7 +307,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 	};
 	const copied = visible && notice?.action === "copy" && !notice.error;
 	const synced = visible && notice?.action === "sync" && !notice.error;
-	const showLabel = props.confirming || actionBusy || (!timed && !awaitingTimer);
+	const showLabel = props.confirming || !visibleActive || actionBusy || (!timed && !awaitingTimer);
 	return (
 		<div
 			ref={stripRef}
@@ -310,9 +315,10 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			data-timed={timed}
 			data-timed-layout={timedLayout}
 			data-awaiting-time={awaitingTimer}
-			data-joining={pendingMembership}
+			data-timer-in-button={timerInButton}
+			data-joining={pendingMembership && !pendingHostTimer}
 		>
-			{!visibleActive && !timed && timedLayout && (
+			{!timerInButton && !timed && timedLayout && (props.idleTimePending || props.idleTimeUnavailable) && !props.creating && !waitingForRoom && (
 				<div className="panel-idle-time panel-time-loading" aria-label="Remaining time unavailable">
 					<Timer size={20} strokeWidth={1.8} aria-hidden="true" />
 					{props.idleTimeUnavailable ? <button type="button" className="panel-time-retry"
@@ -324,8 +330,10 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 			<button
 				ref={buttonRef}
 				type="button"
-				className={`button primary panel-primary-action${visibleActive ? " room-exit" : ""}${props.confirming ? " confirming" : ""}${actionBusy ? " loading" : ""}`}
+				className={`button primary panel-primary-action${visibleActive ? " room-exit" : ""}${props.confirming ? " confirming" : ""}${actionBusy || quietCancel ? " loading" : ""}`}
 				aria-label={label}
+				title={quietCancel ? label : undefined}
+				data-cancel-ready={quietCancel}
 				aria-busy={actionBusy}
 				aria-describedby={active && timed ? descriptionId : undefined}
 				disabled={props.disabled || waitingForRoom || joining || props.closing}
@@ -335,7 +343,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					// Moving the button under a stationary cursor is not a new hover.
 					// Track the hand until arrival, then require deliberate movement
 					// rather than subpixel/trackpad jitter to reveal the end action.
-					if (!active || !props.roomReady || !createPointer) return;
+					if (!active || (!props.roomReady && !connectionStalled) || !createPointer) return;
 					if (stripRef.current?.dataset.roomMotion === "true") {
 						setCreatePointer({ x: event.clientX, y: event.clientY });
 					} else if (Math.hypot(event.clientX - createPointer.x, event.clientY - createPointer.y) >= 4) {
@@ -349,8 +357,8 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 							stripRef.current,
 							buttonRef.current,
 						);
-						// A quick restart can still show the previous room's close feedback.
-						start.current.label = "Create room";
+						// The action being handed off at membership confirmation.
+						start.current.label = "Creating room";
 						startRoomId.current = null;
 						setStartTime(remainingSeconds);
 					}
@@ -363,17 +371,17 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					</span>
 				)}
 				<span className="panel-action-label" aria-live="polite">
-					{label}
+					{quietCancel ? "Creating room" : label}
 				</span>
 			</button>
 			{timed && (
-				<div key="time" className={visibleActive ? "panel-action-timer" : "panel-idle-time"}
+				<div key="time" className={timerInButton ? "panel-action-timer" : "panel-idle-time"}
 					title="Free time remaining today" role="timer" aria-live="off"
 					aria-label={`${displaySeconds} seconds of free time remaining today`}>
 					<PanelTimeCounter seconds={displaySeconds!} />
 				</div>
 			)}
-			{visibleActive && timed && (
+			{active && timed && (
 				<span id={descriptionId} className="sr-only" aria-live="off">
 					{displaySeconds} seconds of free time remaining today
 				</span>
