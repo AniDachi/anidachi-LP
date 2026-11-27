@@ -1,10 +1,11 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 type Presentation = { key: string; phase: "entering" | "open" | "closing"; revealCapsule?: boolean } | null;
+export type NoticeDismissReason = "dismiss" | "plans";
 
 /** Motion only: eligibility and the countdown belong to the caller. Invalid
  * authority disappears immediately; only an explicit dismissal animates out. */
-export function useCapsuleNoticePresentation(options: { noticeKey: string | null; bubbleVisible: boolean; onDismiss(): void }) {
+export function useCapsuleNoticePresentation(options: { noticeKey: string | null; bubbleVisible: boolean; onDismiss(reason: NoticeDismissReason): void }) {
   const { noticeKey } = options;
   const latest = useRef(options); latest.current = options;
   const current = useRef<Presentation>(null);
@@ -32,14 +33,14 @@ export function useCapsuleNoticePresentation(options: { noticeKey: string | null
     return clear;
   }, [noticeKey, clear, show]);
 
-  const dismiss = useCallback(() => {
+  const dismiss = useCallback((reason: NoticeDismissReason = "dismiss") => {
     const { noticeKey: key, onDismiss } = latest.current;
     if (!key || current.current?.phase === "closing") return;
     clear(); show({ key, phase: "closing" });
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) { onDismiss(); return; }
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) { onDismiss(reason); return; }
     timer.current = setTimeout(() => {
       timer.current = null;
-      if (latest.current.noticeKey === key) onDismiss();
+      if (latest.current.noticeKey === key) onDismiss(reason);
     }, 330);
   }, [clear, show]);
 

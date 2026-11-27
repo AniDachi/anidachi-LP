@@ -1,13 +1,15 @@
 import { useRef } from "react";
 import { ArrowUpRight, Clock3, X } from "lucide-react";
 import { WEB_HTTP_BASE } from "./constants";
+import { isFinalHostingMinute } from "./room-hosting-time";
+import type { NoticeDismissReason } from "./use-capsule-notice-presentation";
 import { overlayHotkeyBoundaryProps, overlayInteractionBoundaryProps } from "./overlay-interaction-boundary";
 
 export type Free20WarningNoticeProps = {
   kind: "warning" | "closed";
   remainingSeconds: number | null;
   open: boolean;
-  onDismiss(): void;
+  onDismiss(reason: NoticeDismissReason): void;
   restoreFocus(): void;
 };
 
@@ -26,11 +28,11 @@ export function Free20WarningNotice({ kind, remainingSeconds, open, onDismiss, r
   };
   const dismiss = () => {
     const heldFocus = holdsFocus();
-    onDismiss();
+    onDismiss("dismiss");
     if (heldFocus) restoreFocus();
   };
   return <aside ref={notice} className="free20-warning-notice" aria-label={kind === "warning" ? "Hosting time warning" : "Room closed notification"}
-    data-kind={kind} data-open={open} data-urgent={kind === "warning" && seconds !== null && seconds > 0 && seconds <= 60}
+    data-kind={kind} data-open={open} data-urgent={kind === "warning" && isFinalHostingMinute(seconds)}
     inert={!open} aria-hidden={!open || undefined}
     {...overlayHotkeyBoundaryProps} {...overlayInteractionBoundaryProps}
     onKeyDown={event => {
@@ -63,7 +65,7 @@ export function Free20WarningNotice({ kind, remainingSeconds, open, onDismiss, r
             </>}
           </div>
           <a className="free20-notice-plans" href={new URL("/pricing", WEB_HTTP_BASE).href} target="_blank" rel="noopener noreferrer"
-            aria-label="View plans" title={kind === "warning" ? "View plans to keep your room going" : "View plans for more room time"} onClick={onDismiss}>
+            aria-label="View plans" title={kind === "warning" ? "View plans to keep your room going" : "View plans for more room time"} onClick={() => onDismiss("plans")}>
             <span>View plans</span><ArrowUpRight size={11} strokeWidth={1.5} aria-hidden="true" />
           </a>
         </div>

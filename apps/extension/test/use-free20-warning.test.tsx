@@ -11,7 +11,7 @@ function time(remaining = 299, sequence = 1, day = "2026-11-01"): HostingTimeDis
   return { remainingSeconds: remaining, resetSeconds: 43200, snapshot: { hostingTimeVersion: 1, ownerUserId: owner, roomId: "room", roomGeneration: 1, snapshotSequence: sequence, serverTime: at, period: { utcDay: day, resetAt: at + 43200000 }, access: { kind: "daily_free", budgetSeconds: 1200, usedSeconds: 1200 - remaining, remainingSeconds: remaining, metering: true } } };
 }
 const response = (decision: "show" | "not_eligible" | "already_claimed" = "show"): Free20WarningResult => ({ kind: "server", response: { hostingWarningVersion: 1, ownerUserId: owner, roomId: "room", roomGeneration: 1, utcDay: "2026-11-01", serverTime: at, validUntil: at + 10000, decision, ...(decision === "show" ? { thresholdSeconds: 300 as const, claimId: crypto.randomUUID() } : {}) } } as Free20WarningResult);
-let host: HTMLElement, root: Root, input: Free20WarningInput, current: HostingTimeDisplay | null, dismiss: () => void;
+let host: HTMLElement, root: Root, input: Free20WarningInput, current: HostingTimeDisplay | null, dismiss: ReturnType<typeof useFree20Warning>["dismiss"];
 let request: ReturnType<typeof vi.fn<NonNullable<Free20WarningInput["request"]>>>;
 function Harness() { const warning = useFree20Warning(input); dismiss = warning.dismiss; return <output>{warning.visible ? "notice" : "hidden"}</output>; }
 const render = () => act(async () => root.render(<Harness />));
@@ -22,7 +22,7 @@ describe("Free20 warning lifecycle", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date", "performance"] }); vi.setSystemTime(at);
     vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible");
     current = time(); request = vi.fn().mockResolvedValue(response());
-    input = { ownerUserId: owner, sessionKey: login, credentialRevision: "revision-a", isHost: true, connected: true, roomId: "room", roomGeneration: 1, sourceGeneration: 1, connectionGeneration: 1, reading: current, readFresh: () => current, request };
+    input = { ownerUserId: owner, sessionKey: login, credentialRevision: "revision-a", isHost: true, connected: true, roomId: "room", roomGeneration: 1, connectionGeneration: 1, reading: current, readFresh: () => current, request };
     host = document.createElement("div"); document.body.append(host); root = createRoot(host);
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.restoreAllMocks(); vi.useRealTimers(); });
@@ -32,6 +32,35 @@ describe("Free20 warning lifecycle", () => {
     await tick(20000); await act(async () => window.dispatchEvent(new Event("focus")));
     expect(request).toHaveBeenCalledTimes(1); expect(host.textContent).toBe("notice");
     await act(async () => dismiss()); await render(); expect(host.textContent).toBe("hidden"); expect(request).toHaveBeenCalledTimes(1);
+  });
+  it.each([60, 58])("reminds a host who dismissed early once at %i seconds using the same claim", async remaining => {
+    await render();
+    await act(async () => dismiss());
+    input.reading = current = time(61, 2); await render(); expect(host.textContent).toBe("hidden");
+    input.reading = current = time(remaining, 3); await render(); expect(host.textContent).toBe("notice");
+    await act(async () => dismiss());
+    input.reading = current = time(1, 4); await render(); expect(host.textContent).toBe("hidden");
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+  it("retires the notice when the host chooses plans", async () => {
+    await render(); await act(async () => dismiss("plans"));
+    input.reading = current = time(60, 2); await render(); expect(host.textContent).toBe("hidden");
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+  it("waits for a fresh clock when returning to the same tab after an early dismissal", async () => {
+    await render(); await act(async () => dismiss());
+    const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    input.reading = current = null; await render();
+    input.reading = current = time(59, 2); await render(); expect(host.textContent).toBe("hidden");
+    visibility.mockReturnValue("visible");
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    expect(host.textContent).toBe("notice"); expect(request).toHaveBeenCalledTimes(1);
+  });
+  it("keeps an early dismissal scoped to the original room connection", async () => {
+    await render(); await act(async () => dismiss());
+    input.connectionGeneration++; input.reading = current = time(60, 2);
+    await render(); expect(host.textContent).toBe("hidden"); expect(request).toHaveBeenCalledTimes(1);
   });
   it("retries transient failure once after five seconds and does not loop", async () => {
     request.mockResolvedValue({ kind: "failed", retryable: true }); await render();
@@ -81,7 +110,7 @@ describe("Free20 warning lifecycle", () => {
     vi.spyOn(document, "visibilityState", "get").mockReturnValue("visible"); current = time(); input.reading = current; input.connected = true; input.roomId = "room";
     await render(); expect(host.textContent).toBe("hidden"); expect(request).toHaveBeenCalledTimes(1);
   });
-  it.each(["credentials", "login", "room", "generation", "source", "connection", "day", "sleep"])("aborts/fences pending completion after %s", async change => {
+  it.each(["credentials", "login", "room", "generation", "connection", "day", "sleep"])("aborts/fences pending completion after %s", async change => {
     let resolve!: (value: Free20WarningResult) => void;
     request.mockResolvedValue({ kind: "suppressed" });
     request.mockImplementationOnce(() => new Promise(done => { resolve = done; })); await render();
@@ -90,7 +119,6 @@ describe("Free20 warning lifecycle", () => {
     if (change === "login") input.sessionKey = JSON.stringify([owner, "login", "login-b"]);
     if (change === "room") input.roomId = "other";
     if (change === "generation") input.roomGeneration = 2;
-    if (change === "source") input.sourceGeneration = 2;
     if (change === "connection") input.connectionGeneration = 2;
     if (change === "day") current = time(299, 2, "2026-11-02");
     if (change === "sleep") { current = null; await tick(6000); }

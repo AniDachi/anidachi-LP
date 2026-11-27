@@ -2619,7 +2619,7 @@ describe("privileged overlay wiring", () => {
 		await unmount(view.root);
 	});
 
-  it("keeps the low-time notice visible beside the closed capsule without moving media docks", async () => {
+  it("keeps a pending and visible host warning across video changes and respects final dismissal", async () => {
     const at = Date.parse("2026-11-01T12:00:00Z");
     const pending = deferred<free20WarningClient.Free20WarningResult>();
     const claim = vi.spyOn(free20WarningClient, "requestFree20Warning").mockReturnValue(pending.promise);
@@ -2628,10 +2628,21 @@ describe("privileged overlay wiring", () => {
       utcDay: "2026-11-01", serverTime: at, validUntil: at + 10000, decision: "show", thresholdSeconds: 300, claimId: "11111111-1111-4111-8111-111111111111",
     } };
     const room = await renderActiveFree20Timer();
+    const changeVideo = (generation: number) => {
+      const videoFingerprint = `youtube|clip-${generation}`;
+      const sourceUrl = `https://www.youtube.com/watch?v=clip-${generation}`;
+      return act(async () => room.options.onEvent({
+        type: "SOURCE_CHANGED", roomId: "room-a", roomGeneration: 1, sourceGeneration: generation,
+        serverSeq: generation, serverReceivedAt: at, source: { provider: "youtube", title: `Clip ${generation}`,
+          sourceUrl, canonicalUrl: sourceUrl, videoFingerprint },
+        hostState: { playing: true, playbackRate: 1, hostTime: 0, updatedAt: at, videoFingerprint, sourceUrl },
+      }));
+    };
     try {
       const dock = room.view.container.querySelector(".panel-media-dock");
       expect(dock).not.toBeNull();
       expect(claim).toHaveBeenCalledTimes(1);
+      await changeVideo(2);
       expect(claim.mock.calls[0][1].aborted).toBe(false);
       await act(async () => pending.resolve(authorization));
       const notice = room.view.container.querySelector(".free20-warning-notice")!;
@@ -2640,6 +2651,9 @@ describe("privileged overlay wiring", () => {
       expect(notice.closest(".mini-panel")).toBeNull();
       expect(notice.parentElement?.classList.contains("free20-notice-present")).toBe(true);
       await act(async () => { await new Promise(resolve => setTimeout(resolve, 40)); });
+      expect(notice.getAttribute("data-open")).toBe("true");
+      await changeVideo(3);
+      expect(room.view.container.querySelector(".free20-warning-notice")).toBe(notice);
       expect(notice.getAttribute("data-open")).toBe("true");
       expect(notice.querySelector('[role="timer"]')?.textContent).toBe("00:10");
       await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
@@ -2653,13 +2667,14 @@ describe("privileged overlay wiring", () => {
       expect(notice.getAttribute("data-open")).toBe("false");
       await act(async () => { await new Promise(resolve => setTimeout(resolve, 350)); });
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
+      await changeVideo(4);
       await act(async () => room.options.onEvent(room.time(2, 8)));
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
       expect(claim).toHaveBeenCalledTimes(1);
       room.setSession({ ...room.session!, authRevision: "credential-revision-2", accessToken: "rotated-access", refreshToken: "rotated-refresh" });
       await act(async () => extensionStorage.storage.setItem(AUTH_TOKENS_KEY, room.session));
       await flushMountedWork();
-      await act(async () => room.options.onEvent({ ...room.snapshot, serverSeq: 2, sourceGeneration: 2 }));
+      await act(async () => room.options.onEvent({ ...room.snapshot, serverSeq: 5, sourceGeneration: 4 }));
       await act(async () => room.options.onEvent(room.time(3, 7)));
       expect(room.view.container.querySelector(".free20-warning-notice")).toBeNull();
       expect(claim).toHaveBeenCalledTimes(1);
