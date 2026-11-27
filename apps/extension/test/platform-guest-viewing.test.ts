@@ -65,11 +65,19 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     if (action === "sleeve") await machine.join();
     else { machine.receive(state, host, true); await Promise.resolve(); }
     expect(ctx.navigate).toHaveBeenCalledExactlyOnceWith(host.sourceUrl, expect.anything(), expect.any(AbortSignal));
-    play(watchUrl, host.videoFingerprint);
     const restored = mount();
+    if (provider === "primevideo") {
+      // The new document can receive the host's pause before Prime identifies the episode.
+      play(watchUrl, "primevideo|unknown");
+      restored.receive(state, host);
+      expect(ctx.persist).toHaveBeenLastCalledWith(expect.anything(), host.videoFingerprint);
+      expect(ctx.apply).not.toHaveBeenCalled();
+    }
+    play(watchUrl, host.videoFingerprint);
     restored.receive(state, host);
     expect(restored.together()).toBe(true);
     expect(ctx.apply).toHaveBeenLastCalledWith(state, host);
+    if (provider === "primevideo") expect(ctx.offer).toHaveBeenLastCalledWith(null);
     const later = { ...state, hostTime: 82 };
     restored.receive(later, undefined, true);
     expect(ctx.apply).toHaveBeenLastCalledWith(later, host);
