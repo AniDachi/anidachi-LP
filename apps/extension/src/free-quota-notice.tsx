@@ -2,7 +2,7 @@ import { Clock3, Check, RefreshCw, ArrowUpRight } from "lucide-react";
 import { WEB_HTTP_BASE } from "./constants";
 import type { FreeQuotaNoticeState } from "./use-free-quota-notice";
 
-export type FreeQuotaRenewal = { serverTime: number; resetAt: number };
+export type FreeQuotaRenewal = { serverTime: number; resetAt: number; budgetSeconds?: 1200 | 1800 };
 
 /** The server owns the instant and current date. The device supplies only its
  * local timezone; changing its wall clock cannot move the renewal boundary. */
@@ -30,7 +30,7 @@ export function FreeQuotaNotice({ state, onRetry, compact = false, dailyFree = f
     const label = localRenewalLabel(renewal);
     return <section className="panel-limit-copy" data-daily-free="true" aria-label="Free watch-party limit">
       <h2>Daily limit reached</h2>
-      {label ? <p>20 free minutes <strong className="panel-limit-renewal"><time dateTime={new Date(renewal!.resetAt).toISOString()}>{label}</time></strong></p>
+      {label ? <p>{renewal?.budgetSeconds ? `${renewal.budgetSeconds / 60} free minutes` : "Free minutes renew"} <strong className="panel-limit-renewal"><time dateTime={new Date(renewal!.resetAt).toISOString()}>{label}</time></strong></p>
         : <p>{state.kind === 'unavailable' ? "Couldn't check renewal time." : 'Checking renewal time…'}</p>}
       {!label && state.kind === 'unavailable' && <button type="button" className="free-quota-retry" onClick={onRetry}><RefreshCw size={13} aria-hidden="true" />Retry</button>}
     </section>;

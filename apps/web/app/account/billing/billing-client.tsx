@@ -1016,7 +1016,7 @@ export function BillingView({
 										<ul className="ac-plan-limits">
 											{hostingTime.mode === "free20" ? (
 												<li>
-													Free includes 20 host minutes per UTC day for up to 4
+													Free includes 30 host minutes per UTC day for up to 4
 													people. Time counts with a guest present, including
 													while paused; waiting alone uses no time. Resets at
 													00:00 UTC with no carryover. Joining friends does not

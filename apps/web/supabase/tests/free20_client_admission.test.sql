@@ -32,7 +32,7 @@ $$;
 set local role service_role;
 select throws_ok(format('select pg_temp.client_create(%L,%L,%s)',
  'f6230000-0000-4000-8000-000000000001','unsupported',coalesce(v::text,'null')),
- 'P0001','ROOM_UPDATE_REQUIRED_FREE20','v4 rejects unsupported capability '||coalesce(v::text,'null')) from unnest(array[null,0,2]) v;
+ 'P0001','ROOM_UPDATE_REQUIRED_FREE20','v4 rejects unsupported capability '||coalesce(v::text,'null')) from unnest(array[null,0,3]) v;
 select throws_ok($$select pg_temp.client_create('f6230000-0000-4000-8000-000000000001','media2',1,'host',2)$$,'P0001','ROOM_UPDATE_REQUIRED','independent media3 requirement survives');
 select lives_ok($$insert into client_results values('daily',pg_temp.client_create('f6230000-0000-4000-8000-000000000001','current'))$$,'supported v4 creates the room');
 select is((select value#>>'{room,hosting_time_mode}' from client_results where name='daily'),'daily_free20','room is marked');

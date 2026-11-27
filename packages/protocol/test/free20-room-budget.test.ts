@@ -181,7 +181,7 @@ describe("inactive Free20 room accounting contract", () => {
 	it("does not accept legacy quota, unlimited, unknown versions or unsafe counters", () => {
 		for (const change of [
 			{ roomBudgetVersion: 2 },
-			{ budgetSeconds: 1800 },
+			{ budgetSeconds: 1801 },
 			{ committedSeconds: -1 },
 			{ committedSeconds: 1.5 },
 			{ committedSeconds: Number.MAX_SAFE_INTEGER + 1 },

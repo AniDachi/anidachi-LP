@@ -1,12 +1,13 @@
-import { FREE20_WARNING_THRESHOLD_SECONDS, type Free20WarningResponse } from "@anidachi/protocol";
+import { FREE20_WARNING_THRESHOLD_SECONDS } from "@anidachi/protocol";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isFree20WarningLoginKey, requestFree20Warning } from "./free20-warning-client";
-import type { HostingTimeDisplay } from "./room-hosting-time";
+import { isFinalHostingMinute, type HostingTimeDisplay } from "./room-hosting-time";
+import type { NoticeDismissReason } from "./use-capsule-notice-presentation";
 
 export type Free20WarningInput = {
   ownerUserId: string | null; sessionKey: string | null; credentialRevision: string | null;
   isHost: boolean; connected: boolean; roomId: string | null; roomGeneration: number;
-  sourceGeneration: number; connectionGeneration: number;
+  connectionGeneration: number;
   reading: HostingTimeDisplay | null; readFresh(): HostingTimeDisplay | null;
   request?: typeof requestFree20Warning;
 };
@@ -24,18 +25,30 @@ export function useFree20Warning(input: Free20WarningInput) {
   const budgets = useRef(new Map<string, Budget>());
   const active = useRef<{ controller: AbortController; budget: Budget } | null>(null);
   const retry = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [shown, setShown] = useState<{ scope: string; response: Free20WarningResponse } | null>(null);
+  const [shown, setShown] = useState<{ scope: string; phase: "open" | "final" } | null>(null);
+  const reminder = useRef<string | null>(null);
   const drive = useRef<() => void>(() => {});
   const day = input.reading?.snapshot.period.utcDay ?? null;
-  const budgetKey = JSON.stringify([input.ownerUserId, input.sessionKey, day]);
-  const scope = JSON.stringify([budgetKey, input.credentialRevision, input.roomId, input.roomGeneration, input.sourceGeneration, input.connectionGeneration]);
+  const access = input.reading?.snapshot.access;
+  const budgetSeconds = access?.kind === "daily_free" ? access.budgetSeconds : null;
+  const budgetKey = JSON.stringify([input.ownerUserId, input.sessionKey, day, budgetSeconds]);
+  const roomSession = JSON.stringify([input.ownerUserId, input.sessionKey, input.credentialRevision, input.roomId, input.roomGeneration, input.connectionGeneration, input.isHost, input.connected]);
+  const scope = JSON.stringify([roomSession, day, budgetSeconds]);
   const currentScope = useRef(scope); currentScope.current = scope;
   const stop = useCallback(() => {
     if (retry.current !== null) { clearTimeout(retry.current); retry.current = null; }
     if (active.current) { active.current.budget.phase = "done"; active.current.controller.abort(); active.current = null; }
   }, []);
-  const dismiss = useCallback(() => { stop(); setShown(null); }, [stop]);
+  const finalMinute = isFinalHostingMinute(input.reading?.remainingSeconds);
+  const canSnooze = shown?.phase === "open" && !finalMinute;
+  const dismiss = useCallback((reason: NoticeDismissReason = "dismiss") => {
+    if (currentScope.current !== scope) return;
+    stop();
+    reminder.current = canSnooze && reason === "dismiss" ? scope : null;
+    setShown(null);
+  }, [stop, scope, canSnooze]);
 
+  useEffect(() => { reminder.current = null; }, [roomSession]);
   useEffect(() => {
     setShown(null);
     const hide = () => { stop(); setShown(null); };
@@ -47,7 +60,15 @@ export function useFree20Warning(input: Free20WarningInput) {
   drive.current = () => {
     const value = latest.current;
     const time = value.readFresh();
-    if (!eligible(value, time) || time.snapshot.period.utcDay !== day) { stop(); setShown(previous => previous === null ? previous : null); return; }
+    if (reminder.current && time && (
+      time.snapshot.access.kind !== "daily_free" || time.remainingSeconds === 0 ||
+      time.resetSeconds <= 0 || (day && reminder.current !== scope)
+    )) reminder.current = null;
+    if (!eligible(value, time) || (time.snapshot.period.utcDay !== day || time.snapshot.access.kind !== "daily_free" || time.snapshot.access.budgetSeconds !== budgetSeconds)) { stop(); setShown(previous => previous === null ? previous : null); return; }
+    if ((reminder.current === scope || (shown?.scope === scope && shown.phase === "open")) && isFinalHostingMinute(time.remainingSeconds)) {
+      reminder.current = null;
+      setShown({ scope, phase: "final" });
+    }
     let budget = budgets.current.get(budgetKey);
     if (!budget) {
       budget = { attempts: 0, phase: "idle", lastAttempt: Number.NEGATIVE_INFINITY, sequence: -1, roomId: null, roomGeneration: 0 };
@@ -74,14 +95,14 @@ export function useFree20Warning(input: Free20WarningInput) {
     active.current = { controller, budget: own };
     void (value.request ?? requestFree20Warning)({
       ownerUserId: value.ownerUserId!, loginKey: value.sessionKey!, credentialRevision: value.credentialRevision!, reason,
-      snapshotSequence: time.snapshot.snapshotSequence,
+      snapshotSequence: time.snapshot.snapshotSequence, budgetSeconds: time.snapshot.access.budgetSeconds,
       request: { hostingWarningVersion: 1, roomId: value.roomId!, roomGeneration: value.roomGeneration, utcDay: time.snapshot.period.utcDay },
     }, controller.signal).then(result => {
       if (controller.signal.aborted || currentScope.current !== scope) return;
       active.current = null;
       const current = latest.current, fresh = current.readFresh();
       const elapsed = Math.max(0, performance.now() - started);
-      if (!eligible(current, fresh) || fresh.snapshot.period.utcDay !== day || Math.abs(Date.now() - wall - elapsed) > 2_000) { own.phase = "done"; return; }
+      if (!eligible(current, fresh) || fresh.snapshot.period.utcDay !== day || fresh.snapshot.access.kind !== "daily_free" || fresh.snapshot.access.budgetSeconds !== budgetSeconds || Math.abs(Date.now() - wall - elapsed) > 2_000) { own.phase = "done"; return; }
       if (result.kind === "failed") {
         own.phase = result.retryable && own.attempts < 2 ? "retry" : "done";
         if (own.phase === "retry") drive.current();
@@ -92,7 +113,7 @@ export function useFree20Warning(input: Free20WarningInput) {
       if (response.ownerUserId !== current.ownerUserId || response.roomId !== current.roomId || response.roomGeneration !== current.roomGeneration || response.utcDay !== day || response.serverTime + elapsed >= response.validUntil) { own.phase = "done"; return; }
       if (response.decision === "not_eligible") { own.phase = own.attempts < 2 ? "crossing" : "done"; return; }
       own.phase = "done";
-      if (response.decision === "show") setShown({ scope, response });
+      if (response.decision === "show") setShown({ scope, phase: isFinalHostingMinute(fresh.remainingSeconds) ? "final" : "open" });
     }).catch(() => {
       if (controller.signal.aborted || currentScope.current !== scope) return;
       active.current = null; own.phase = own.attempts < 2 ? "retry" : "done"; drive.current();

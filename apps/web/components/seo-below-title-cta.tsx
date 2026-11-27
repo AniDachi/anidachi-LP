@@ -25,7 +25,7 @@ function isDateMetaParagraph(child: ReactNode): boolean {
 /** Guide copy for the hub-style install block when a guide promotes no single watchroom (ANI-64). */
 export const GUIDE_HERO_LEAD =
   "Watch Crunchyroll, YouTube or Netflix together in sync, each on your own player.";
-export const GUIDE_HERO_FINE_PRINT = "20 free minutes a day. Friends join free.";
+export const GUIDE_HERO_FINE_PRINT = "30 free minutes a day. Friends join free.";
 
 /**
  * Keep the introduction or short-answer block together before the install CTA.

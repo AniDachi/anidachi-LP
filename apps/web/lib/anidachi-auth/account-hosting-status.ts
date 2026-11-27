@@ -127,6 +127,7 @@ function sameAuthority(a: Authority, b: Authority) {
 	return (
 		a.ownerUserId === b.ownerUserId &&
 		a.planCode === b.planCode &&
+		a.budgetSeconds === b.budgetSeconds &&
 		a.resetAt === b.resetAt &&
 		a.accountGeneration === b.accountGeneration &&
 		a.accessEpoch === b.accessEpoch &&
@@ -196,17 +197,17 @@ async function resolveStatus(
 			canCreateRoom: false,
 		});
 	}
-	const used = Math.min(1200, first.committedSeconds);
+	const used = Math.min(first.budgetSeconds, first.committedSeconds);
 	return AccountHostingStatusSchema.parse({
 		...context,
 		access: {
 			kind: "daily_free",
-			budgetSeconds: 1200,
+			budgetSeconds: first.budgetSeconds,
 			usedSeconds: used,
-			remainingSeconds: 1200 - used,
+			remainingSeconds: first.budgetSeconds - used,
 			metering: false,
 		},
-		canCreateRoom: activeRoom === null && used < 1200,
+		canCreateRoom: activeRoom === null && used < first.budgetSeconds,
 	});
 }
 

@@ -103,7 +103,7 @@ const howToSteps = [
   },
   {
     name: "Choose a host on Free, Plus, or Pro",
-    text: "One person hosts. Free includes 20 host minutes per UTC day for up to 4 people; friends never need a plan to join.",
+    text: "One person hosts. Free includes 30 host minutes per UTC day for up to 4 people; friends never need a plan to join.",
   },
   {
     name: "Create the room on the episode",

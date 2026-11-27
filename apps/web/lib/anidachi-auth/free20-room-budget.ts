@@ -14,7 +14,7 @@ import {
 	type RoomRow,
 	resolveWatchHistoryAccess,
 } from "./db";
-import { readFree20AccountBudget } from "./free20-account-budget";
+import { readDailyFreeBudgetSeconds, readFree20AccountBudget } from "./free20-account-budget";
 
 type Room = Pick<
 	RoomRow,
@@ -26,6 +26,7 @@ type Room = Pick<
 	| "free20_abuse_protected"
 >;
 type Dependencies = {
+	readBudgetSeconds: typeof readDailyFreeBudgetSeconds;
 	readRoom: (roomId: string) => Promise<Room | null>;
 	commitUsage: typeof commitRoomUsageDay;
 	resolveAuthority: typeof resolveWatchHistoryAccess;
@@ -43,6 +44,7 @@ export async function settleFree20RoomBudget(
 	now: Date,
 	deps: Dependencies = {
 		readRoom: getRoomById,
+		readBudgetSeconds: readDailyFreeBudgetSeconds,
 		commitUsage: commitRoomUsageDay,
 		resolveAuthority: resolveWatchHistoryAccess,
 		readUsage: getUsageSecondsForDay,

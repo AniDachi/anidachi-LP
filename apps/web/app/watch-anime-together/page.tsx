@@ -174,7 +174,7 @@ export default function WatchAnimeTogetherPage() {
         heroLead="Anime is better with friends. AniDachi keeps you in sync."
         heroCtaLabel="Start an Anime Watch Party"
         heroWorksOn={["Crunchyroll", "YouTube", "Netflix"]}
-        heroFinePrint="20 free minutes a day. Friends join free."
+        heroFinePrint="30 free minutes a day. Friends join free."
         answer={
           <>
             <strong>
@@ -258,7 +258,7 @@ export default function WatchAnimeTogetherPage() {
             {
               feature: "Price",
               values: {
-                anidachi: `Free 20 min a day; Plus from ${PRICING_STARTING_AT}`,
+                anidachi: `Free 30 min a day; Plus from ${PRICING_STARTING_AT}`,
                 teleparty: "Free tier; Crunchyroll needs Premium",
                 discord: "Free",
               },
@@ -339,7 +339,7 @@ export default function WatchAnimeTogetherPage() {
           pagePath={PAGE_PATH}
           ctaLabel="Start an Anime Watch Party"
           heading="Start your anime watch party"
-          body="Install AniDachi, open an episode and send the invite. 20 free minutes a day, and friends join free."
+          body="Install AniDachi, open an episode and send the invite. 30 free minutes a day, and friends join free."
         />
 
         <h2 id="websites" className="scroll-mt-24">

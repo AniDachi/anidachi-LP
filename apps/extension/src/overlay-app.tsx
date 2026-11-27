@@ -2368,7 +2368,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		ownerUserId: authAuthenticated ? accountUser?.id ?? null : null,
 		sessionKey: roomAuthSessionKeyRef.current, credentialRevision: authRevision,
 		isHost, connected: Boolean(isConnected && roomSnapshotReady), roomId,
-		roomGeneration, sourceGeneration, connectionGeneration: connectionGenerationRef.current,
+		roomGeneration, connectionGeneration: connectionGenerationRef.current,
 		reading: liveHostingTime, readFresh: readFreshHostingTime,
 	});
 	const quotaMeteringActive =
@@ -6419,7 +6419,7 @@ export function OverlayApp({ adapter, adapterActive = true }: OverlayAppProps) {
 		: capsuleNoticeKind === "warning" ? JSON.stringify(["warning", roomAuthSessionKeyRef.current, roomId, roomGeneration, liveHostingTime?.snapshot.period.utcDay]) : null;
 	const capsuleNotice = useCapsuleNoticePresentation({
 		noticeKey: capsuleNoticeKey, bubbleVisible: topBubbleReveal.bubbleVisible || panelOpen,
-		onDismiss: () => { if (capsuleNoticeKind === "closed") setFree20ClosedNotice(null); else free20Warning.dismiss(); },
+		onDismiss: reason => { if (capsuleNoticeKind === "closed") setFree20ClosedNotice(null); else free20Warning.dismiss(reason); },
 	});
 	useEffect(() => {
 		if (!capsuleNotice.present) return;

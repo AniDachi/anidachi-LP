@@ -336,7 +336,7 @@ export default function WatchCrunchyrollWithoutAccountSharingPage() {
           <InstallLink href="/extension" className="text-brand-orange hover:underline">
             Add AniDachi to Chrome
           </InstallLink>{" "}
-          to try it. Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit. Friends join on free accounts. Rooms hold up to 6 people on
+          to try it. Free includes 30 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit. Friends join on free accounts. Rooms hold up to 6 people on
           Plus and 15 on Pro, host included. The full walkthrough is on the{" "}
           <Link href="/watch-crunchyroll-together" className="text-brand-orange hover:underline">
             Crunchyroll watch party guide

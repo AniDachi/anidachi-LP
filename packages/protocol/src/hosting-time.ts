@@ -31,8 +31,11 @@ export const HostingTimeBindingSchema = z.strictObject({
 });
 export type HostingTimeBinding = z.infer<typeof HostingTimeBindingSchema>;
 
+export const DailyFreeBudgetSecondsSchema = z.union([z.literal(1200), z.literal(1800)]);
+export type DailyFreeBudgetSeconds = z.infer<typeof DailyFreeBudgetSecondsSchema>;
+
 /** Account-wide UTC budget, shared across the host's rooms/devices/providers.
- * usedSeconds is consumed budget capped at 1200, including authoritative live
+ * usedSeconds is consumed budget capped at the issued daily allowance, including authoritative live
  * usage as of outer serverTime, not a raw durable settlement total (which can
  * include liveness overshoot). Do not add room usage again or carry time over.
  * metering means host + at least one guest are present, including playback pause;
@@ -41,13 +44,13 @@ export type HostingTimeBinding = z.infer<typeof HostingTimeBindingSchema>;
 export const DailyFreeHostingTimeSchema = z
 	.strictObject({
 		kind: z.literal("daily_free"),
-		budgetSeconds: z.literal(1200),
-		usedSeconds: z.number().int().min(0).max(1200),
-		remainingSeconds: z.number().int().min(0).max(1200),
+		budgetSeconds: DailyFreeBudgetSecondsSchema,
+		usedSeconds: z.number().int().nonnegative(),
+		remainingSeconds: z.number().int().nonnegative(),
 		metering: z.boolean(),
 	})
 	.refine(
-		(access) => access.usedSeconds + access.remainingSeconds === 1200,
+		(access) => access.usedSeconds + access.remainingSeconds === access.budgetSeconds,
 		"Used and remaining seconds must equal the daily budget",
 	);
 

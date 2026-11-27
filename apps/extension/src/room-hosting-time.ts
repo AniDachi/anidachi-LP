@@ -2,6 +2,9 @@ import { acceptHostingTimeSnapshot, HostingTimeEventSchema, LegacyHostingTimeEve
 
 type Scope = Omit<HostingTimeBinding, "utcDay">;
 export type HostingTimeDisplay = { remainingSeconds: number | null; resetSeconds: number; snapshot: HostingTimeSnapshot };
+export function isFinalHostingMinute(seconds: number | null | undefined): boolean {
+  return seconds != null && seconds > 0 && seconds <= 60;
+}
 
 /** A display clock only. Binding is supplied by the authenticated ROOM_SNAPSHOT,
  * never by a HOSTING_TIME payload; ordering survives a transport interruption. */

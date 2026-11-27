@@ -72,7 +72,7 @@ const faq = [
   {
     question: "Can a group watch the new episode together?",
     answer:
-      "Yes. One person hosts on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro. Friends join free. Everyone opens the same episode once it unlocks.",
+      "Yes. One person hosts on Free (30 host minutes per UTC day for up to 4 people), Plus, or Pro. Friends join free. Everyone opens the same episode once it unlocks.",
   },
 ];
 
@@ -177,7 +177,7 @@ export default function CrunchyrollSchedulePage() {
             <InstallLink href="/extension" className={linkClass}>
               add AniDachi to desktop Chrome
             </InstallLink>{" "}
-            and open the episode on Crunchyroll when it unlocks. One person hosts on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro; friends join free on their own Crunchyroll accounts, and play, pause
+            and open the episode on Crunchyroll when it unlocks. One person hosts on Free (30 host minutes per UTC day for up to 4 people), Plus, or Pro; friends join free on their own Crunchyroll accounts, and play, pause
             and seek stay in sync with voice and chat in the room. Watching something on Netflix
             instead? The same extension runs a{" "}
             <Link href="/netflix-watch-party" className={linkClass}>

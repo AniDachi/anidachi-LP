@@ -3,6 +3,7 @@ import { PlanCodeSchema } from "./commercial-policy";
 import {
 	ConfirmedUnlimitedHostingTimeSchema,
 	DailyFreeHostingTimeSchema,
+	DailyFreeBudgetSecondsSchema,
 	HostingTimeBindingSchema,
 } from "./hosting-time";
 
@@ -128,6 +129,8 @@ export const Free20AccountAuthoritySchema = z.strictObject({
 	// Fresh Free accounts may never have enabled history; their epoch is zero.
 	accessEpoch: AuthorityCounter,
 	committedSeconds: AuthorityCounter,
+	// The original SQL authority omitted the daily allowance.
+	budgetSeconds: DailyFreeBudgetSecondsSchema.default(1200),
 	grant: z
 		.strictObject({
 			source: z.enum(["paid", "trial", "manual"]),

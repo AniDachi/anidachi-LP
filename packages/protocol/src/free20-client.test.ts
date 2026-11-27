@@ -8,9 +8,10 @@ import {
 describe("Free20 admission capability", () => {
 	it("accepts only the exact supported value", () => {
 		expect(FREE20_CLIENT_HEADER).toBe("x-anidachi-free20-client");
-		expect(FREE20_CLIENT_VERSION).toBe(1);
+		expect(FREE20_CLIENT_VERSION).toBe(2);
 		expect(parseFree20ClientVersion("1")).toBe(1);
-		for (const value of [null, "", "0", "2", "01", "1, 1", " 1 ", "true"])
+		expect(parseFree20ClientVersion("2")).toBe(2);
+		for (const value of [null, "", "0", "3", "01", "1, 1", " 1 ", "true"])
 			expect(parseFree20ClientVersion(value)).toBeNull();
 	});
 	it("uses actual HTTP normalization but rejects duplicate serialization", () => {
