@@ -178,7 +178,7 @@ export default function GermanCrunchyrollCalendarPage() {
               füge AniDachi zu Chrome hinzu
             </InstallLink>{" "}
             und öffne die Folge auf Crunchyroll, sobald sie erscheint. Einer erstellt den Raum mit Free
-            (20 Minuten am Tag für bis zu 4 Personen), Plus oder Pro; die anderen treten kostenlos bei,
+            (30 Minuten am Tag für bis zu 4 Personen), Plus oder Pro; die anderen treten kostenlos bei,
             jeder im eigenen Crunchyroll-Konto. Abspielen, Pause und Spulen bleiben synchron, mit
             Sprache und Chat im Raum. Ihr schaut stattdessen etwas auf Netflix? Dieselbe Erweiterung
             startet eine{" "}

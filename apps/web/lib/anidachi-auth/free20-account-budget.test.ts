@@ -41,6 +41,7 @@ function authority(
 
 function db(value = authority(), committedSeconds = 420) {
 	return {
+		readBudgetSeconds: async () => 1200 as const,
 		resolveAuthority: async (userId: string) => {
 			assert.equal(userId, value.history.ownerUserId);
 			return value;
@@ -305,6 +306,7 @@ test("unknown, wrong-owner and expired authority fail before reading usage", asy
 	]) {
 		await assert.rejects(
 			readFree20AccountBudget(owner, now, {
+				readBudgetSeconds: async () => 1200 as const,
 				resolveAuthority: async () => raw,
 				readUsage: async () =>
 					assert.fail("Invalid authority must not read usage"),
@@ -317,6 +319,7 @@ test("unknown, wrong-owner and expired authority fail before reading usage", asy
 test("authority outage never becomes Free", async () => {
 	await assert.rejects(
 		readFree20AccountBudget(owner, now, {
+			readBudgetSeconds: async () => 1200 as const,
 			resolveAuthority: async () => {
 				throw new Error("authority unavailable");
 			},
@@ -325,4 +328,17 @@ test("authority outage never becomes Free", async () => {
 		}),
 		HistoryAccessError,
 	);
+});
+
+test("the 30-minute policy keeps today's spent seconds, including an exhausted old allowance", async () => {
+  for (const [used, left] of [[0, 1800], [1080, 720], [1200, 600], [1799, 1], [1800, 0], [1900, 0]]) {
+    const budget = await readFree20AccountBudget(owner, now, {
+      ...db(authority(), used), readBudgetSeconds: async () => 1800,
+    });
+    assert.equal(budget.kind, "daily_free");
+    if (budget.kind === "daily_free") {
+      assert.equal(budget.committedSeconds, used);
+      assert.equal(budget.remainingAfterCommittedSeconds, left);
+    }
+  }
 });

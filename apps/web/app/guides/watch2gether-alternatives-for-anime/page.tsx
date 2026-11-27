@@ -52,7 +52,7 @@ const faq = [
   {
     question: "Is there a free site like Watch2Gether?",
     answer:
-      "Yes. Kosmi is free with voice and video chat, and SyncUp has free rooms for YouTube and web videos with no account. On AniDachi, friends join free and a Free host gets 20 minutes a day for up to 4 people.",
+      "Yes. Kosmi is free with voice and video chat, and SyncUp has free rooms for YouTube and web videos with no account. On AniDachi, friends join free and a Free host gets 30 minutes a day for up to 4 people.",
   },
 ];
 

@@ -249,7 +249,7 @@ export default function DiscordWatchPartyPage() {
 			heroCtaLabel="Sync Your Discord Watch Party"
 			heroWorksOnLabel="Works with"
 			heroWorksOn={["your Discord call", "Crunchyroll", "YouTube", "Netflix"]}
-			heroFinePrint="20 free minutes a day. Friends join free."
+			heroFinePrint="30 free minutes a day. Friends join free."
 			answer={
 				<>
 					<strong>
@@ -326,7 +326,7 @@ export default function DiscordWatchPartyPage() {
 						values: {
 							activity: "180 min per person in a group (30 alone), then a 10-min cool-down",
 							golive: "None stated",
-							anidachi: "20 host minutes a day on Free; none on Plus or Pro",
+							anidachi: "30 host minutes a day on Free; none on Plus or Pro",
 						},
 					},
 					{
@@ -342,7 +342,7 @@ export default function DiscordWatchPartyPage() {
 						values: {
 							activity: "No fee mentioned by Discord",
 							golive: "Free; Nitro for higher quality",
-							anidachi: `Friends free; Free host: 20 minutes per UTC day, up to 4 people; Plus ${PRICING_PLUS_SHORT}, Pro ${PRICING_PRO_SHORT}`,
+							anidachi: `Friends free; Free host: 30 minutes per UTC day, up to 4 people; Plus ${PRICING_PLUS_SHORT}, Pro ${PRICING_PRO_SHORT}`,
 						},
 					},
 				]}
@@ -405,7 +405,7 @@ export default function DiscordWatchPartyPage() {
 			/>
 			<p>
 				The honest limits of the third option: everyone needs desktop Chrome,
-				everyone needs their own access to the title, and Free hosts get 20 host minutes per UTC day for up to 4 people. If your group mixes phones and computers, or watches
+				everyone needs their own access to the title, and Free hosts get 30 host minutes per UTC day for up to 4 people. If your group mixes phones and computers, or watches
 				on Disney+, Hulu or HBO Max, AniDachi won&apos;t cover it. For the
 				feature-by-feature version, see{" "}
 				<Link href="/discord-watch-party">
@@ -497,7 +497,7 @@ export default function DiscordWatchPartyPage() {
 				pagePath={PAGE_PATH}
 				ctaLabel="Sync Your Discord Watch Party"
 				heading="Sync your next Discord watch party"
-				body="Stay in your Discord call. Install AniDachi, open the episode and paste the invite. 20 free minutes a day, and friends join free."
+				body="Stay in your Discord call. Install AniDachi, open the episode and paste the invite. 30 free minutes a day, and friends join free."
 			/>
 
 			<h2 id="checklist" className="scroll-mt-24">

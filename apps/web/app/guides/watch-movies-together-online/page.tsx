@@ -133,7 +133,7 @@ const optionRows = [
 		services: "Netflix, full YouTube watch pages, Crunchyroll",
 		devices: "Desktop Chrome or Chromium Edge",
 		talk: "On-player chat, voice and video",
-		cost: "Free: 20 host minutes per UTC day for up to 4 people; Plus / Pro: no daily hosting time limit",
+		cost: "Free: 30 host minutes per UTC day for up to 4 people; Plus / Pro: no daily hosting time limit",
 	},
 	{
 		option: "Sync extension: Teleparty",

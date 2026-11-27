@@ -310,7 +310,7 @@ locale="de"
             },
             {
               feature: "Kosten",
-              values: { share: "Kostenlos; Nitro für höhere Qualität", anidachi: "Freunde treten kostenlos bei; Free-Gastgeber: 20 Minuten pro UTC-Tag, bis zu 4 Personen; Plus und Pro ohne Tageslimit" },
+              values: { share: "Kostenlos; Nitro für höhere Qualität", anidachi: "Freunde treten kostenlos bei; Free-Gastgeber: 30 Minuten pro UTC-Tag, bis zu 4 Personen; Plus und Pro ohne Tageslimit" },
             },
             {
               feature: "Geräte",

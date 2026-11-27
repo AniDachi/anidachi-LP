@@ -236,9 +236,9 @@ export function pricingFreeTier(
 		return {
 			...base,
 			audience: "A little time together, every day.",
-			summary: "20 free minutes every day",
+			summary: "30 free minutes every day",
 			features: [
-				"20 free minutes every day",
+				"30 free minutes every day",
 				"Up to 4 people, including you",
 				"Up to 4 cameras & 4 mics",
 				...common,
@@ -265,7 +265,7 @@ export function pricingMatrixRows(
 			free:
 				row.feature === "Host your own room"
 					? mode === "daily_free20"
-						? "20 min/day"
+						? "30 min/day"
 						: mode === "paid_hosting"
 							? "Join only"
 							: "Check availability"

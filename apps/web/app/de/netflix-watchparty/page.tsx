@@ -311,7 +311,7 @@ locale="de"
           rows={[
             {
               feature: "Netflix-Party veranstalten",
-              values: { anidachi: "20 Minuten am Tag mit Free, ohne Limit mit Plus oder Pro", teleparty: "Kostenlose Stufe" },
+              values: { anidachi: "30 Minuten am Tag mit Free, ohne Limit mit Plus oder Pro", teleparty: "Kostenlose Stufe" },
             },
             {
               feature: "Sprach- und Videochat",
@@ -347,7 +347,7 @@ locale="de"
           href={DE_INSTALL_HUB_PATH}
           ctaLabel={CTA_LABEL}
           heading="Starte deine Netflix Watchparty"
-          body="AniDachi installieren, Film oder Folge öffnen, Link schicken. 20 Minuten am Tag kostenlos, Freunde treten kostenlos bei."
+          body="AniDachi installieren, Film oder Folge öffnen, Link schicken. 30 Minuten am Tag kostenlos, Freunde treten kostenlos bei."
         />
 
         <h2 id="more" className="scroll-mt-24">

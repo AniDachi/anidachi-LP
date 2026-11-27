@@ -71,7 +71,7 @@ const faq = [
   {
     question: "What is the best free Teleparty alternative?",
     answer:
-      "Kosmi and Rave are free, and Kosmi includes video chat at no cost. Watch2Gether is free and needs no account. AniDachi's friends join free, and a Free host gets 20 minutes a day for up to 4 people; Plus and Pro remove the daily limit.",
+      "Kosmi and Rave are free, and Kosmi includes video chat at no cost. Watch2Gether is free and needs no account. AniDachi's friends join free, and a Free host gets 30 minutes a day for up to 4 people; Plus and Pro remove the daily limit.",
   },
   {
     question: "Is there an app like Teleparty that works on phones?",
@@ -241,7 +241,7 @@ export default function BestTelepartyAlternativesPage() {
               <>
                 A Chrome extension that syncs each person&apos;s own Crunchyroll,
                 Netflix or YouTube player, with chat, reactions and voice and
-                video calls included. Friends join free. A Free host gets 20
+                video calls included. Friends join free. A Free host gets 30
                 minutes a day for up to 4 people; Plus rooms hold {PLUS_ROOM} and
                 Pro rooms {PRO_ROOM}, with no daily limit. The limits: desktop
                 Chrome only, and three services today.

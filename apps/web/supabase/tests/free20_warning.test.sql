@@ -23,17 +23,17 @@ select room_record->>'room_id' as warning_room from public.create_room_with_acti
 create temporary table warning_state(name text primary key,value jsonb);
 grant all on warning_state to service_role;
 create function pg_temp.context() returns jsonb language sql as $$
- select (a-'enabled'-'committedSeconds'-'serverTime'-'refreshBy'-'resetAt')||jsonb_build_object(
+ select (a-'enabled'-'committedSeconds'-'budgetSeconds'-'serverTime'-'refreshBy'-'resetAt')||jsonb_build_object(
  'utcDay',((a->>'serverTime')::timestamptz at time zone 'UTC')::date::text,
  'serverTime',floor(extract(epoch from (a->>'serverTime')::timestamptz)*1000),
  'refreshBy',floor(extract(epoch from (a->>'refreshBy')::timestamptz)*1000),
  'resetAt',floor(extract(epoch from (a->>'resetAt')::timestamptz)*1000))
  from (select public.read_free20_account_status_v1('f6260000-0000-4000-8000-000000000001') a) q;
 $$;
-create function pg_temp.live(c jsonb,n integer default 300,m boolean default false) returns jsonb language sql as $$
+create function pg_temp.live(c jsonb,n integer default 300,m boolean default false,budget integer default 1200) returns jsonb language sql as $$
  select jsonb_build_object('liveStatusVersion',1,'ownerUserId',c->'ownerUserId','roomId',c#>'{assignment,roomId}',
  'roomGeneration',1,'utcDay',c->'utcDay','serverTime',c->'serverTime','validUntil',c->'refreshBy',
- 'access',jsonb_build_object('kind','daily_free','budgetSeconds',1200,'usedSeconds',1200-n,'remainingSeconds',n,'metering',m));
+ 'access',jsonb_build_object('kind','daily_free','budgetSeconds',budget,'usedSeconds',budget-n,'remainingSeconds',n,'metering',m));
 $$;
 create function pg_temp.claim(c jsonb,l jsonb) returns jsonb language sql as $$
  select public.claim_free20_daily_warning_v1('f6260000-0000-4000-8000-000000000001',c,l);
@@ -137,6 +137,13 @@ savepoint guest;
 update public.active_room_sessions set role='member' where user_id='f6260000-0000-4000-8000-000000000001';
 select is(pg_temp.claim(c.value,l.value)->>'decision','not_eligible','guest assignment does not claim') from warning_state c,warning_state l where c.name='context' and l.name='live';
 rollback to guest;
+savepoint allowance_increase;
+update public.hosting_commercial_policy set free_daily_host_seconds=1800;
+select is(public.read_free20_account_status_v1('f6260000-0000-4000-8000-000000000001')->>'budgetSeconds','1800','account display reads the new allowance');
+select is(pg_temp.claim(c,pg_temp.live(c,301,false,1800))->>'decision','not_eligible','new allowance has more than five minutes') from pg_temp.context() c;
+select is(pg_temp.claim(c,pg_temp.live(c,300,false,1800))->>'decision','show','the earlier 20-minute warning does not consume the 30-minute warning') from pg_temp.context() c;
+select is(pg_temp.claim(c,pg_temp.live(c,60,false,1800))->>'decision','already_claimed','retry at 01:00 does not mint another server claim') from pg_temp.context() c;
+rollback to allowance_increase;
 update public.hosting_commercial_policy set free20_enabled=false;
 select throws_ok(format('select pg_temp.claim(%L::jsonb,%L::jsonb)',c.value,l.value),'P0001','FREE20_DISABLED','SQL gate remains independent') from warning_state c,warning_state l where c.name='context' and l.name='live';
 set local role anon;

@@ -122,7 +122,7 @@ export async function POST(
 			{ status: 503 },
 		);
 	}
-	if (isHost && room.hosting_time_mode === "daily_free20" && free20ClientVersion !== 1)
+	if (isHost && room.hosting_time_mode === "daily_free20" && (free20ClientVersion === null || (free20Access?.quota.limitSeconds === 1800 && free20ClientVersion === 1)))
 		return NextResponse.json(roomUpdateRequiredBody(true), { status: 426 });
 	// A room's Free capacity is frozen even if its host has since upgraded.
 	// After T, its denial takes precedence over the retired daily quota while

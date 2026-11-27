@@ -188,7 +188,7 @@ export default function WatchYoutubeTogetherPage() {
         heroLead="Everyone watches on their own YouTube tab and account. AniDachi keeps play, pause and seeking in sync, with chat and calls on top."
         heroCtaLabel="Start a YouTube Watch Party"
         heroWorksOn={["YouTube", "Crunchyroll", "Netflix"]}
-        heroFinePrint="20 free minutes a day. Friends join free."
+        heroFinePrint="30 free minutes a day. Friends join free."
         answer={
           <>
             <strong>
@@ -280,7 +280,7 @@ export default function WatchYoutubeTogetherPage() {
           signed in to their own account, so their own YouTube settings and
           YouTube Premium apply. Chat, reactions, camera and mic sit on top
           of the player, and the same room also works for Crunchyroll and
-          Netflix. Hosting is free for 20 minutes a day, and friends join
+          Netflix. Hosting is free for 30 minutes a day, and friends join
           free. The full side-by-side is in{" "}
           <Link href="/guides/watch2gether-alternatives-for-anime">Watch2Gether alternatives</Link>.
         </p>
@@ -389,7 +389,7 @@ export default function WatchYoutubeTogetherPage() {
           pagePath={PAGE_PATH}
           ctaLabel="Start a YouTube Watch Party"
           heading="Start your YouTube watch party"
-          body="Install AniDachi, open a video and send the invite. 20 free minutes a day, and friends join free."
+          body="Install AniDachi, open a video and send the invite. 30 free minutes a day, and friends join free."
         />
 
         <h2 id="start-here" className="scroll-mt-24">

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
 	ConfirmedUnlimitedHostingTimeSchema,
+	DailyFreeBudgetSecondsSchema,
 	HostingTimeBindingSchema,
 } from "./hosting-time";
 import { RoomUsageSummarySchema } from "./types";
@@ -35,7 +36,7 @@ export type Free20RoomBudgetRequest = z.infer<
 /** ACKs and the effective scope total are ONE post-commit response, never independent
  * reads that a consumer may mix. committedSeconds is max(account, bound browser,
  * bound installation totals), includes this room's ACKed
- * seconds and may exceed 1200. This is neither the public HostingTimeSnapshot
+ * seconds and may exceed the daily budget. This is neither the public HostingTimeSnapshot
  * nor a lease, reservation, unlimited assertion, or permission to revive a room.
  * Issued only by the authenticated, explicitly enabled internal budget route.
  */
@@ -46,7 +47,7 @@ export const Free20RoomBudgetCheckpointSchema = HostingTimeBindingSchema.extend(
 		serverTime: Timestamp,
 		resetAt: Timestamp,
 		refreshBy: Timestamp,
-		budgetSeconds: z.literal(1200),
+		budgetSeconds: DailyFreeBudgetSecondsSchema,
 		committedSeconds: Counter,
 		acknowledged: Usage,
 	},

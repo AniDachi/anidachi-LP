@@ -125,7 +125,7 @@ const howToSteps = [
   },
   {
     name: "Watch in a synced room",
-    text: "The host installs AniDachi in desktop Chrome, opens the episode on Crunchyroll and creates a room on Free (20 host minutes per UTC day for up to 4 people), Plus, or Pro. Friends join free with their own Crunchyroll accounts.",
+    text: "The host installs AniDachi in desktop Chrome, opens the episode on Crunchyroll and creates a room on Free (30 host minutes per UTC day for up to 4 people), Plus, or Pro. Friends join free with their own Crunchyroll accounts.",
   },
   {
     name: "Post the spoiler line",

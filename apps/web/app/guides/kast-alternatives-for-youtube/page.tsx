@@ -46,7 +46,7 @@ const faq = [
   {
     question: "Is there a free alternative to Kast?",
     answer:
-      "Yes. Kosmi is free with voice and video chat, Watch2Gether and SyncUp have free rooms with no account, and Discord is free for the call. On AniDachi, friends join free and a Free host gets 20 minutes a day for up to 4 people.",
+      "Yes. Kosmi is free with voice and video chat, Watch2Gether and SyncUp have free rooms with no account, and Discord is free for the call. On AniDachi, friends join free and a Free host gets 30 minutes a day for up to 4 people.",
   },
 ];
 

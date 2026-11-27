@@ -608,6 +608,8 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 		props.hosting,
 		props.accountHostingTime,
 	);
+	const dailyAccess = props.accountHostingTime?.status?.access;
+	const dailyAllowance = dailyAccess?.kind === "daily_free" ? `Free includes ${dailyAccess.budgetSeconds / 60} host minutes per UTC day.` : "Free hosting time is shared across rooms each UTC day.";
 	const h = layout?.hole;
 	const chatClosed = step === "chat" && chatPhase === "closed";
 	// Dim the surrounding controls as well as the video. The visual masks
@@ -894,7 +896,7 @@ export function PlayerOnboarding(props: PlayerOnboardingProps) {
 									) : (
 										<p>
 											{step === "create" && offer === "daily-free"
-												? `Free includes 20 host minutes per UTC day.\n${Math.ceil((props.accountHostingTime?.remainingSeconds ?? 0) / 60)} minutes remaining; up to 4 people.`
+												? `${dailyAllowance}\n${Math.ceil((props.accountHostingTime?.remainingSeconds ?? 0) / 60)} minutes remaining; up to 4 people.`
 												: step === "create" && offer === "exhausted"
 													? "Today’s hosting time is used. Resets at 00:00 UTC.\nJoin friends free, or upgrade for no daily host limit."
 													: step === "create" && offer === "active-room"

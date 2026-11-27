@@ -15,8 +15,8 @@ const retiredOffers = [
   /creat(?:e|es|ing)[^.!?]{0,65}(?:room|watchroom)[^.!?]{0,30}with Plus or Pro/i,
   /(?:host|hosting|rooms?)[^.!?]{0,100}(?:3[ -]day|three[ -]day) trial/i,
   /(?:eligible (?:Free )?accounts? can (?:try|start)|try Plus or Pro)[^.!?]{0,100}(?:trial|3 days|three days)/i,
-  /Free(?: hosting| accounts?| includes?|:)?[^.!?;]{0,45}30[ -](?:host[ -])?minutes?/i,
-  /30[ -]minute Free/i,
+  /Free(?: hosting| accounts?| includes?|:)?[^.!?;]{0,45}20[ -](?:(?:free|host)[ -])?min(?:utes?|uten)?/i,
+  /20[ -]minute Free/i,
   /Choose Plus[^.!?]{0,100}or Pro to host\./i,
   /Choose Plus(?:\s*\([^)]*\))?\s+or Pro(?:\s*\([^)]*\))?\s+to create (?:your own )?(?:rooms?|watchrooms?)/i,
 ];
@@ -74,7 +74,7 @@ test("the copy guard catches offer regressions across prose, metadata and JSON-L
     'description: "Creating your own room requires your own Plus or Pro access."',
     '{ "description": "Hosting needs Plus or Pro, with a 3-day trial." }',
     "Eligible Free accounts can try Plus or Pro free for 3 days.",
-    "Free includes 30-minute hosting.",
+    "Free includes 20-minute hosting.",
     "Choose Plus ($7.99/mo) or Pro ($11.99/mo) to create rooms.",
     `Choose Plus ({PRICING_PLUS_SHORT} on monthly billing) or Pro (
       {PRICING_PRO_SHORT} on monthly billing) to create rooms.{" "}`,
@@ -89,12 +89,13 @@ test("provider trials, paid size examples and existing-trial rights remain valid
     "Existing trials keep their original end date and renewal terms.",
     "Privacy: trial abuse protections retain limited eligibility records.",
     "Discord Watch Together allows 30 minutes alone.",
+    "Free includes 30 host minutes per UTC day.",
     "Choose Plus or Pro for larger rooms and hosting without a daily time limit.",
   ]) assert.deepEqual(violations(text), [], text);
 });
 
 test("shared Free20 copy distinguishes metering, media permission and personal history", () => {
-  assert.match(copy.PRICING_FREE20_SUMMARY, /20 minutes a day.*4 people, including you/);
+  assert.match(copy.PRICING_FREE20_SUMMARY, /30 minutes a day.*4 people, including you/);
   for (const requirement of [/you and at least one guest/, /paused/, /alone uses no time/, /one allowance across your rooms and devices/, /00:00 UTC/, /don’t carry over/, /Joining someone else’s room doesn’t use your minutes/]) assert.match(copy.PRICING_FREE20_METERING_NOTE, requirement);
   assert.match(copy.PRICING_FREE20_MEDIA_NOTE, /four people.*camera and microphone/);
   assert.match(copy.PRICING_FREE20_MEDIA_NOTE, /host manages access.*each person chooses/);

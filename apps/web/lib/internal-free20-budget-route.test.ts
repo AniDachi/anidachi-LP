@@ -108,6 +108,8 @@ beforeEach(() => {
 				},
 			});
 		}
+		if (path.endsWith("/hosting_commercial_policy"))
+			return Response.json({ free_daily_host_seconds: 1800 });
 		if (path.endsWith("/usage_daily"))
 			return Response.json({ host_seconds: used });
 		if (path.endsWith("renew_room_media_lease_v3")) {

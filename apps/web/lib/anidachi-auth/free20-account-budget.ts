@@ -1,6 +1,7 @@
+import { DailyFreeBudgetSecondsSchema, type DailyFreeBudgetSeconds } from "@anidachi/protocol";
 import { nextUtcMidnight, utcDayOf } from "../room-quota";
 import { resolveAccountEntitlements } from "./account-entitlements";
-import { getUsageSecondsForDay, resolveWatchHistoryAccess } from "./db";
+import { db, getUsageSecondsForDay, resolveWatchHistoryAccess } from "./db";
 
 type BudgetContext = {
 	ownerUserId: string;
@@ -21,7 +22,7 @@ export type Free20AccountBudget = BudgetContext &
 	(
 		| {
 				kind: "daily_free";
-				budgetSeconds: 1200;
+				budgetSeconds: DailyFreeBudgetSeconds;
 				/** Raw ledger total, including any liveness overshoot beyond the budget. */
 				committedSeconds: number;
 				remainingAfterCommittedSeconds: number;
@@ -29,7 +30,15 @@ export type Free20AccountBudget = BudgetContext &
 		| { kind: "unlimited"; planCode: "plus" | "pro" }
 	);
 
+export async function readDailyFreeBudgetSeconds(): Promise<DailyFreeBudgetSeconds> {
+	const { data, error } = await db().from("hosting_commercial_policy")
+		.select("free_daily_host_seconds").eq("singleton", true).abortSignal(AbortSignal.timeout(2000)).single();
+	if (error) throw new Error("Daily hosting allowance unavailable");
+	return DailyFreeBudgetSecondsSchema.parse(data?.free_daily_host_seconds);
+}
+
 type Dependencies = {
+	readBudgetSeconds: typeof readDailyFreeBudgetSeconds;
 	resolveAuthority: typeof resolveWatchHistoryAccess;
 	readUsage: typeof getUsageSecondsForDay;
 };
@@ -46,6 +55,7 @@ export async function readFree20AccountBudget(
 	deps: Dependencies = {
 		resolveAuthority: resolveWatchHistoryAccess,
 		readUsage: getUsageSecondsForDay,
+		readBudgetSeconds: readDailyFreeBudgetSeconds,
 	},
 ): Promise<Free20AccountBudget> {
 	const access = await resolveAccountEntitlements(
@@ -77,15 +87,18 @@ export async function readFree20AccountBudget(
 	if (access.policy.planCode !== "free")
 		return { ...context, kind: "unlimited", planCode: access.policy.planCode };
 
-	const committedSeconds = await deps.readUsage(userId, context.utcDay);
+	const [committedSeconds, budgetSeconds] = await Promise.all([
+		deps.readUsage(userId, context.utcDay),
+		deps.readBudgetSeconds(),
+	]);
 	if (!Number.isSafeInteger(committedSeconds) || committedSeconds < 0) {
 		throw new Error("Invalid committed Free20 usage");
 	}
 	return {
 		...context,
 		kind: "daily_free",
-		budgetSeconds: 1200,
+		budgetSeconds,
 		committedSeconds,
-		remainingAfterCommittedSeconds: Math.max(0, 1200 - committedSeconds),
+		remainingAfterCommittedSeconds: Math.max(0, budgetSeconds - committedSeconds),
 	};
 }

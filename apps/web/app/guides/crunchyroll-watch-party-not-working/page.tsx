@@ -138,7 +138,7 @@ const messageRows = [
   {
     message: "This room needs a host with Plus or Pro",
     meaning: "In a legacy room, the person who created it no longer has the Plus or Pro access required by that room.",
-    fix: "For a legacy room, restore its required hosting access or create a new Free20 room. Free20 allows up to 4 people and 20 host minutes per UTC day; exhausted time resets at 00:00 UTC. If asked to update AniDachi, update before joining the new room.",
+    fix: "For a legacy room, restore its required hosting access or create a new Free20 room. Free20 allows up to 4 people and 30 host minutes per UTC day; exhausted time resets at 00:00 UTC. If asked to update AniDachi, update before joining the new room.",
   },
   {
     message: "Update AniDachi to join this room",
@@ -275,7 +275,7 @@ export default function CrunchyrollWatchPartyNotWorkingPage() {
             Add AniDachi to Chrome from the install page
           </InstallLink>
           , pin it from the puzzle-piece menu, and refresh any Crunchyroll tab
-          that was already open. Friends join free; Free hosts have 20 host minutes per UTC day for up to 4 people.
+          that was already open. Friends join free; Free hosts have 30 host minutes per UTC day for up to 4 people.
         </p>
 
         <h3 className="text-xl font-semibold text-foreground mt-8 mb-3">

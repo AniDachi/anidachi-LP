@@ -55,7 +55,7 @@ export default function GermanExtensionInstallPage() {
       />
       <HowToJsonLd
         name="So schaut ihr zusammen"
-        description="Veranstalte einen Live-Raum für Crunchyroll, YouTube oder Netflix mit Free (20 Minuten pro UTC-Tag für bis zu 4 Personen), Plus oder Pro. Freunde treten kostenlos bei."
+        description="Veranstalte einen Live-Raum für Crunchyroll, YouTube oder Netflix mit Free (30 Minuten pro UTC-Tag für bis zu 4 Personen), Plus oder Pro. Freunde treten kostenlos bei."
         steps={deExtensionUsingSteps.map(({ name, text }) => ({ name, text }))}
       />
       <main id="main-content" className="min-h-screen bg-ani-canvas">

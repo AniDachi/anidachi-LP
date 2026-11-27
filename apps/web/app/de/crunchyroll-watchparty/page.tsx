@@ -222,7 +222,7 @@ locale="de"
           href={DE_INSTALL_HUB_PATH}
           ctaLabel={CTA_LABEL}
           heading="Starte deine Crunchyroll Watchparty"
-          body="AniDachi installieren, Folge öffnen, Link schicken. 20 Minuten am Tag kostenlos, Freunde treten kostenlos bei."
+          body="AniDachi installieren, Folge öffnen, Link schicken. 30 Minuten am Tag kostenlos, Freunde treten kostenlos bei."
         />
 
         <h2 id="more" className="scroll-mt-24">

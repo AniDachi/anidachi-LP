@@ -76,7 +76,7 @@ const faq = [
   {
     question: "What is the best free watch party app?",
     answer:
-      "Kosmi is free and includes voice and video chat. Watch2Gether is free with no account. Teleparty is free on Netflix, YouTube, Disney+, Hulu, HBO Max and Prime Video with text chat. SyncUp is free for rooms of up to 5 with an hour of voice chat a day. On AniDachi, friends join free and a Free host gets 20 minutes a day.",
+      "Kosmi is free and includes voice and video chat. Watch2Gether is free with no account. Teleparty is free on Netflix, YouTube, Disney+, Hulu, HBO Max and Prime Video with text chat. SyncUp is free for rooms of up to 5 with an hour of voice chat a day. On AniDachi, friends join free and a Free host gets 30 minutes a day.",
   },
   {
     question: "Which watch party apps work on phones?",

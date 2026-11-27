@@ -529,7 +529,7 @@ export default function IsTelepartyFreePage() {
       <p className="mb-4 leading-relaxed text-ani-muted">
         AniDachi fits a narrower job: Crunchyroll, YouTube and Netflix nights in
         desktop Chrome where you want to talk. Rooms include voice and video
-        calls with push-to-talk, on-player chat and reactions. One host creates the room on Free (20 host minutes per UTC day for up to 4 people),
+        calls with push-to-talk, on-player chat and reactions. One host creates the room on Free (30 host minutes per UTC day for up to 4 people),
         Plus ({PRICING_PLUS_SHORT}), or Pro ({PRICING_PRO_SHORT}). Rooms hold {PRICING_ROOM_SIZE_RANGE}.
         Everyone still uses their own streaming account.
       </p>

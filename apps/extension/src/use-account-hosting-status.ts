@@ -1,4 +1,4 @@
-import { acceptAccountHostingStatus, type AccountHostingStatus } from "@anidachi/protocol";
+import { acceptAccountHostingStatus, type DailyFreeBudgetSeconds, type AccountHostingStatus } from "@anidachi/protocol";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { requestAccountHostingStatus } from "./account-hosting-status-client";
 import { requestHostingAccess } from "./hosting-access-client";
@@ -13,12 +13,13 @@ type State = {
   presentationPlanCode: AccountHostingStatus["planCode"] | null;
   roomEpoch: number; monotonic: number; wall: number; exhaustedUntil: number | null;
   exhaustionEvent: QuotaExhaustion | null;
-  periodClock: { serverTime: number; monotonic: number; resetAt: number } | null;
+  exhaustedBudgetSeconds: DailyFreeBudgetSeconds | null;
+  periodClock: { serverTime: number; monotonic: number; resetAt: number; budgetSeconds: DailyFreeBudgetSeconds } | null;
   busy: boolean; error: boolean;
   completedRead?: { roomEpoch: number; settlementRevision: number };
   statusSettlementRevision?: number;
 };
-const empty = (ownerUserId: string | null, sessionKey: string | null): State => ({ ownerUserId, sessionKey, mode: "unknown", status: null, presentationPlanCode: null, roomEpoch: -1, monotonic: 0, wall: 0, exhaustedUntil: null, exhaustionEvent: null, periodClock: null, busy: false, error: false });
+const empty = (ownerUserId: string | null, sessionKey: string | null): State => ({ ownerUserId, sessionKey, mode: "unknown", status: null, presentationPlanCode: null, roomEpoch: -1, monotonic: 0, wall: 0, exhaustedUntil: null, exhaustionEvent: null, exhaustedBudgetSeconds: null, periodClock: null, busy: false, error: false });
 const RECOVERY_DELAYS_MS = [500, 1_500] as const;
 
 /** On-demand display authority. One expiry/reset recovery is allowed per visible
@@ -64,6 +65,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
     const exhaustedUntil = exhaustion?.ownerUserId === ownerUserId && (exhaustion.sessionKey === undefined || exhaustion.sessionKey === sessionKey) ? Date.parse(exhaustion.resetAt ?? "") : NaN;
     if (Number.isFinite(exhaustedUntil) && current.exhaustionEvent !== exhaustion) {
       current.exhaustionEvent = exhaustion;
+      current.exhaustedBudgetSeconds = current.status?.access.kind === "daily_free" && current.status.period.resetAt === exhaustedUntil ? current.status.access.budgetSeconds : null;
       current.exhaustedUntil = exhaustedUntil;
       if (exhaustion?.free20 && !guestRoom) current.mode = "free20";
     }
@@ -118,11 +120,14 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
         if (status.serverTime + Math.max(0, performance.now() - monotonic) >= status.validUntil) throw new Error("Expired status");
         const access = status.access;
         let exhaustedUntil = current.exhaustedUntil;
-        if (access.kind === "confirmed_unlimited" || (exhaustedUntil !== null && status.serverTime >= exhaustedUntil)) exhaustedUntil = null;
+        const allowanceIncreased = access.kind === "daily_free" && access.remainingSeconds > 0 &&
+          exhaustedUntil === status.period.resetAt && current.exhaustedBudgetSeconds !== null && access.budgetSeconds > current.exhaustedBudgetSeconds;
+        if (access.kind === "confirmed_unlimited" || allowanceIncreased || (exhaustedUntil !== null && status.serverTime >= exhaustedUntil)) exhaustedUntil = null;
         if (access.kind === "daily_free" && access.remainingSeconds === 0) exhaustedUntil = status.period.resetAt;
         show({ mode: "free20", status, roomEpoch: roomScope.epoch, monotonic, wall: wall - (now - monotonic), exhaustedUntil,
+          exhaustedBudgetSeconds: exhaustedUntil === null ? null : access.kind === "daily_free" && access.remainingSeconds === 0 ? access.budgetSeconds : current.exhaustedBudgetSeconds,
           presentationPlanCode: status.planCode,
-          periodClock: access.kind === "daily_free" ? { serverTime: status.serverTime, monotonic, resetAt: status.period.resetAt } : null,
+          periodClock: access.kind === "daily_free" ? { serverTime: status.serverTime, monotonic, resetAt: status.period.resetAt, budgetSeconds: access.budgetSeconds } : null,
           busy: false, error: false, statusSettlementRevision: settlementRevision,
           completedRead: { roomEpoch: roomScope.epoch, settlementRevision } });
       } catch {
@@ -225,7 +230,7 @@ export function useAccountHostingStatus({ ownerUserId, sessionKey, credentialKey
     Math.abs(Date.now() - scoped.wall - elapsed) < 2_000 ? scoped.periodClock : null;
   const serverTime = periodClock ? periodClock.serverTime + Math.max(0, performance.now() - periodClock.monotonic) : null;
   const renewal = periodClock && serverTime !== null && serverTime < periodClock.resetAt &&
-    periodClock.resetAt === scoped.exhaustedUntil ? {serverTime,resetAt:periodClock.resetAt} : null;
+    periodClock.resetAt === scoped.exhaustedUntil ? {serverTime,resetAt:periodClock.resetAt,budgetSeconds:periodClock.budgetSeconds} : null;
   return {
     mode: scoped.mode, status, planCode: observation?.planCode ?? null, busy: scoped.busy, error: scoped.error, exhausted,
     presentationPlanCode: scoped.presentationPlanCode,
