@@ -5,11 +5,14 @@ import * as metadata from "../../src/source-adapters/hbomax/metadata";
 import { afterEach, expect, it, vi } from "vitest";
 import { detectHboMaxAdapter, hbomaxDefinition } from "../../src/source-adapters/hbomax/definition";
 
+import { startHboClock } from "../../src/source-adapters/hbomax/native-clock";
+
+let stopClock: (() => void) | undefined;
 const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const nextId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const url = (id: string) => "https://www.hbomax.com/video/watch/" + id;
 const go = (href: string) => vi.stubGlobal("location", new URL(href));
-function fixture() {
+function fixture(prefix = 0, adDuration = 0) {
   go(url(id));
   document.body.innerHTML = '<video src="preview"></video><div data-testid="playerContainer"><video data-testid="VideoElement" src="blob:first"></video><div data-testid="overlay-root"><div data-testid="ad" style="visibility:hidden"></div><div data-testid="playback_controls"><div data-testid="control_footer"><div data-testid="player-ux-scrubber-position" aria-valuemax="3112"></div></div></div></div></div>';
   const video = document.querySelector<HTMLVideoElement>('[data-testid="VideoElement"]')!;
@@ -17,11 +20,26 @@ function fixture() {
   for (const element of [video, player]) {
     vi.spyOn(element, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 1280, 720));
   }
-  Object.defineProperty(video, "duration", { configurable: true, value: 3112 });
+  Object.defineProperty(video, "duration", { configurable: true, value: 3112 + prefix + adDuration });
   Object.defineProperty(video, "readyState", { configurable: true, value: 4 });
-  return { adapter: detectHboMaxAdapter(document)!, video, player };
+  const main = { type: "main", startMs: prefix * 1000, durationMs: 3112000 };
+  const timeline = {
+    _videoElement: video, _isInitialized: true,
+    getPlayheadData: (ms: number) => ({ contentPlayheadMs: Math.max(0, ms - adDuration * 1000) }),
+    getStreamPlayhead: (ms: number) => ms + adDuration * 1000,
+  };
+  const controls = {
+    _rootElement: player, _lastLoadedContentMetadata: { videoId: id, id: "edit" },
+    _playbackEngineAdapter: { _activeLoadContext: { contentId: "edit" },
+      _activeStreamInfo: { streamMode: "VOD", videoPeriods: [main] }, _timelineManager: timeline },
+  };
+  Reflect.set(player.querySelector('[data-testid="overlay-root"]')!, "__reactFiber$test",
+    { return: { memoizedProps: { playerCallbacks: { mediator: { _playerControls: controls } } } } });
+  stopClock = startHboClock(document);
+  return { controls, main, timeline, adapter: detectHboMaxAdapter(document)!, video, player };
 }
 afterEach(() => {
+  stopClock?.();
   document.body.replaceChildren();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -154,3 +172,41 @@ it.each(["https://www.hbomax.com:8443", "https://play.max.com:8443", "https://he
     expect(detectSourceAdapter(document)).toBeNull();
   },
 );
+
+it.each([[0, 0], [29.959, 0], [8.45, 13]])("maps episode time both ways with a %ss promo and %ss inserted ad", (prefix, ad) => {
+  const { video, adapter, main } = fixture(prefix, ad);
+  video.currentTime = 171 + prefix + ad;
+  expect(adapter.getState().hostTime).toBeCloseTo(171);
+  expect(adapter.getSourceDescriptor()?.duration).toBe(3112);
+  adapter.seek(81.5);
+  expect(video.currentTime).toBeCloseTo(81.5 + prefix + ad);
+  if (prefix > 0) {
+    video.currentTime = ad + 1;
+    expect(adapter.getPlaybackSnapshot().phase).toBe("interstitial");
+    adapter.seek(81.5);
+    expect(video.currentTime).toBe(ad + 1);
+    main.startMs = 0; // Same episode reloaded with a different playlist.
+    expect(adapter.getState().hostTime).toBeCloseTo(1);
+  }
+});
+
+it("can play through a guest promo while preserving its local playhead", async () => {
+  const { adapter, video } = fixture(15);
+  const play = vi.spyOn(video, "play").mockResolvedValue();
+  await adapter.resumeInterstitial(AbortSignal.abort());
+  expect(play).not.toHaveBeenCalled();
+  await adapter.resumeInterstitial(new AbortController().signal);
+  expect(play).toHaveBeenCalledOnce();
+  expect(video.currentTime).toBe(0);
+});
+
+it("waits for a matching loaded episode and a usable native timeline", () => {
+  const { controls, adapter, video, timeline } = fixture();
+  controls._lastLoadedContentMetadata.videoId = nextId;
+  expect(adapter.getPlaybackSnapshot().phase).toBe("transition");
+  adapter.seek(50);
+  expect(video.currentTime).toBe(0);
+  controls._lastLoadedContentMetadata.videoId = id;
+  timeline._isInitialized = false;
+  expect(adapter.getSourceDescriptor()).toBeUndefined();
+});

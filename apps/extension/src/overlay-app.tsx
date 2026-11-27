@@ -3679,11 +3679,11 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
     },
     href: () => location.href,
     playerFingerprint: () => adapterActiveRef.current && !browseMode.current ? activePlayer.current?.getFingerprint() ?? null : null,
-    apply: (state, source) => {
+    apply: (state, source, timing) => {
       if (source?.provider === "disneyplus") observeDisneyPlusRoomSource(document, source);
       if (source?.provider === "hbomax") observeHboMaxRoomSource(document, source);
       playbackSyncController.bindAdapter(activePlayer.current);
-      void playbackSyncController.handleHostState(state, source);
+      void playbackSyncController.handleHostState(state, source, timing);
     },
     playerSource: () => activePlayer.current?.getSourceDescriptor(true),
     continueEpisode: (source, record, signal) => continueGuestEpisode(document, source, record, signal),

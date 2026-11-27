@@ -70,7 +70,7 @@ export async function applyPersonalHistoryResume(
 		})() &&
 		input.adapter.provider === intent.provider;
 	const ready = () => {
-		const duration = intent.provider === "disneyplus"
+		const duration = (intent.provider === "disneyplus" || intent.provider === "hbomax")
 			? input.adapter.getSourceDescriptor()?.duration : input.adapter.video.duration;
 		return input.adapter.getPlaybackSnapshot().phase === "content" &&
 			input.adapter.video.readyState >= 1 && duration !== undefined && duration !== null &&

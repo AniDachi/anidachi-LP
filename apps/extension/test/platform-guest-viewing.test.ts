@@ -30,6 +30,8 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
   const state = { hostSurface: "player" as const, playing: false, playbackRate: 1, updatedAt: 3000,
     hostTime: 47, sourceUrl: host.sourceUrl, videoFingerprint: host.videoFingerprint };
 
+  const alignment = provider === "hbomax" ? [expect.objectContaining({ align: true })] : [];
+
   function setup() {
     let record: RoomSessionRecord = { version: 1, revision: 1, roomId: "room", ownerUserId: "guest",
       participantSessionId: "session", cameraEnabled: false, voiceMode: "push-to-talk" };
@@ -69,10 +71,10 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     const restored = mount();
     restored.receive(state, host);
     expect(restored.together()).toBe(true);
-    expect(ctx.apply).toHaveBeenLastCalledWith(state, host);
+    expect(ctx.apply).toHaveBeenLastCalledWith(state, host, ...alignment);
     const later = { ...state, hostTime: 82 };
     restored.receive(later, undefined, true);
-    expect(ctx.apply).toHaveBeenLastCalledWith(later, host);
+    expect(ctx.apply).toHaveBeenLastCalledWith(later, host, ...alignment);
     expect(ctx.navigate).toHaveBeenCalledTimes(1);
 
     play(personalUrl, personal.videoFingerprint);
@@ -108,7 +110,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     play(personalUrl, personal.videoFingerprint);
     machine.refresh();
     expect(machine.together()).toBe(true);
-    expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal));
+    expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal), ...alignment);
   });
 
   it("synchronizes in place when both players have advanced to the exact same episode", async () => {
@@ -119,7 +121,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     machine.receive(nextState, episode(personal));
     await Promise.resolve();
     expect(machine.together()).toBe(true);
-    expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal));
+    expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal), ...alignment);
     expect(ctx.continueEpisode).not.toHaveBeenCalled();
     expect(ctx.navigate).not.toHaveBeenCalled();
   });
