@@ -4363,6 +4363,10 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
 				onRestoredChat: reaction => {
 					if (isCurrentAttachment()) recordChatHistoryMessage(reaction);
 				},
+				onRestoredHostingTime: scope => {
+					if (isCurrentAttachment() && roomAuthSessionKeyRef.current === timeAuthSessionKey)
+						hostingTimeClock.restoreNegotiation(scope);
+				},
 				onStatus: setRoomStatus,
 				onHistoryAuthority: (authority) => {
 					void watchHistoryControllerRef.current

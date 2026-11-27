@@ -94,6 +94,23 @@ export function registerPrimeRoomOffscreen() {
 				state: owner.client.media.rebindState(),
 			});
 		if (snapshot) notify(owner, { kind: "event", event: snapshot });
+		const mode = owner.projection.hostingTimeMode;
+		if (snapshot && mode && snapshot.participants.some(participant =>
+			participant.role === "host" &&
+			participant.id === owner.identity.ownerUserId &&
+			participant.participantSessionId === owner.identity.participantSessionId &&
+			participant.connected !== false
+		)) {
+			const { roomId, roomGeneration } = snapshot;
+			if (mode === "live") {
+				notify(owner, {
+					kind: "hosting-time-resume",
+					scope: { ownerUserId: owner.identity.ownerUserId, roomId, roomGeneration },
+				});
+			} else {
+				notify(owner, { kind: "event", event: { type: "HOSTING_TIME_LEGACY", roomId, roomGeneration } });
+			}
+		}
 		if (owner.client.media?.snapshot)
 			notify(owner, { kind: "event", event: owner.client.media.snapshot });
 		notify(owner, {

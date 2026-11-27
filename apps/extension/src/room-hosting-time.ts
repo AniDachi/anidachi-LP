@@ -1,12 +1,14 @@
 import { acceptHostingTimeSnapshot, HostingTimeEventSchema, LegacyHostingTimeEventSchema, type HostingTimeBinding, type HostingTimeEvent, type HostingTimeSnapshot } from "@anidachi/protocol";
 
-type Scope = Omit<HostingTimeBinding, "utcDay">;
+export type RoomHostingTimeScope = Omit<HostingTimeBinding, "utcDay">;
+const RECOVERY_COOLDOWN_MS = 5_000;
 export type HostingTimeDisplay = { remainingSeconds: number | null; resetSeconds: number; snapshot: HostingTimeSnapshot };
 
 /** A display clock only. Binding is supplied by the authenticated ROOM_SNAPSHOT,
  * never by a HOSTING_TIME payload; ordering survives a transport interruption. */
 export class RoomHostingTime {
-  private scope: Scope | null = null;
+  private scope: RoomHostingTimeScope | null = null;
+  private restoreRequestsRemaining = 0;
   private ordered: HostingTimeSnapshot | null = null;
   private observation: { event: HostingTimeEvent; monotonic: number; ageAtReceipt: number } | null = null;
   private serverClock: { serverTime: number; monotonic: number } | null = null;
@@ -20,13 +22,27 @@ export class RoomHostingTime {
   observed = false;
   legacy = false;
 
-  bind(scope: Scope): void {
+  bind(scope: RoomHostingTimeScope): void {
     if (this.scope && (this.scope.ownerUserId !== scope.ownerUserId || this.scope.roomId !== scope.roomId || this.scope.roomGeneration !== scope.roomGeneration)) {
       this.ordered = null; this.observation = null; this.observed = false;
+      this.beginTransport();
       this.legacy = false;
     }
     this.scope = scope;
     this.transportBound = true;
+  }
+  /** The surviving socket confirms protocol support, never a cached balance. */
+  restoreNegotiation(scope: RoomHostingTimeScope): void {
+    if (!this.transportBound || !this.scope || this.legacy || this.observation ||
+      this.scope.ownerUserId !== scope.ownerUserId || this.scope.roomId !== scope.roomId ||
+      this.scope.roomGeneration !== scope.roomGeneration) return;
+    this.observed = true;
+    this.requireCorrelatedRecovery = true;
+    this.restoreRequestsRemaining = 2;
+  }
+  needsRestoreRequest(monotonic = performance.now()): boolean {
+    // A preceding document can have used the shared socket's recovery slot.
+    return this.restoreRequestsRemaining > 0 && monotonic - this.lastRequest >= RECOVERY_COOLDOWN_MS;
   }
   acceptLegacy(value: unknown): boolean {
     const parsed = LegacyHostingTimeEventSchema.safeParse(value);
@@ -60,7 +76,7 @@ export class RoomHostingTime {
         : event.serverTime + Math.max(0, monotonic - (this.transportStartedAt ?? monotonic));
     this.serverClock = { serverTime: serverNow, monotonic };
     this.observation = { event, monotonic, ageAtReceipt: Math.max(0, serverNow - event.serverTime) };
-    if (recovery) { this.pendingRecovery = null; this.requireCorrelatedRecovery = false; this.recoveryNeeded = false; }
+    if (recovery) { this.pendingRecovery = null; this.requireCorrelatedRecovery = false; this.recoveryNeeded = false; this.restoreRequestsRemaining = 0; }
     return true;
   }
   read(monotonic = performance.now()): HostingTimeDisplay | null {
@@ -97,11 +113,13 @@ export class RoomHostingTime {
     return this.observation !== null && this.observation.event.snapshot.access.kind !== "unknown" && this.read(monotonic) === null;
   }
   beginTransport(monotonic = performance.now()): void {
+    this.restoreRequestsRemaining = 0;
     this.invalidate(); this.transportBound = false; this.serverClock = null;
     this.transportStartedAt = monotonic; this.pendingRecovery = null; this.requireCorrelatedRecovery = false;
     this.recoveryNeeded = false; this.clockSample = { monotonic, wall: Date.now() };
   }
   clear(): void {
+    this.restoreRequestsRemaining = 0;
     this.scope = null; this.ordered = null; this.observation = null; this.observed = false;
     this.legacy = false;
     this.transportBound = false; this.lastRequest = Number.NEGATIVE_INFINITY;
@@ -109,7 +127,8 @@ export class RoomHostingTime {
     this.requireCorrelatedRecovery = false; this.recoveryNeeded = false; this.clockSample = null;
   }
   requestRecovery(monotonic = performance.now()): { type: "HOSTING_TIME_REQUEST"; roomId: string; requestId: string } | null {
-    if (!this.observed || !this.scope || !this.transportBound || monotonic - this.lastRequest < 5_000) return null;
+    if (!this.observed || !this.scope || !this.transportBound || monotonic - this.lastRequest < RECOVERY_COOLDOWN_MS) return null;
+    if (this.restoreRequestsRemaining > 0) this.restoreRequestsRemaining--;
     this.lastRequest = monotonic;
     this.pendingRecovery = { requestId: crypto.randomUUID(), monotonic };
     this.recoveryNeeded = false;

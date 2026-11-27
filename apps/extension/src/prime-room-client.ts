@@ -116,6 +116,7 @@ export class PrimeRoomClient extends RoomClient {
 		const {
 			onEvent,
 			onRestoredChat,
+			onRestoredHostingTime,
 			onHistoryAuthority,
 			onStatus,
 			onTransportReady,
@@ -185,6 +186,9 @@ export class PrimeRoomClient extends RoomClient {
 						break;
 					case "chat-history":
 						onRestoredChat?.(message.reaction);
+						break;
+					case "hosting-time-resume":
+						onRestoredHostingTime?.(message.scope);
 						break;
 					case "event":
 						this.observeParticipants(message.event);

@@ -18,6 +18,34 @@ describe("live hosting time lifecycle recovery", () => {
     send = vi.fn(); ready = true; host = document.createElement("div"); document.body.append(host); root = createRoot(host);
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.restoreAllMocks(); vi.useRealTimers(); });
+  it("restores a reattached host from a fresh server reply even when a rapid reload throttles the first request", async () => {
+    const scope = { ownerUserId: owner, roomId: "room", roomGeneration: 1 };
+    await render();
+    clock.restoreNegotiation({ ...scope, roomGeneration: 2 });
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(send).not.toHaveBeenCalled();
+    clock.restoreNegotiation(scope);
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toBe("unknown");
+    await act(async () => vi.advanceTimersByTimeAsync(6_000));
+    expect(send).toHaveBeenCalledTimes(2);
+    const first = send.mock.calls[0][0], second = send.mock.calls[1][0];
+    if (first.type !== "HOSTING_TIME_REQUEST" || second.type !== "HOSTING_TIME_REQUEST") throw new Error("Expected time requests");
+    expect(clock.accept({ ...event(2), requestId: first.requestId })).toBe(false);
+    expect(clock.accept({ ...event(3), requestId: second.requestId })).toBe(true);
+    await render();
+    expect(host.textContent).toBe("9");
+    await act(async () => vi.advanceTimersByTimeAsync(1_000));
+    expect(host.textContent).toBe("8");
+  });
+  it("bounds reattach requests when the server never responds", async () => {
+    await render();
+    clock.restoreNegotiation({ ownerUserId: owner, roomId: "room", roomGeneration: 1 });
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(host.textContent).toBe("unknown");
+  });
   it("does not request old servers or poll persistent unknown events every five seconds", async () => {
     await render(); await act(async () => vi.advanceTimersByTimeAsync(10_000)); expect(send).not.toHaveBeenCalled();
     clock.accept(event(1, true)); await render(); await act(async () => vi.advanceTimersByTimeAsync(30_000)); expect(send).not.toHaveBeenCalled();

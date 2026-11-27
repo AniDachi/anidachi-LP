@@ -1,4 +1,5 @@
 import type { Free20Request } from "./free20-abuse-client";
+import type { RoomHostingTimeScope } from "./room-hosting-time";
 import {
   ActiveRoomConflictResponseSchema,
   PrimeMarketplaceSchema,
@@ -258,6 +259,7 @@ export interface RoomClientOptions {
   reconnect?: boolean;
   onEvent: (event: ServerEvent) => void;
   onRestoredChat?: (reaction: Extract<ServerEvent, {type: "REACTION"}>["reaction"]) => void;
+  onRestoredHostingTime?: (scope: RoomHostingTimeScope) => void;
   onStatus: (status: RoomConnectionStatus) => void;
   onHistoryAuthority?: (authority: RoomHistoryAuthority | null) => void;
   onTerminalClose?: (code: number) => void;

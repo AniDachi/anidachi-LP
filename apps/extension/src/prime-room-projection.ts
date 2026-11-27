@@ -15,6 +15,7 @@ type Chat = Extract<ServerEvent, { type: "REACTION" }>;
 /** Fold only durable UI state. Never repeat transport signaling or playback commands. */
 export class PrimeRoomProjection {
 	snapshot: Snapshot | null = null;
+	hostingTimeMode: "live" | "legacy" | null = null;
 	readonly chat = new Map<string, Chat>();
 	baseline: BrowseBaseline | null = null;
 	private detachedAt: number | null = null;
@@ -151,7 +152,14 @@ export class PrimeRoomProjection {
 							event.serverSeq < snapshot.serverSeq))
 				)
 					return;
+				if (snapshot?.roomGeneration !== event.roomGeneration || snapshot.roomId !== event.roomId)
+					this.hostingTimeMode = null;
 				this.snapshot = event;
+				break;
+			case "HOSTING_TIME":
+			case "HOSTING_TIME_LEGACY":
+				if (snapshot?.roomId === event.roomId && snapshot.roomGeneration === event.roomGeneration)
+					this.hostingTimeMode ??= event.type === "HOSTING_TIME" ? "live" : "legacy";
 				break;
 			case "PARTICIPANT_JOINED":
 				if (snapshot)

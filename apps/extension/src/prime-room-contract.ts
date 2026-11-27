@@ -7,6 +7,7 @@ import type { RoomClientOptions, RoomConnectionStatus } from "./room-client";
 import type { RoomMediaRebindState } from "./room-media-session";
 import type { RoomSessionRecord } from "./room-session-storage";
 import type { SignalingTransportReady } from "./media-types";
+import type { RoomHostingTimeScope } from "./room-hosting-time";
 
 export const PRIME_ROOM_UI = "ANIDACHI_PRIME_ROOM_UI";
 export const PRIME_ROOM_INTERNAL = "ANIDACHI_PRIME_ROOM_INTERNAL";
@@ -55,6 +56,7 @@ export type PrimeRoomCommand =
 	| { kind: "baseline"; value: BrowseBaseline | null }
 	| { kind: "media"; value: unknown };
 export type PrimeRoomNotification =
+	| { kind: "hosting-time-resume"; scope: RoomHostingTimeScope }
 	| { kind: "status"; status: RoomConnectionStatus }
 	| {
 			kind: "chat-history";
