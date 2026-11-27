@@ -90,7 +90,11 @@ export class GuestViewing {
     }
     const sameSource = previous?.state.videoFingerprint === target.videoFingerprint;
     const descriptor = source?.videoFingerprint === target.videoFingerprint ? source : sameSource ? previous.source : undefined;
-    this.target = { url: target.sourceUrl, state, receivedAt: Date.now(), source: descriptor };
+    // A room snapshot may replay the last heartbeat. Its position still dates from the first receipt.
+    const sameSample = sameSource && previous.state.updatedAt === state.updatedAt &&
+      previous.state.hostTime === state.hostTime && previous.state.playing === state.playing &&
+      previous.state.playbackRate === state.playbackRate;
+    this.target = { url: target.sourceUrl, state, receivedAt: sameSample ? previous.receivedAt : Date.now(), source: descriptor };
     if (syncGuests) void this.join();
     else this.refresh();
   }
