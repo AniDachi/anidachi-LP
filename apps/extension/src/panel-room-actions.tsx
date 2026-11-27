@@ -335,7 +335,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 				title={quietCancel ? label : undefined}
 				data-cancel-ready={quietCancel}
 				aria-busy={actionBusy}
-				aria-describedby={visibleActive && timed ? descriptionId : undefined}
+				aria-describedby={active && timed ? descriptionId : undefined}
 				disabled={props.disabled || waitingForRoom || joining || props.closing}
 				data-show-action={showLabel}
 				data-suppress-start-hover={createPointer !== null}
@@ -381,7 +381,7 @@ export function PanelRoomActions(props: PanelRoomActionsProps) {
 					<PanelTimeCounter seconds={displaySeconds!} />
 				</div>
 			)}
-			{visibleActive && timed && (
+			{active && timed && (
 				<span id={descriptionId} className="sr-only" aria-live="off">
 					{displaySeconds} seconds of free time remaining today
 				</span>
