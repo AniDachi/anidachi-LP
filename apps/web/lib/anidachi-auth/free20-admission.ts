@@ -1,7 +1,8 @@
+import { DailyFreeBudgetSecondsSchema } from "@anidachi/protocol";
 import { nextUtcMidnight, type QuotaView } from "../room-quota";
 import { db, getRoomById, readFree20RoomUsage, resolveWatchHistoryAccess } from "./db";
 import { type Free20AbuseContext, Free20ContextError } from "./free20-abuse";
-import { readFree20AccountBudget } from "./free20-account-budget";
+import { readDailyFreeBudgetSeconds, readFree20AccountBudget } from "./free20-account-budget";
 
 export type Free20HostingAdmission = {
 	planCode: "free" | "plus" | "pro";
@@ -53,6 +54,7 @@ export async function readFree20HostingAdmission(
 			return null;
 		const { planCode, usedSeconds, remainingSeconds, serverTime, resetAt } =
 			data;
+		const budgetSeconds = DailyFreeBudgetSecondsSchema.parse(data.budgetSeconds === undefined ? 1200 : data.budgetSeconds);
 		if (
 			data.enabled !== true ||
 			data.ownerUserId !== ownerUserId ||
@@ -65,14 +67,14 @@ export async function readFree20HostingAdmission(
 			!Number.isFinite(Date.parse(resetAt)) ||
 			Date.parse(resetAt) !== nextUtcMidnight(new Date(serverTime)).getTime() ||
 			remainingSeconds !==
-				(planCode === "free" ? Math.max(0, 1200 - usedSeconds) : null) ||
-			data.canHost !== (planCode !== "free" || usedSeconds < 1200)
+				(planCode === "free" ? Math.max(0, budgetSeconds - usedSeconds) : null) ||
+			data.canHost !== (planCode !== "free" || usedSeconds < budgetSeconds)
 		)
 			throw new Error("Invalid authority");
 		return {
 			planCode,
 			quota: {
-				limitSeconds: planCode === "free" ? 1200 : Number.POSITIVE_INFINITY,
+				limitSeconds: planCode === "free" ? budgetSeconds : Number.POSITIVE_INFINITY,
 				usedSeconds,
 				remainingSeconds: remainingSeconds ?? Number.POSITIVE_INFINITY,
 				resetAt: new Date(resetAt).toISOString(),
@@ -104,6 +106,7 @@ export async function readFree20BoundRoomAdmission(
 			new Date(),
 			{
 				resolveAuthority: resolveWatchHistoryAccess,
+				readBudgetSeconds: readDailyFreeBudgetSeconds,
 				readUsage: (_owner, day) => readFree20RoomUsage(roomId, day),
 			},
 		);
@@ -119,7 +122,7 @@ export async function readFree20BoundRoomAdmission(
 		return {
 			planCode: free ? "free" : budget.planCode,
 			quota: {
-				limitSeconds: free ? 1200 : Infinity,
+				limitSeconds: free ? budget.budgetSeconds : Infinity,
 				usedSeconds: free ? budget.committedSeconds : 0,
 				remainingSeconds: free
 					? budget.remainingAfterCommittedSeconds

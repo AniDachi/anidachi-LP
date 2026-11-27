@@ -1,4 +1,4 @@
-import { ACCOUNT_HOSTING_OWNER_HEADER, Free20WarningRequestSchema, Free20WarningResponseSchema, type Free20WarningResponse } from "@anidachi/protocol";
+import { ACCOUNT_HOSTING_OWNER_HEADER, DailyFreeBudgetSecondsSchema, Free20WarningRequestSchema, Free20WarningResponseSchema, type Free20WarningResponse } from "@anidachi/protocol";
 import { z } from "zod";
 import { getBackgroundAuthSession, isSameExtensionAuthSession, type ExtensionAuthTokens } from "./auth-tokens";
 import { refreshExtensionSession } from "./auth-client";
@@ -12,15 +12,17 @@ export function isFree20WarningLoginKey(ownerUserId: string, loginKey: string): 
   try { const key: unknown = JSON.parse(loginKey); return Array.isArray(key) && key.length === 3 && key[0] === ownerUserId && key[1] === "login" && id.safeParse(key[2]).success; } catch { return false; }
 }
 const MessageSchema = z.discriminatedUnion("command", [
-  z.strictObject({ ...common, command: z.literal("claim"), credentialRevision: id, reason: z.enum(["initial", "retry", "crossing"]), snapshotSequence: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER), request: Free20WarningRequestSchema }),
+  z.strictObject({ ...common, command: z.literal("claim"), budgetSeconds: DailyFreeBudgetSecondsSchema.optional(), credentialRevision: id, reason: z.enum(["initial", "retry", "crossing"]), snapshotSequence: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER), request: Free20WarningRequestSchema }),
+  z.strictObject({ ...common, command: z.literal("final-minute"), credentialRevision: id, roomId: Free20WarningRequestSchema.shape.roomId }),
   z.strictObject({ ...common, command: z.literal("cancel") }),
 ]).refine(value => isFree20WarningLoginKey(value.ownerUserId, value.loginKey));
 export type Free20WarningMessage = z.infer<typeof MessageSchema>;
+type FinalMinute = Extract<Free20WarningMessage, { command: "final-minute" }>;
 type Claim = Extract<Free20WarningMessage, { command: "claim" }>;
 export type Free20WarningResult = { kind: "server"; response: Free20WarningResponse } | { kind: "suppressed" } | { kind: "failed"; retryable: boolean };
 export function isFree20WarningMessage(value: unknown): value is Free20WarningMessage { return MessageSchema.safeParse(value).success; }
 
-const EntrySchema = z.strictObject({ ownerUserId: z.uuid(), loginId: id, utcDay: Free20WarningRequestSchema.shape.utcDay, attempts: z.number().int().min(1).max(2), lastAttempt: z.number().finite(), sequence: z.number().int().nonnegative(), next: z.enum(["retry", "crossing", "done"]),
+const EntrySchema = z.strictObject({ budgetSeconds: DailyFreeBudgetSecondsSchema.optional(), ownerUserId: z.uuid(), loginId: id, utcDay: Free20WarningRequestSchema.shape.utcDay, attempts: z.number().int().min(1).max(2), lastAttempt: z.number().finite(), sequence: z.number().int().nonnegative(), next: z.enum(["retry", "crossing", "done"]),
   // Optional only to retain attempt counts from the preceding client build.
   roomId: Free20WarningRequestSchema.shape.roomId.optional(), roomGeneration: Free20WarningRequestSchema.shape.roomGeneration.optional(),
 });
@@ -30,6 +32,8 @@ type Dependencies = {
   refresh(expected: ExtensionAuthTokens): Promise<ExtensionAuthTokens | null>;
   fetch: typeof fetch;
   now(): number;
+  readFinalRooms(owner: string): Promise<unknown>;
+  writeFinalRooms(owner: string, rooms: string[]): Promise<void>;
   read(): Promise<unknown>;
   write(entries: Entry[]): Promise<void>;
 };
@@ -46,12 +50,27 @@ export function createFree20WarningClient(dependencies: Dependencies) {
     const value = await dependencies.read();
     return (Array.isArray(value) ? value : []).flatMap(item => { const parsed = EntrySchema.safeParse(item); return parsed.success ? [parsed.data] : []; }).slice(-32);
   };
-  return async (message: Free20WarningMessage): Promise<Free20WarningResult> => {
+  return async (message: Free20WarningMessage): Promise<Free20WarningResult | { kind: "final-minute"; show: boolean }> => {
     const failed = (retryable = false): Free20WarningResult => ({ kind: "failed", retryable });
     if (message.command === "cancel") {
       const pending = active.get(message.requestId);
       if (pending?.message.ownerUserId === message.ownerUserId && pending.message.loginKey === message.loginKey) pending.controller.abort();
       return { kind: "suppressed" };
+    }
+    if (message.command === "final-minute") {
+      try {
+        return await serialize(async () => {
+          const session = await dependencies.getSession();
+          if (!session?.authSessionId || session.user.id !== message.ownerUserId || session.authRevision !== message.credentialRevision ||
+            message.loginKey !== JSON.stringify([session.user.id, "login", session.authSessionId])) return failed();
+          const stored = await dependencies.readFinalRooms(message.ownerUserId);
+          const rooms = Array.isArray(stored) ? stored.filter((room): room is string => typeof room === "string") : [];
+          if (rooms.includes(message.roomId)) return { kind: "final-minute", show: false } as const;
+          // One active hosted room per account. Keep recent rooms across reloads and late messages.
+          await dependencies.writeFinalRooms(message.ownerUserId, [...rooms.slice(-31), message.roomId]);
+          return { kind: "final-minute", show: true } as const;
+        });
+      } catch { return failed(true); }
     }
     const controller = new AbortController();
     active.set(message.requestId, { message, controller });
@@ -61,7 +80,7 @@ export function createFree20WarningClient(dependencies: Dependencies) {
       const loginId = session?.authSessionId;
       if (!session || !loginId || controller.signal.aborted || session.user.id !== message.ownerUserId || session.authRevision !== message.credentialRevision || message.loginKey !== JSON.stringify([session.user.id, "login", loginId])) return failed();
       const initial = session;
-      const key = (entry: Entry) => entry.ownerUserId === message.ownerUserId && entry.loginId === loginId && entry.utcDay === message.request.utcDay;
+      const key = (entry: Entry) => entry.ownerUserId === message.ownerUserId && entry.loginId === loginId && entry.utcDay === message.request.utcDay && (entry.budgetSeconds ?? 1200) === (message.budgetSeconds ?? 1200);
       const reserved = await serialize(async () => {
         const all = await entries();
         // An old document/completion cannot prune the new day's reservations.
@@ -71,10 +90,10 @@ export function createFree20WarningClient(dependencies: Dependencies) {
         const sameStream = previous?.roomId === message.request.roomId && previous.roomGeneration === message.request.roomGeneration;
         const now = dependencies.now();
         if (previous && (previous.attempts >= 2 || now - previous.lastAttempt < 5_000 ||
-          [...active.values()].some(item => item.message.requestId !== message.requestId && item.message.ownerUserId === message.ownerUserId && item.message.loginKey === message.loginKey && item.message.request.utcDay === message.request.utcDay) ||
+          [...active.values()].some(item => item.message.requestId !== message.requestId && item.message.ownerUserId === message.ownerUserId && item.message.loginKey === message.loginKey && item.message.request.utcDay === message.request.utcDay && (item.message.budgetSeconds ?? 1200) === (message.budgetSeconds ?? 1200)) ||
           !(previous.next === "retry" && message.reason === "retry" || previous.next === "crossing" && message.reason === "crossing" && (!sameStream || message.snapshotSequence > previous.sequence)))) return false;
         if (!previous && message.reason !== "initial") return false;
-        const entry: Entry = { ownerUserId: message.ownerUserId, loginId, utcDay: message.request.utcDay, attempts: (previous?.attempts ?? 0) + 1, lastAttempt: now, sequence: message.snapshotSequence, next: "retry", roomId: message.request.roomId, roomGeneration: message.request.roomGeneration };
+        const entry: Entry = { budgetSeconds: message.budgetSeconds ?? 1200, ownerUserId: message.ownerUserId, loginId, utcDay: message.request.utcDay, attempts: (previous?.attempts ?? 0) + 1, lastAttempt: now, sequence: message.snapshotSequence, next: "retry", roomId: message.request.roomId, roomGeneration: message.request.roomGeneration };
         await dependencies.write([...stored.filter(item => !key(item)), entry].slice(-32));
         return true;
       });
@@ -127,10 +146,19 @@ export function createFree20WarningClient(dependencies: Dependencies) {
 
 const backgroundClient = createFree20WarningClient({
   getSession: getBackgroundAuthSession, refresh: expected => refreshExtensionSession(undefined, expected), fetch: (...args) => fetch(...args), now: () => Date.now(),
+  readFinalRooms: async owner => (await chrome.storage.local.get(`finalHostingMinute:${owner}`))[`finalHostingMinute:${owner}`],
+  writeFinalRooms: (owner, rooms) => chrome.storage.local.set({ [`finalHostingMinute:${owner}`]: rooms }),
   read: async () => (await chrome.storage.session.get(STORAGE_KEY))[STORAGE_KEY],
   write: async entries => { await chrome.storage.session.set({ [STORAGE_KEY]: entries }); },
 });
 export const handleFree20WarningMessage = backgroundClient;
+
+export async function claimFinalHostingMinute(input: Pick<FinalMinute, "ownerUserId" | "loginKey" | "credentialRevision" | "roomId">): Promise<boolean> {
+  const message: FinalMinute = { ...input, type: TYPE, command: "final-minute", requestId: crypto.randomUUID() };
+  const result = await chrome.runtime.sendMessage(message);
+  if (result?.kind !== "final-minute" || typeof result.show !== "boolean") throw new Error("Final minute status unavailable");
+  return result.show;
+}
 
 export async function requestFree20Warning(input: Omit<Claim, "type" | "command" | "requestId">, signal: AbortSignal): Promise<Free20WarningResult> {
   if (signal.aborted) return { kind: "failed", retryable: false };

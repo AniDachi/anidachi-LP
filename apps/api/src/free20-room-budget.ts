@@ -44,7 +44,7 @@ export function validateFree20RoomBudget(budget: Free20RoomBudget) {
 	if (
 		!Number.isSafeInteger(budget.allowedSeconds) ||
 		budget.allowedSeconds < 0 ||
-		budget.allowedSeconds > 1200 ||
+		budget.allowedSeconds > budget.checkpoint.budgetSeconds ||
 		!Number.isSafeInteger(budget.acknowledgedSeconds) ||
 		budget.acknowledgedSeconds < 0 ||
 		budget.acknowledgedSeconds > 86_400 ||
@@ -52,7 +52,7 @@ export function validateFree20RoomBudget(budget: Free20RoomBudget) {
 		budget.allowedSeconds >
 			Math.max(
 				0,
-				1200 - budget.checkpoint.committedSeconds + budget.acknowledgedSeconds,
+				budget.checkpoint.budgetSeconds - budget.checkpoint.committedSeconds + budget.acknowledgedSeconds,
 			)
 	) {
 		throw new Error("Invalid Free20 room allowance");
@@ -147,20 +147,23 @@ export function reconcileFree20RoomBudget(
 		throw new Error("Inconsistent Free20 account usage");
 	}
 	// committedSeconds is the effective max across the account and bound markers.
- // Add back only this room's ACK: its durable meter already contains that time.
- const allowed = Math.max(
+	// Add back only this room's ACK: its durable meter already contains that time.
+	const allowed = Math.max(
 		0,
-		1200 - checkpoint.committedSeconds + next.acknowledgedSeconds,
+		checkpoint.budgetSeconds - checkpoint.committedSeconds + next.acknowledgedSeconds,
 	);
+	const sameDay = previous?.checkpoint.utcDay === checkpoint.utcDay;
+	// Preserve conservative scope floors. Apply only the change in policy,
+	// so replaying a checkpoint cannot return another ten minutes.
+	const previousLimit = sameDay && previous
+		? Math.max(0, previous.allowedSeconds + (checkpoint.budgetSeconds - previous.checkpoint.budgetSeconds))
+		: allowed;
 	return {
 		meter: next,
 		budget: {
 			checkpoint,
 			acknowledgedSeconds: next.acknowledgedSeconds,
-			allowedSeconds:
-				previous?.checkpoint.utcDay === checkpoint.utcDay
-					? Math.min(previous.allowedSeconds, allowed)
-					: allowed,
+			allowedSeconds: Math.min(previousLimit, allowed),
 		},
 	};
 }
@@ -189,8 +192,8 @@ export function readFree20RoomTime(
 	);
 	return {
 		kind: "daily_free" as const,
-		budgetSeconds: 1200 as const,
-		usedSeconds: 1200 - remainingSeconds,
+		budgetSeconds: budget.checkpoint.budgetSeconds,
+		usedSeconds: budget.checkpoint.budgetSeconds - remainingSeconds,
 		remainingSeconds,
 		metering: meter.activeSince !== null,
 	};

@@ -42,7 +42,7 @@ const TIERS: {
     audience: "Jeden Tag ein bisschen Zeit zusammen.",
     featureHeading: "In Free enthalten",
     features: [
-      "Jeden Tag 20 Minuten kostenlos",
+      "Jeden Tag 30 Minuten kostenlos",
       `Bis zu ${free.maxParticipants} Personen, dich eingeschlossen`,
       `Bis zu ${free.maxCameras} Kameras und ${free.maxMicrophones} Mikrofone`,
       "Crunchyroll, YouTube, Netflix",
@@ -91,7 +91,7 @@ function matrixRows(period: BillingPeriod) {
   return [
     { feature: "Preis", values: { free: "Kostenlos", plus: priceText("plus"), pro: priceText("pro") } },
     { feature: "Dienste", values: { free: "Crunchyroll, YouTube, Netflix", plus: "Crunchyroll, YouTube, Netflix", pro: "Crunchyroll, YouTube, Netflix" } },
-    { feature: "Eigenen Raum veranstalten", values: { free: "20 Min. pro Tag", plus: "Kein Tageslimit", pro: "Kein Tageslimit" } },
+    { feature: "Eigenen Raum veranstalten", values: { free: "30 Min. pro Tag", plus: "Kein Tageslimit", pro: "Kein Tageslimit" } },
     { feature: "Personen im Raum (inkl. Gastgeber)", values: { free: `Bis zu ${free.maxParticipants}`, plus: `Bis zu ${plus.maxParticipants}`, pro: `Bis zu ${pro.maxParticipants}` } },
     { feature: "Kameras gleichzeitig", values: { free: `Bis zu ${free.maxCameras}`, plus: `Bis zu ${plus.maxCameras}`, pro: `Bis zu ${pro.maxCameras}` } },
     { feature: "Mikrofone gleichzeitig", values: { free: `Bis zu ${free.maxMicrophones}`, plus: `Bis zu ${plus.maxMicrophones}`, pro: `Bis zu ${pro.maxMicrophones}` } },
@@ -145,7 +145,7 @@ export function PricingSectionDe({
         <HomeSectionHeader
           titleAs={headingLevel === 1 ? "h1" : "h2"}
           title="Zusammen schauen. Wähle deinen Plan."
-          description="20 Minuten jeden Tag kostenlos. Kein tägliches Zeitlimit mit Plus oder Pro."
+          description="30 Minuten jeden Tag kostenlos. Kein tägliches Zeitlimit mit Plus oder Pro."
         />
         <div className="pricing-plans__period" role="group" aria-label="Abrechnungszeitraum">
           {(["monthly", "yearly"] as const).map((value) => (

@@ -163,7 +163,7 @@ export default function WatchCrunchyrollTogetherPage() {
 				heroLead="Crunchyroll has no watch party button. AniDachi adds one."
 				heroCtaLabel="Start a Crunchyroll Watch Party"
 				heroWorksOn={["Crunchyroll", "YouTube", "Netflix"]}
-				heroFinePrint="20 free minutes a day. Friends join free."
+				heroFinePrint="30 free minutes a day. Friends join free."
 				answer={
 					<>
 							<strong>
@@ -376,7 +376,7 @@ export default function WatchCrunchyrollTogetherPage() {
 					pagePath={PAGE_PATH}
 					ctaLabel="Start a Crunchyroll Watch Party"
 					heading="Start your Crunchyroll watch party"
-					body="Install AniDachi, open an episode and send the invite. 20 free minutes a day, and friends join free."
+					body="Install AniDachi, open an episode and send the invite. 30 free minutes a day, and friends join free."
 				/>
 
 				<h2 id="group-watch" className="scroll-mt-24">

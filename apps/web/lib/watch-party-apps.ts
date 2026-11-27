@@ -57,7 +57,7 @@ export const WATCH_PARTY_APPS: Record<WatchPartyAppId, WatchPartyApp> = {
     calls: "Voice and video, on the player",
     price: PRICING_FREE_TIER_TABLE,
     summary:
-      "Our Chrome extension syncs each person's own Netflix, YouTube or Crunchyroll player, with chat, reactions and voice and video calls on the video, so nobody needs Discord open beside it. Friends join free. A Free host gets 20 minutes a day for up to 4 people; Plus and Pro remove the daily limit. The limits: desktop Chrome only, and three services today.",
+      "Our Chrome extension syncs each person's own Netflix, YouTube or Crunchyroll player, with chat, reactions and voice and video calls on the video, so nobody needs Discord open beside it. Friends join free. A Free host gets 30 minutes a day for up to 4 people; Plus and Pro remove the daily limit. The limits: desktop Chrome only, and three services today.",
     sources: [],
   },
   teleparty: {

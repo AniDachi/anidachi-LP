@@ -1016,14 +1016,14 @@ test("explicit Free20 offer paints daily hosting while retired trials stay absen
 		});
 	const el = await mount({ showPlanMatrix: true });
 	const free = el.querySelector('[aria-labelledby="pricing-free-title"]')!;
-	assert.match(free.textContent!, /20 free minutes every day/);
+	assert.match(free.textContent!, /30 free minutes every day/);
 	assert.match(free.textContent!, /4 cameras & 4 mics/);
 	assert.doesNotMatch(
 		free.textContent!,
 		/Creating rooms.*require Plus|30 min|trial host/,
 	);
 	assert.doesNotMatch(el.textContent!, /3.day free trial|Try 3 days free/);
-	assert.match(el.textContent!, /20 min\/day/);
+	assert.match(el.textContent!, /30 min\/day/);
 });
 
 test("Free20 catalog survives offer expiry but an expired checkout still needs verification", async (t) => {
@@ -1123,9 +1123,9 @@ test("a confirmed hosting-policy change replaces the Free20 catalog", async () =
 		});
 	const el = await mount();
 	const free = el.querySelector('[aria-labelledby="pricing-free-title"]')!;
-	assert.match(free.textContent!, /20/);
+	assert.match(free.textContent!, /30/);
 	free20 = false;
 	await act(async () => window.dispatchEvent(new Event("focus")));
-	assert.doesNotMatch(free.textContent!, /20/);
+	assert.doesNotMatch(free.textContent!, /30/);
 	assert.match(free.textContent!, /Join friends/);
 });

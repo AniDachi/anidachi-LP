@@ -22,7 +22,7 @@ export const ASYNC_COMING_SOON =
 
 /** Public Free20 offer; the deployed legacy runtime policy remains separate. */
 export const PRICING_FREE20_SUMMARY =
-  "Free includes 20 minutes a day for rooms of up to 4 people, including you. Plus and Pro have no daily time limit.";
+  "Free includes 30 minutes a day for rooms of up to 4 people, including you. Plus and Pro have no daily time limit.";
 
 export const PRICING_FREE20_METERING_NOTE =
   "Your minutes count while you and at least one guest are in your room, even when the video is paused. Waiting alone uses no time. You share one allowance across your rooms and devices. It resets at 00:00 UTC every day; unused minutes don’t carry over. Joining someone else’s room doesn’t use your minutes.";
@@ -93,9 +93,9 @@ export const PRICING_YT_PRICING_SNIPPET =
 export const PRICING_CR_PRICING_SNIPPET =
   PRICING_YT_PRICING_SNIPPET;
 
-export const PRICING_FREE_TIER_TABLE = "Free: 20 minutes a day, up to 4 people; Plus / Pro: no daily time limit";
+export const PRICING_FREE_TIER_TABLE = "Free: 30 minutes a day, up to 4 people; Plus / Pro: no daily time limit";
 export const PRICING_HOST_PRICING_TABLE = PRICING_FREE_TIER_TABLE;
-export const PRICING_PRICE_TABLE = `Free: 20 minutes a day for up to 4 people; Plus ${PRICING_PLUS_SHORT} or Pro ${PRICING_PRO_SHORT}. Yearly options available`;
+export const PRICING_PRICE_TABLE = `Free: 30 minutes a day for up to 4 people; Plus ${PRICING_PLUS_SHORT} or Pro ${PRICING_PRO_SHORT}. Yearly options available`;
 /** Compare-table Pricing cell — Free + Plus + Pro. */
 export const PRICING_PLUS_PRICE_LINE = PRICING_PRICE_TABLE;
 export const PRICING_AMAZON_SUBSCRIPTION_ROW = PRICING_PRICE_TABLE;

@@ -175,7 +175,7 @@ locale="de"
           { feature: "Zeitversetzt nachholen", values: { anidachi: "Bald verfügbar", w2g: "no" } },
           {
             feature: "Kostenlose Stufe",
-            values: { anidachi: "20 Minuten am Tag, bis zu 4 Personen; Freunde treten kostenlos bei", w2g: "Ja (Räume); PLUS und PRO ohne Werbebanner" },
+            values: { anidachi: "30 Minuten am Tag, bis zu 4 Personen; Freunde treten kostenlos bei", w2g: "Ja (Räume); PLUS und PRO ohne Werbebanner" },
           },
         ]}
       />

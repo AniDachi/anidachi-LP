@@ -112,7 +112,7 @@ const faq = [
   {
     question: "Does everyone need Netflix to watch together on Discord?",
     answer:
-      "Yes, for a synced watch party. Each person needs their own Netflix access to the same title in their region. With AniDachi, Free includes 20 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends join the room free.",
+      "Yes, for a synced watch party. Each person needs their own Netflix access to the same title in their region. With AniDachi, Free includes 30 host minutes per UTC day for up to 4 people; Plus and Pro have no daily hosting time limit; friends join the room free.",
   },
   {
     question: "How do you watch movies on Discord with friends?",
@@ -326,7 +326,7 @@ export default function HowToScreenShareNetflixOnDiscordPage() {
               feature: "Cost",
               values: {
                 share: "Free; Nitro for higher quality",
-                anidachi: `Friends join free; Free host: 20 minutes per UTC day, up to 4 people; Plus ${PRICING_PLUS_SHORT}, Pro ${PRICING_PRO_SHORT}`,
+                anidachi: `Friends join free; Free host: 30 minutes per UTC day, up to 4 people; Plus ${PRICING_PLUS_SHORT}, Pro ${PRICING_PRO_SHORT}`,
               },
             },
             {

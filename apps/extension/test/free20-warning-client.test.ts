@@ -20,14 +20,30 @@ const body = (decision: "show" | "not_eligible" | "already_claimed" = "show") =>
 function setup() {
   let session: ExtensionAuthTokens | null = structuredClone(initial);
   let stored: unknown;
+  const finalRooms = new Map<string, string[]>();
   let now = at;
   const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify(body())));
   const refresh = vi.fn(async (_expected: ExtensionAuthTokens) => session);
-  const dependencies = { getSession: async () => session, refresh, fetch: fetcher, now: () => now, read: async () => stored, write: async (value: unknown) => { stored = structuredClone(value); } };
+  const dependencies = { readFinalRooms: async (owner: string) => finalRooms.get(owner), writeFinalRooms: async (owner: string, rooms: string[]) => { finalRooms.set(owner, rooms); }, getSession: async () => session, refresh, fetch: fetcher, now: () => now, read: async () => stored, write: async (value: unknown) => { stored = structuredClone(value); } };
   return { dependencies, client: createFree20WarningClient(dependencies), fetcher, refresh, setSession: (next: ExtensionAuthTokens | null) => { session = next; }, advance: () => { now += 5_000; }, stored: () => stored };
 }
 afterEach(() => { vi.restoreAllMocks(); authStorage.clear(); });
 describe("background Free20 warning claim budget", () => {
+  it("grants the final minute once per host and room across documents and background restarts", async () => {
+    const s = setup();
+    const final = { type: "ANIDACHI_FREE20_WARNING" as const, command: "final-minute" as const, requestId: crypto.randomUUID(),
+      ownerUserId: owner, loginKey, credentialRevision: initial.authRevision!, roomId: request.roomId };
+    expect(isFree20WarningMessage(final)).toBe(true);
+    expect(await Promise.all([s.client(final), s.client({ ...final, requestId: crypto.randomUUID() })])).toEqual([
+      { kind: "final-minute", show: true }, { kind: "final-minute", show: false },
+    ]);
+    const restarted = createFree20WarningClient(s.dependencies);
+    expect(await restarted(final)).toEqual({ kind: "final-minute", show: false });
+    expect(await restarted({ ...final, roomId: "another" })).toEqual({ kind: "final-minute", show: true });
+    expect(await restarted({ ...final, credentialRevision: "stale" })).toMatchObject({ kind: "failed" });
+    expect(s.fetcher).not.toHaveBeenCalled();
+    expect(s.stored()).toBeUndefined();
+  });
   it("serializes racing tabs without broadcasting the winning show promise", async () => {
     const s = setup();
     const results = await Promise.all([s.client(message()), s.client(message())]);

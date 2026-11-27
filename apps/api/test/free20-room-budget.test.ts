@@ -301,3 +301,13 @@ it("effective marker720 plus room480 exhausts once across checkpoints and restar
  expect(readFree20RoomTime(final.budget,final.meter,end).remainingSeconds).toBe(0);
  expect(roomUsageBuckets(final.meter)).toEqual([]);
 });
+
+it("extends the existing checkpoint once and preserves the previously consumed account time", () => {
+  const original = apply(checkpoint(1080));
+  const first = { ...checkpoint(1080), budgetSeconds: 1800 as const, checkpointSequence: 2 };
+  const upgraded = apply(first, original.meter, original.budget);
+  const retried = apply({ ...first, checkpointSequence: 3 }, upgraded.meter, upgraded.budget);
+  expect(readFree20RoomTime(retried.budget, retried.meter, start)).toMatchObject({
+    budgetSeconds: 1800, usedSeconds: 1080, remainingSeconds: 720,
+  });
+});
