@@ -22,6 +22,10 @@ create function pg_temp.host(client_version integer) returns text language sql a
   'f6300000-0000-4000-8000-000000000001','host',null,null,null,null,null,null,null,'free30','free',
   4,4,false,false,3,client_version,repeat('a',64),repeat('b',64))
 $$;
+create function pg_temp.renew_lease() returns jsonb language sql as $$
+ select public.renew_room_media_lease_v3(room_id) from public.rooms
+ where host_user_id='f6300000-0000-4000-8000-000000000001'
+$$;
 set local role service_role;
 select is(pg_temp.access()->>'remainingSeconds','0','exhausted 20-minute installation has no old time left');
 reset role;
@@ -31,11 +35,17 @@ select is(public.resolve_free20_hosting_access_v1('f6300000-0000-4000-8000-00000
 select is(pg_temp.access()->>'remainingSeconds','600','20 spent minutes on a shared browser leave 10');
 select throws_ok('select pg_temp.host(1)','P0001','ROOM_UPDATE_REQUIRED_FREE20','old Free host gets an actionable update response');
 select lives_ok('select pg_temp.host(2)','current host can start a new room from the remaining ten minutes');
+-- The real renewal is a separate service-role request. A plan cached during
+-- privileged room creation in this session can mask a missing privilege.
+discard plans;
+select is(pg_temp.renew_lease()#>>'{capabilities,hostPlanCode}','free',
+  'service role renews a protected Free room with ten minutes remaining');
 reset role;
 update anidachi_room_private.free20_marker_days set committed_seconds=1800
 where kind='browser' and marker_hash=repeat('a',64) and day=(now() at time zone 'UTC')::date;
 set local role service_role;
 select is(pg_temp.access()->>'canHost','false','the shared scope enforces the new daily maximum');
 select is(pg_temp.access()->>'remainingSeconds','0','zero remains after 30 minutes');
+select is(pg_temp.renew_lease()->>'denied','true','renewal closes at the actual scoped daily allowance');
 select * from finish();
 rollback;
