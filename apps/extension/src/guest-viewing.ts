@@ -11,6 +11,7 @@ type ViewingContext = {
   provider(): CatalogRoomProvider | null;
   href(): string;
   playerFingerprint(): string | null;
+  nextEpisodeFingerprint?(): string | undefined;
   playerSource?(): WatchSourceDescriptor | undefined;
   continueEpisode?(source: WatchSourceDescriptor, room: RoomSessionRecord, signal: AbortSignal): Promise<boolean>;
   apply(state: PlaybackState, source?: WatchSourceDescriptor, timing?: GuestPlaybackTiming): void;
@@ -43,7 +44,7 @@ export class GuestViewing {
   private navigationPath: string | null = null;
   private navigatingFrom: string | null = null;
   private playedHere = false;
-  private episode: { fingerprint: string; series: string; pending?: string } | null = null;
+  private episode: { fingerprint: string; series: string; pending?: string; successor?: string; autoplayDeadline?: number } | null = null;
   private lastFollowed: string | null = null;
   private hostInCatalog = false;
   private offered: string | null = null;
@@ -111,13 +112,27 @@ export class GuestViewing {
     const target = this.target;
     if (!this.active()) return;
     const localFingerprint = this.localFingerprint();
-    // Both native players can advance before the room's source-change event arrives.
-    // Reuse the previous shared choice only if no independent visit was observed.
-    if (target && this.episode && !this.navigating && this.following === this.episode.fingerprint &&
-        target.state.videoFingerprint !== this.following && localFingerprint === target.state.videoFingerprint &&
-        this.context.playerFingerprint() === localFingerprint && episodeSeries(target.source) === this.episode.series) {
-      void this.join(this.episode.fingerprint);
-      return;
+    // Native autoplay can change the URL before the new adapter or the host heartbeat is ready.
+    const origin = this.episode;
+    if (origin && !this.navigating && this.following === origin.fingerprint && localFingerprint &&
+        localFingerprint !== origin.fingerprint) {
+      const netflix = this.context.provider() === "netflix";
+      const onHostEpisode = target?.state.videoFingerprint === localFingerprint;
+      const hostSeries = episodeSeries(target?.source);
+      const withinHandoff = origin.autoplayDeadline === undefined || Date.now() < origin.autoplayDeadline;
+      if (withinHandoff && onHostEpisode && hostSeries === origin.series &&
+          (netflix || this.context.playerFingerprint() === localFingerprint)) {
+        void this.join(origin.fingerprint);
+        return;
+      }
+      // Only the next episode identified by Netflix may wait in place for host confirmation.
+      if (netflix && withinHandoff && localFingerprint === origin.successor &&
+          (!target || target.state.videoFingerprint === origin.fingerprint || (onHostEpisode && !hostSeries))) {
+        origin.autoplayDeadline ??= Date.now() + EPISODE_IDENTITY_WAIT_MS;
+        this.context.suspend();
+        if (target) this.deferOffer(target.url, origin.autoplayDeadline - Date.now());
+        return;
+      }
     }
     if (this.episode && !this.navigating && localFingerprint !== this.episode.fingerprint) {
       this.episode = null;
@@ -191,7 +206,10 @@ export class GuestViewing {
     }
     if (this.together()) {
       const series = episodeSeries(target.source);
-      if (series) this.episode = { fingerprint, series };
+      if (series) {
+        const previous = this.episode?.fingerprint === fingerprint && this.episode.series === series ? this.episode : null;
+        this.episode = { fingerprint, series, successor: this.context.nextEpisodeFingerprint?.() ?? previous?.successor };
+      }
       const firstPlayback = !this.playedHere || this.deferredOffer?.url === target.url || this.offered === target.url;
       this.playedHere = true;
       this.show(null);
@@ -264,9 +282,14 @@ export class GuestViewing {
           return;
         }
         this.awaitingArrival = true;
-        const arrived = episodeOrigin && target.source && this.context.continueEpisode
-          ? await this.context.continueEpisode(target.source, room, pending.signal)
-          : await this.context.navigate(target.url, room, pending.signal);
+        // The native Netflix player may already be loading the exact watch URL.
+        const loadingInPlace = episodeOrigin && provider === "netflix" && this.onTarget();
+        let arrived: boolean | void = true;
+        if (!loadingInPlace) {
+          arrived = episodeOrigin && target.source && this.context.continueEpisode
+            ? await this.context.continueEpisode(target.source, room, pending.signal)
+            : await this.context.navigate(target.url, room, pending.signal);
+        }
         if (arrived !== false) {
           if (this.navigating === pending) {
             const timer = setTimeout(() => void retry(), PLAYER_ARRIVAL_WAIT_MS);

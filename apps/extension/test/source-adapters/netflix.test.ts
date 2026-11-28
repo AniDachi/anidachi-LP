@@ -99,6 +99,21 @@ describe("Netflix identity and bounded metadata", () => {
 		expect(data.context?.region).toBe("CA");
 		expect(netflixContext(null, "en-US")?.region).toBeNull();
 	});
+	it("identifies the immediate Netflix successor, including across seasons", () => {
+		const data = show();
+		data.currentEpisode = 70196259;
+		const current = () => readNetflixMetadata(data, "70196259", context)?.nextEpisodeId;
+		expect(current()).toBe("70196260");
+		const next = data.seasons[0].episodes.pop()!;
+		expect(current()).toBeUndefined();
+		data.seasons.push({ id: 70114192, seq: 3, title: "Season 3", episodes: [{ ...next, seq: 1 }] });
+		expect(current()).toBe("70196260");
+		data.seasons[1].episodes[0].autoplayable = false;
+		expect(current()).toBeUndefined();
+		data.seasons[1].episodes[0].autoplayable = true;
+		data.seasons[1].seq = 4;
+		expect(current()).toBeUndefined();
+	});
 	it("rejects recap, conflicting current ID, duplicates and oversized series", () => {
 		expect(
 			readNetflixMetadata(

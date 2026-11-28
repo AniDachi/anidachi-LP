@@ -111,6 +111,7 @@ export function readNetflixMetadata(
 		video.seasons.length > 100
 	)
 		return null;
+	let checkedSuccessor = false;
 	let found: NetflixMetadata | null = null,
 		count = 0;
 	const episodeIds = new Set<string>(),
@@ -138,6 +139,16 @@ export function readNetflixMetadata(
 			)
 				return null;
 			episodeIds.add(episodeId);
+			// The next catalog entry is a local autoplay candidate, never a navigation command.
+			if (found && !checkedSuccessor) {
+				checkedSuccessor = true;
+				const seasonNumber = sequence(season.seq, 1000);
+				const number = sequence(episode?.seq);
+				if (found.identity.kind === "episode" && episode?.autoplayable !== false && (
+					(seasonId === found.identity.providerSeasonIdentifier && found.episodeNumber !== null && number === found.episodeNumber + 1) ||
+					(found.seasonNumber !== null && seasonNumber === found.seasonNumber + 1 && number === 1)
+				)) found.nextEpisodeId = episodeId;
+			}
 			if (episodeId !== movieId) continue;
 			if (
 				!episode ||
