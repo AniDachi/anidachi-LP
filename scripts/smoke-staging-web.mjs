@@ -207,6 +207,23 @@ async function main() {
     );
   }
 
+  const install = await fetchManual("/extension", {
+    headers: { cookie: stagingCookie, "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile" },
+  });
+  assertStatus(install, 200, "GET /extension on mobile");
+  await assertTextIncludes(install, "chromewebstore.google.com/detail/", "Mobile install page");
+  // Exercise the same-origin form route without reserving quota or sending mail.
+  const invalidEmail = await fetchManual("/api/extension/install-link", {
+    method: "POST",
+    headers: { cookie: stagingCookie, origin: new URL(baseUrl).origin, "content-type": "application/json" },
+    body: JSON.stringify({ email: "" }),
+  });
+  assertStatus(invalidEmail, 400, "POST install link without an email address");
+  if ((await invalidEmail.json()).error !== "invalid_email") {
+    throw new Error("Mobile install endpoint did not return its validation response");
+  }
+  console.log("Mobile install page and email endpoint smoke passed");
+
   const robots = await fetchManual("/robots.txt");
   assertStatus(robots, 200, "GET /robots.txt");
   await assertTextIncludes(robots, "Disallow: /", "GET /robots.txt");

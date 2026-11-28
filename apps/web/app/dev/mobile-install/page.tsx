@@ -6,21 +6,25 @@ import { Hero } from "@/components/hero";
 import { MobileInstallProvider } from "@/components/mobile-install-panel";
 import { InstallLink } from "@/components/install-link";
 import { INSTALL_HUB_PATH } from "@/lib/install-cta";
+import { OpenInstallPanel } from "./open-install-panel";
 
 export const metadata: Metadata = { title: "Mobile install preview", robots: { index: false, follow: false } };
 
-export default async function MobileInstallPreview({ searchParams }: { searchParams: Promise<{ frame?: string; width?: string; height?: string }> }) {
+export default async function MobileInstallPreview({ searchParams }: { searchParams: Promise<{ frame?: string; width?: string; height?: string; demo?: string }> }) {
   if (process.env.NODE_ENV !== "development") notFound();
   const params = await searchParams;
-  if (params.frame === "1") return <MobileInstallProvider mobilePreview>
+  const emailDemo = params.demo === "email";
+  if (params.frame === "1") {
+    const landing = (
     <main id="main-content" style={{ minHeight: "100dvh", background: "#0c0d0e" }}>
       <header className="flex items-center justify-between border-b border-white/5 px-5 py-4">
         <AnidachiLogoLink size={29} />
         <InstallLink href={INSTALL_HUB_PATH} className="rounded-full bg-ani-primary px-5 py-2 text-sm font-semibold text-ani-on-primary">Install</InstallLink>
       </header>
       <Hero />
-    </main>
-  </MobileInstallProvider>;
+    </main>);
+    return <MobileInstallProvider mobilePreview>{emailDemo && <OpenInstallPanel />}{landing}</MobileInstallProvider>;
+  }
 
   const width = params.width === "320" ? 320 : params.width === "430" ? 430 : 390;
   const height = params.height === "568" ? 568 : 844;
@@ -29,6 +33,6 @@ export default async function MobileInstallPreview({ searchParams }: { searchPar
       <div><h1 className="text-lg font-medium text-ani-text">Mobile install</h1><p className="mt-1 text-sm text-ani-muted">Local preview · tap Install</p></div>
       <Link href="/" className="text-sm text-ani-muted underline underline-offset-4">Open website</Link>
     </div>
-    <iframe src="/dev/mobile-install?frame=1" title="AniDachi mobile install preview" style={{ display: "block", width, maxWidth: "100%", height: `min(${height}px, calc(100dvh - 136px))`, minHeight: 480, margin: "0 auto", border: "1px solid #ffffff1c", borderRadius: 28, background: "#0c0d0e" }} />
+    <iframe src={emailDemo ? "/dev/mobile-install?frame=1&demo=email" : "/dev/mobile-install?frame=1"} title="AniDachi mobile install preview" style={{ display: "block", width, maxWidth: "100%", height: `min(${height}px, calc(100dvh - 136px))`, minHeight: 480, margin: "0 auto", border: "1px solid #ffffff1c", borderRadius: 28, background: "#0c0d0e" }} />
   </main>;
 }

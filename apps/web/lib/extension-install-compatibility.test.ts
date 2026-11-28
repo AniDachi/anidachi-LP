@@ -74,7 +74,7 @@ function storeLink() {
   return container.querySelector<HTMLAnchorElement>(`a[href="${CHROME_WEB_STORE_URL}"]`);
 }
 
-test("mobile installation shares a room return link without collecting an email address", async () => {
+test("mobile installation offers email, Store and optional sharing of the room return link", async () => {
   Object.defineProperty(navigator, "userAgent", {
     configurable: true, value: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148",
   });
@@ -85,18 +85,53 @@ test("mobile installation shares a room return link without collecting an email 
     await act(async () => storeLink()!.click());
     const panel = container.querySelector("dialog[open]");
     assert.ok(panel);
-    assert.match(panel.textContent!, /Continue onyour computer/);
-    assert.match(panel.textContent!, /Add to Desktop/);
+    assert.match(panel.textContent!, /Install AniDachi on your computer/);
+    assert.ok(panel.querySelector(`a[href="${CHROME_WEB_STORE_URL}"]`));
     const button = [...panel.querySelectorAll("button")].find((item) => item.textContent?.includes("Share link"))!;
     await act(async () => button.click());
     assert.deepEqual(copied, ["http://localhost/extension?next=%2Froom%2Ftest-room"]);
     assert.match(button.textContent!, /Link copied/);
-    assert.equal(Boolean(container.querySelector('input[type="email"]')), false);
-    assert.equal(Boolean(container.querySelector("form")), false);
-    assert.doesNotMatch(container.textContent!, /Email me|Send install link/);
+    assert.equal(panel.querySelector<HTMLInputElement>('input[type="email"]')?.value, "");
+    assert.match(panel.querySelector("form")!.textContent!, /Send install link/);
   } finally {
     window.history.replaceState(null, "", "/room/test-room");
   }
+});
+
+test("email prefill is editable, rapid submits coalesce and confirmation follows provider acceptance", async () => {
+  Object.defineProperty(navigator, "userAgent", { configurable: true, value: "Android Mobile" });
+  let complete!: (response: Response) => void;
+  const requests: unknown[] = [];
+  globalThis.fetch = async (url, init) => {
+    if (url === "/api/me") return Response.json({ user: { email: "me@example.com" } });
+    assert.equal(url, "/api/extension/install-link");
+    requests.push(JSON.parse(String(init?.body)));
+    return new Promise<Response>(resolve => { complete = resolve; });
+  };
+  await renderHub();
+  await act(async () => storeLink()!.click());
+  const panel = container.querySelector("dialog")!;
+  assert.equal(panel.querySelector("input")!.value, "me@example.com");
+  const input = panel.querySelector("input")!;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "elsewhere@example.com");
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  const form = panel.querySelector("form")!;
+  const submit = () => form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  await act(async () => { submit(); submit(); });
+  assert.equal(requests.length, 1);
+  assert.doesNotMatch(panel.textContent!, /Check your inbox/);
+  await act(async () => complete(new Response(null, { status: 503 })));
+  assert.ok(panel.querySelector('[role="alert"]'));
+  assert.equal(panel.querySelector("input")!.value, "elsewhere@example.com");
+  await act(async () => submit());
+  await act(async () => complete(Response.json({ ok: true })));
+  assert.match(panel.textContent!, /Check your inbox/);
+  assert.match(panel.textContent!, /elsewhere@example.com/);
+  await act(async () => [...panel.querySelectorAll("button")].find(button => button.textContent === "Change email")!.click());
+  assert.equal(panel.querySelector("input")!.value, "elsewhere@example.com");
+  assert.deepEqual(requests, [{ email: "elsewhere@example.com" }, { email: "elsewhere@example.com" }]);
 });
 
 test("mobile install can be dismissed and reopened, without remembering a copied status", async () => {
@@ -124,7 +159,7 @@ test("cancelling native sharing does not copy or claim success", async () => {
   await act(async () => share.click());
   assert.deepEqual(copied, []);
   assert.equal(share.disabled, false);
-  assert.equal(container.querySelector("dialog input"), null);
+  assert.equal(container.querySelector("dialog input[readonly]"), null);
   assert.doesNotMatch(container.querySelector("dialog")!.textContent!, /Link copied/);
 });
 
@@ -145,7 +180,8 @@ test("a late clipboard result cannot update a newly reopened install panel", asy
   await act(async () => finish());
   assert.ok(container.querySelector("dialog[open]"));
   assert.doesNotMatch(container.querySelector("dialog")!.textContent!, /Link copied/);
-  assert.equal(share.disabled, false);
+  const reopenedShare = [...container.querySelectorAll<HTMLButtonElement>("dialog button")].find(button => button.textContent?.includes("Share link"));
+  assert.equal(reopenedShare?.disabled, false);
 });
 
 test("unavailable sharing and clipboard leave a selectable safe install link", async () => {
@@ -157,7 +193,7 @@ test("unavailable sharing and clipboard leave a selectable safe install link", a
     await act(async () => storeLink()!.click());
     const share = [...container.querySelectorAll<HTMLButtonElement>("dialog button")].find((button) => button.textContent?.includes("Share link"))!;
     await act(async () => share.click());
-    assert.equal(container.querySelector<HTMLInputElement>("dialog input")!.value, "http://localhost/extension");
+    assert.equal(container.querySelector<HTMLInputElement>("dialog input[readonly]")!.value, "http://localhost/extension");
     assert.equal(share.disabled, false);
   } finally { window.history.replaceState(null, "", "/room/test-room"); }
 });

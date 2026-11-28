@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { boundedFree20, readBoundedFree20Json } from "./free20-abuse-http";
+import { emailJson as json, guardEmailRequest, readEmailBody } from "../email-request";
 import {
 	createEmailChallenge,
 	EMAIL_BROWSER_SECRET,
@@ -47,40 +47,6 @@ const defaults: Dependencies = {
 	issueTokens: issueTokenPair,
 	getUser: getUserIdentityById,
 };
-function json(body: object, status = 200): NextResponse {
-	return NextResponse.json(body, {
-		status,
-		headers: { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" },
-	});
-}
-function guard(request: NextRequest, enabled: boolean): NextResponse | null {
-	if (!enabled) return json({ error: "unavailable" }, 503);
-	if (
-		request.headers.get("origin") !== request.nextUrl.origin ||
-		![null, "same-origin"].includes(request.headers.get("sec-fetch-site"))
-	)
-		return json({ error: "forbidden" }, 403);
-	if (
-		request.headers.get("content-type")?.split(";")[0].trim() !==
-		"application/json"
-	)
-		return json({ error: "invalid_request" }, 400);
-	return null;
-}
-async function body(
-	request: NextRequest,
-): Promise<Record<string, unknown> | null> {
-	try {
-		const value = await boundedFree20(3000, (signal) =>
-			readBoundedFree20Json(request.body, 6144, signal),
-		);
-		return value && typeof value === "object" && !Array.isArray(value)
-			? (value as Record<string, unknown>)
-			: null;
-	} catch {
-		return null;
-	}
-}
 const cookieOptions = () => ({
 	path: "/",
 	httpOnly: true,
@@ -92,9 +58,10 @@ export function createEmailLoginRoutes(overrides: Partial<Dependencies> = {}) {
 	const deps = { ...defaults, ...overrides };
 	return {
 		async send(request: NextRequest): Promise<NextResponse> {
-			const blocked = guard(request, deps.enabled());
+			if (!deps.enabled()) return json({ error: "unavailable" }, 503);
+			const blocked = guardEmailRequest(request);
 			if (blocked) return blocked;
-			const input = await body(request);
+			const input = await readEmailBody(request);
 			const email = normalizeLoginEmail(input?.email);
 			if (!input || !email) return json({ error: "invalid_email" }, 400);
 			try {
@@ -127,9 +94,10 @@ export function createEmailLoginRoutes(overrides: Partial<Dependencies> = {}) {
 			}
 		},
 		async verify(request: NextRequest): Promise<NextResponse> {
-			const blocked = guard(request, deps.enabled());
+			if (!deps.enabled()) return json({ error: "unavailable" }, 503);
+			const blocked = guardEmailRequest(request);
 			if (blocked) return blocked;
-			const input = await body(request);
+			const input = await readEmailBody(request);
 			const id = input?.challengeId;
 			const code = input?.code;
 			if (

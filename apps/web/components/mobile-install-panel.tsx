@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, Check, Chrome, Monitor, Share2, Smartphone, X } from "lucide-react";
-import { AnidachiLogo } from "@/components/anidachi-logo";
-import { InstallPlatformMarks } from "@/components/install-platform-marks";
+import { Check, Chrome, Share2, X } from "lucide-react";
+import { MobileInstallEmail } from "./mobile-install-email";
 import { CHROME_WEB_STORE_URL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { inferPageTemplateFromPath, trackConversion, trackStoreClick } from "@/lib/conversion-events";
 import { desktopInstallUrl } from "@/lib/mobile-install";
@@ -20,7 +19,6 @@ function panelEventContext() {
 
 export function MobileInstallProvider({ children, mobilePreview = false }: { children: ReactNode; mobilePreview?: boolean }) {
   const [shareUrl, setShareUrl] = useState<string | null>(null);
-  const [hasOpened, setHasOpened] = useState(false);
   const [shareState, setShareState] = useState<"idle" | "busy" | "copied" | "manual">("idle");
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -30,7 +28,6 @@ export function MobileInstallProvider({ children, mobilePreview = false }: { chi
   const open = useCallback((href = INSTALL_HUB_PATH) => {
     shareAttempt.current += 1;
     sharing.current = false;
-    setHasOpened(true);
     setShareState("idle");
     setShareUrl(desktopInstallUrl(href, window.location.origin));
     trackConversion("mobile_install_panel_view", panelEventContext());
@@ -74,44 +71,28 @@ export function MobileInstallProvider({ children, mobilePreview = false }: { chi
     <dialog ref={dialog} className={styles.panel} aria-labelledby={titleId} aria-describedby={descriptionId}
       onCancel={(event) => { event.preventDefault(); close(); }} onClose={() => { if (!dialog.current?.open) close(); }}
       onClick={(event) => { if (event.target === event.currentTarget) close(); }}>
-      {hasOpened ? <div className={styles.content} data-scroll-lock-scrollable>
+      {shareUrl ? <div className={styles.body} data-scroll-lock-scrollable>
         <button type="button" className={styles.close} aria-label="Close install panel" onClick={close} autoFocus>
           <X size={20} strokeWidth={1.6} aria-hidden="true" />
         </button>
-        <div className={styles.illustration} aria-hidden="true">
-          <span className={styles.phone}>
-            <Smartphone size={94} strokeWidth={1.8} absoluteStrokeWidth />
-            <AnidachiLogo size={31} alt="" aria-hidden />
-          </span>
-          <ArrowRight className={styles.arrow} size={37} strokeWidth={1.3} />
-          <Monitor className={styles.monitor} size={124} strokeWidth={1.8} absoluteStrokeWidth />
-        </div>
-        <h2 id={titleId} className={styles.title}>Continue on<br />your computer</h2>
-        <p id={descriptionId} className={styles.description}>AniDachi works in Chrome on desktop.</p>
-        <a className={styles.primary} href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer"
-          onClick={() => trackStoreClick("mobile_install_panel")}>
-          <Chrome size={21} strokeWidth={1.8} aria-hidden="true" />
-          Open Chrome Web Store
-          <span className="sr-only"> (opens in a new tab)</span>
-        </a>
-        <p className={styles.hint}>
-          In Chrome, choose <strong>“Add to Desktop”.</strong>
-          <span>Use the same Google account on both devices.</span>
-        </p>
-        <div className={styles.shareArea}>
-          <button type="button" className={styles.share} onClick={() => void shareLink()} disabled={shareState === "busy"}>
-            {shareState === "copied" ? <Check size={18} aria-hidden="true" /> : <Share2 size={18} aria-hidden="true" />}
+        <MobileInstallEmail titleId={titleId} descriptionId={descriptionId} />
+        <div className={styles.actions}>
+          <a className={styles.secondary} href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer"
+            onClick={() => trackStoreClick("mobile_install_panel")}>
+            <Chrome size={16} aria-hidden="true" /> Chrome Store<span className="sr-only"> (opens in a new tab)</span>
+          </a>
+          <button type="button" className={styles.secondary} onClick={() => void shareLink()} disabled={shareState === "busy"}>
+            {shareState === "copied" ? <Check size={15} aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
             {shareState === "copied" ? "Link copied" : "Share link"}
           </button>
-          <div role="status" aria-live="polite">
-            {shareState === "copied" ? <span className="sr-only">Desktop install link copied.</span> : null}
-            {shareState === "manual" ? <div className={styles.manual}>
-              <label htmlFor={`${titleId}-link`}>Copy this link to open it on your computer</label>
-              <input id={`${titleId}-link`} readOnly value={shareUrl ?? ""} onFocus={(event) => event.currentTarget.select()} />
-            </div> : null}
-          </div>
         </div>
-        <div className={styles.platforms}><InstallPlatformMarks compact /></div>
+        <div role="status" aria-live="polite">
+          {shareState === "copied" ? <span className="sr-only">Desktop install link copied.</span> : null}
+          {shareState === "manual" ? <div className={styles.manual}>
+            <label htmlFor={`${titleId}-link`}>Copy this link to open it on your computer</label>
+            <input id={`${titleId}-link`} readOnly value={shareUrl} onFocus={(event) => event.currentTarget.select()} />
+          </div> : null}
+        </div>
       </div> : null}
     </dialog>
   </MobileInstallContext.Provider>;

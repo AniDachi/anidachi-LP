@@ -1,3 +1,5 @@
+import { sendTransactionalEmail } from "../transactional-email";
+
 export function emailCodeMessage(code: string) {
 	if (!/^\d{6}$/.test(code)) throw new Error("Invalid email code");
 	return {
@@ -43,31 +45,6 @@ export function emailCodeMessage(code: string) {
 	};
 }
 
-export async function sendEmailLoginCode(
-	email: string,
-	code: string,
-	challengeId: string,
-): Promise<void> {
-	const key = process.env.RESEND_API_KEY;
-	if (!key) throw new Error("Email delivery unavailable");
-	const response = await fetch("https://api.resend.com/emails", {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${key}`,
-			"Content-Type": "application/json",
-			"Idempotency-Key": `email-login/${challengeId}`,
-		},
-		body: JSON.stringify({
-			from: "AniDachi <notifications@anidachi.app>",
-			to: [email],
-			...emailCodeMessage(code),
-		}),
-		signal: AbortSignal.timeout(8000),
-		cache: "no-store",
-	});
-	// Never log the provider body: it may contain an address or message content.
-	if (!response.ok) throw new Error("Email delivery unavailable");
-	const data = (await response.json()) as { id?: unknown };
-	if (typeof data.id !== "string" || !data.id)
-		throw new Error("Email delivery unavailable");
+export async function sendEmailLoginCode(email: string, code: string, challengeId: string): Promise<void> {
+	return sendTransactionalEmail(email, emailCodeMessage(code), `email-login/${challengeId}`);
 }
