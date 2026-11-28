@@ -170,7 +170,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.offer).not.toHaveBeenCalled();
   });
 
-  if (provider === "netflix") {
+  if (provider === "netflix" || provider === "disneyplus") {
     it.each(["guest advances first", "host player announced first", "host metadata arrives late"])(
       "keeps watching together during native autoplay when %s", async order => {
         const { machine, ctx, play, page } = setup();
@@ -203,7 +203,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     );
 
     it.each(["host advances", "guest leaves", "host rewinds"])(
-      "preserves the shared choice on Netflix credits beyond ten seconds until %s", async outcome => {
+      "preserves the shared choice on native credits beyond ten seconds until %s", async outcome => {
         vi.useFakeTimers();
         try {
           const { machine, ctx, play, leave } = setup();
@@ -262,6 +262,25 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
       } finally { vi.useRealTimers(); }
     });
   }
+
+  if (provider === "disneyplus") it("continues direct playback using the native sequential episode before series metadata arrives", async () => {
+    const { machine, ctx, play, page } = setup();
+    ctx.episodeSuccessor.mockReturnValue({ fingerprint: personal.videoFingerprint, creditsStart: 700 });
+    play(watchUrl, host.videoFingerprint);
+    machine.receive({ ...state, hostTime: 710 }, host);
+    page.href = personalUrl;
+    page.fingerprint = null;
+    machine.refresh();
+    machine.receive(nextState, personal);
+    await Promise.resolve();
+    play(personalUrl, personal.videoFingerprint);
+    machine.refresh();
+    expect(machine.together()).toBe(true);
+    expect(ctx.apply).toHaveBeenLastCalledWith(nextState, personal);
+    expect(ctx.offer).not.toHaveBeenCalled();
+    expect(ctx.navigate).not.toHaveBeenCalled();
+    expect(ctx.continueEpisode).not.toHaveBeenCalled();
+  });
 
   it("synchronizes in place when both players have advanced to the exact same episode", async () => {
     const { ctx, machine, play } = setup();

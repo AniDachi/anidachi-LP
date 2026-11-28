@@ -12,8 +12,9 @@ function bind(video: HTMLVideoElement, player: HTMLElement, id: string): DisneyP
   // A route can change before Disney replaces the video or its MediaSource.
   const src = video.currentSrc || video.src;
   const previous = bindings.get(video);
-  if (!src || (previous && previous.id !== id && previous.src === src)) return null;
   const active = activePlayer.get(video.ownerDocument)?.deref();
+  if (!src || (previous && previous.id !== id && previous.src === src &&
+      !(active?.video === video && active.hasNewNativeProgram()))) return null;
   bindings.set(video, { id, src });
   if (previous?.id === id && active?.video === video && active.container === player) {
     return active;
