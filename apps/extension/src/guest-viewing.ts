@@ -170,9 +170,9 @@ export class GuestViewing {
     if (!target) return;
     const href = this.context.href();
     const provider = this.context.provider();
-    // Netflix exits to title details. Disney can pass through details on the way *into* a player.
-    const browsingCatalog = !localFingerprint && (provider === "netflix" || provider === "disneyplus") &&
-      catalogRoomProvider(href) === provider && (provider === "netflix" || !disneyPlusEntityId(href));
+    // HBO and Netflix exit to title details. Disney can pass through details while entering playback.
+    const browsingCatalog = !localFingerprint && (provider === "hbomax" || provider === "netflix" ||
+      (provider === "disneyplus" && !disneyPlusEntityId(href))) && catalogRoomProvider(href) === provider;
     if (this.navigationPath !== null) {
       const path = new URL(href).pathname;
       if (browsingCatalog && path !== this.navigationPath) this.cancelNavigation();
@@ -272,7 +272,8 @@ export class GuestViewing {
     const pending = new AbortController();
     this.navigating = pending;
     const provider = this.context.provider();
-    this.navigationPath = provider === "disneyplus" || provider === "netflix" ? new URL(this.context.href()).pathname : null;
+    this.navigationPath = provider === "disneyplus" || provider === "netflix" || provider === "hbomax"
+      ? new URL(this.context.href()).pathname : null;
     this.show(null);
     this.navigatingFrom = episodeOrigin ?? null;
     const previous = this.following;
