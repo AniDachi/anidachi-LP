@@ -349,8 +349,10 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.offer).not.toHaveBeenCalled();
   });
 
-  if (provider === "netflix") it.each(["/title/80057918", "/browse/genre/83", "/search?q=Lucifer"])(
-    "offers the current Netflix episode immediately after Back to Browse restores the session at %s",
+  const exitPaths = provider === "netflix" ? ["/title/80057918", "/browse/genre/83", "/search?q=Lucifer"] :
+    provider === "hbomax" ? ["/show/" + first, "/br/pt-br/show/" + first, "/br/pt-br/show/" + first + "/s1/e1-pilot/" + second, "/home", "/search"] : [];
+  if (exitPaths.length) it.each(exitPaths)(
+    "offers the current episode immediately after the guest exits playback and the session is restored at %s",
     async path => {
       const { ctx, machine, mount, page, play } = setup();
       play(watchUrl, host.videoFingerprint);
@@ -375,7 +377,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     },
   );
 
-  if (provider === "disneyplus" || provider === "netflix") it.each(["same document", "new document"])(
+  if (provider === "disneyplus" || provider === "netflix" || provider === "hbomax") it.each(["same document", "new document"])(
     "restores the return button immediately when the guest switches catalog pages in the %s",
     async transition => {
       const { ctx, machine, mount, page } = setup();
@@ -383,7 +385,8 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
       await machine.join();
       machine.refresh();
       expect(ctx.offer).toHaveBeenLastCalledWith(null);
-      page.href = provider === "netflix" ? new URL("/title/80057918", home).href : new URL("../browse/movies", watchUrl).href;
+      const catalogPath = provider === "netflix" ? "/title/80057918" : provider === "hbomax" ? "/br/pt-br/series" : "../browse/movies";
+      page.href = new URL(catalogPath, watchUrl).href;
       if (transition === "new document") {
         machine.bind(null);
         mount().receive(state, host);
