@@ -35,7 +35,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
       participantSessionId: "session", cameraEnabled: false, voiceMode: "push-to-talk" };
     const page = { href: home, fingerprint: null as string | null };
     const ctx = { provider: () => provider, session: () => record, href: () => page.href, playerFingerprint: () => page.fingerprint,
-      nextEpisodeFingerprint: vi.fn<() => string | undefined>(),
+      episodeSuccessor: vi.fn<() => { fingerprint: string; creditsStart: number } | undefined>(),
       apply: vi.fn(), suspend: vi.fn(), offer: vi.fn(), targetChanged: vi.fn(), continueEpisode: vi.fn(async () => true), navigate: vi.fn(async () => true),
       persist: vi.fn(async (_room: RoomSessionRecord, followingFingerprint: string | null) => {
         record = { ...record, followingFingerprint };
@@ -174,7 +174,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     it.each(["guest advances first", "host player announced first", "host metadata arrives late"])(
       "keeps watching together during native autoplay when %s", async order => {
         const { machine, ctx, play, page } = setup();
-        ctx.nextEpisodeFingerprint.mockReturnValue(personal.videoFingerprint);
+        ctx.episodeSuccessor.mockReturnValue({ fingerprint: personal.videoFingerprint, creditsStart: 3080 });
         play(watchUrl, host.videoFingerprint);
         machine.receive(state, episode(host));
         if (order === "host player announced first") {
@@ -202,11 +202,52 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
       }
     );
 
+    it.each(["host advances", "guest leaves", "host rewinds"])(
+      "preserves the shared choice on Netflix credits beyond ten seconds until %s", async outcome => {
+        vi.useFakeTimers();
+        try {
+          const { machine, ctx, play, leave } = setup();
+          ctx.episodeSuccessor.mockReturnValue({ fingerprint: personal.videoFingerprint, creditsStart: 3080 });
+          play(watchUrl, host.videoFingerprint);
+          const credits = { ...state, hostTime: 3110 };
+          const previous = { ...episode(host), duration: 3207.666666 };
+          machine.receive(credits, previous);
+          play(personalUrl, personal.videoFingerprint);
+          machine.refresh();
+          await vi.advanceTimersByTimeAsync(45_000);
+          machine.receive(credits, previous);
+          expect(ctx.offer).not.toHaveBeenCalled();
+          expect(ctx.persist).not.toHaveBeenCalledWith(expect.anything(), null);
+          if (outcome === "guest leaves") {
+            leave();
+            machine.refresh();
+            expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
+          } else if (outcome === "host rewinds") {
+            machine.receive(state, previous);
+            await vi.advanceTimersByTimeAsync(10_001);
+            machine.refresh();
+            expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
+          }
+          machine.receive(nextState, episode(personal));
+          await Promise.resolve();
+          expect(machine.together()).toBe(outcome === "host advances");
+          if (outcome === "host advances") {
+            expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal));
+            machine.receive({ ...nextState, playing: true });
+            machine.receive({ ...nextState, playing: false });
+            expect(ctx.apply).toHaveBeenLastCalledWith({ ...nextState, playing: false }, episode(personal));
+            expect(ctx.offer).not.toHaveBeenCalled();
+          }
+          expect(ctx.continueEpisode).not.toHaveBeenCalled();
+        } finally { vi.useRealTimers(); }
+      }
+    );
+
     it.each(["host stays", "guest browses"])("ends the pending autoplay choice if %s", async reason => {
       vi.useFakeTimers();
       try {
         const { ctx, machine, play, leave } = setup();
-        ctx.nextEpisodeFingerprint.mockReturnValue(personal.videoFingerprint);
+        ctx.episodeSuccessor.mockReturnValue({ fingerprint: personal.videoFingerprint, creditsStart: 3080 });
         play(watchUrl, host.videoFingerprint);
         machine.receive(state, episode(host));
         play(personalUrl, personal.videoFingerprint);

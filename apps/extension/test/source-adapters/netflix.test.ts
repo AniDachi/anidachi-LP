@@ -99,6 +99,19 @@ describe("Netflix identity and bounded metadata", () => {
 		expect(data.context?.region).toBe("CA");
 		expect(netflixContext(null, "en-US")?.region).toBeNull();
 	});
+	it("uses a valid Netflix credits offset from the current episode only", () => {
+		const data = show();
+		const current = data.seasons[0].episodes[1];
+		Reflect.set(data.seasons[0].episodes[0], "creditsOffset", 120);
+		const credits = () => readNetflixMetadata(data, "70196260", context)?.creditsStart;
+		expect(credits()).toBeUndefined();
+		Reflect.set(current, "creditsOffset", 2540);
+		expect(credits()).toBe(2540);
+		for (const invalid of [0, -1, current.runtime + 1, Infinity, "2540"]) {
+			Reflect.set(current, "creditsOffset", invalid);
+			expect(credits()).toBeUndefined();
+		}
+	});
 	it("identifies the immediate Netflix successor, including across seasons", () => {
 		const data = show();
 		data.currentEpisode = 70196259;

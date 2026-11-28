@@ -69,9 +69,14 @@ export class NetflixVideoAdapter extends Html5VideoAdapter {
 	getFingerprint(): string {
 		return `netflix|watch/${this.movieId ?? "unknown"}`;
 	}
-	getNextEpisodeFingerprint() {
-		const id = this.getNetflixSnapshot()?.metadata.nextEpisodeId;
-		return id ? `netflix|watch/${id}` : undefined;
+	getEpisodeSuccessor() {
+		const snapshot = this.getNetflixSnapshot();
+		const id = snapshot?.metadata.nextEpisodeId;
+		if (!snapshot || !id) return undefined;
+		return {
+			fingerprint: `netflix|watch/${id}`,
+			creditsStart: Math.min(snapshot.metadata.creditsStart ?? Infinity, Math.floor(snapshot.duration)),
+		};
 	}
 	getCurrentTime(): number {
 		return this.getNetflixSnapshot()?.currentTime ?? 0;

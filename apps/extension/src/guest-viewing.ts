@@ -2,6 +2,8 @@ import { disneyPlusEntityId, type PlaybackState, type WatchSourceDescriptor } fr
 import { roomSessionIdentityMatches, type RoomSessionRecord } from "./room-session-storage";
 import { catalogRoomProvider, roomWatchSource, type CatalogRoomProvider } from "./catalog-room-routes";
 
+import type { EpisodeSuccessor } from "./source-adapters/core/types";
+
 type HostPlayback = PlaybackState & { hostSurface?: "player" | "catalog" };
 const EPISODE_IDENTITY_WAIT_MS = 10_000;
 const PLAYER_ARRIVAL_WAIT_MS = 60_000;
@@ -11,7 +13,7 @@ type ViewingContext = {
   provider(): CatalogRoomProvider | null;
   href(): string;
   playerFingerprint(): string | null;
-  nextEpisodeFingerprint?(): string | undefined;
+  episodeSuccessor?(): EpisodeSuccessor | undefined;
   playerSource?(): WatchSourceDescriptor | undefined;
   continueEpisode?(source: WatchSourceDescriptor, room: RoomSessionRecord, signal: AbortSignal): Promise<boolean>;
   apply(state: PlaybackState, source?: WatchSourceDescriptor, timing?: GuestPlaybackTiming): void;
@@ -44,7 +46,7 @@ export class GuestViewing {
   private navigationPath: string | null = null;
   private navigatingFrom: string | null = null;
   private playedHere = false;
-  private episode: { fingerprint: string; series: string; pending?: string; successor?: string; autoplayDeadline?: number } | null = null;
+  private episode: { fingerprint: string; series: string; pending?: string; successor?: EpisodeSuccessor; autoplayDeadline?: number } | null = null;
   private lastFollowed: string | null = null;
   private hostInCatalog = false;
   private offered: string | null = null;
@@ -126,7 +128,16 @@ export class GuestViewing {
         return;
       }
       // Only the next episode identified by Netflix may wait in place for host confirmation.
-      if (netflix && withinHandoff && localFingerprint === origin.successor &&
+      if (netflix && localFingerprint === origin.successor?.fingerprint &&
+          target?.state.videoFingerprint === origin.fingerprint && target.state.hostTime >= origin.successor.creditsStart) {
+        // Netflix profiles can stay on the credits screen until a viewer chooses Next.
+        // The guest is already on the verified successor; wait for the host's choice.
+        origin.autoplayDeadline = undefined;
+        this.context.suspend();
+        this.show(null);
+        return;
+      }
+      if (netflix && withinHandoff && localFingerprint === origin.successor?.fingerprint &&
           (!target || target.state.videoFingerprint === origin.fingerprint || (onHostEpisode && !hostSeries))) {
         origin.autoplayDeadline ??= Date.now() + EPISODE_IDENTITY_WAIT_MS;
         this.context.suspend();
@@ -208,7 +219,7 @@ export class GuestViewing {
       const series = episodeSeries(target.source);
       if (series) {
         const previous = this.episode?.fingerprint === fingerprint && this.episode.series === series ? this.episode : null;
-        this.episode = { fingerprint, series, successor: this.context.nextEpisodeFingerprint?.() ?? previous?.successor };
+        this.episode = { fingerprint, series, successor: this.context.episodeSuccessor?.() ?? previous?.successor };
       }
       const firstPlayback = !this.playedHere || this.deferredOffer?.url === target.url || this.offered === target.url;
       this.playedHere = true;

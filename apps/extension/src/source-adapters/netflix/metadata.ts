@@ -168,6 +168,8 @@ export function readNetflixMetadata(
 					providerEpisodeIdentifier: episodeId,
 				},
 				episodeTitle: label(episode.title)!,
+				...(typeof episode.creditsOffset === "number" && episode.creditsOffset > 0 &&
+					episode.creditsOffset <= Math.min(episode.runtime, 604800) && { creditsStart: episode.creditsOffset }),
 				seasonTitle: label(season.title),
 				seasonNumber: sequence(season.seq, 1000),
 				episodeNumber: sequence(episode.seq),
