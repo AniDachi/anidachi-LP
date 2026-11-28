@@ -35,6 +35,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
       participantSessionId: "session", cameraEnabled: false, voiceMode: "push-to-talk" };
     const page = { href: home, fingerprint: null as string | null };
     const ctx = { provider: () => provider, session: () => record, href: () => page.href, playerFingerprint: () => page.fingerprint,
+      nextEpisodeFingerprint: vi.fn<() => string | undefined>(),
       apply: vi.fn(), suspend: vi.fn(), offer: vi.fn(), targetChanged: vi.fn(), continueEpisode: vi.fn(async () => true), navigate: vi.fn(async () => true),
       persist: vi.fn(async (_room: RoomSessionRecord, followingFingerprint: string | null) => {
         record = { ...record, followingFingerprint };
@@ -168,6 +169,58 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal));
     expect(ctx.offer).not.toHaveBeenCalled();
   });
+
+  if (provider === "netflix") {
+    it.each(["guest advances first", "host player announced first", "host metadata arrives late"])(
+      "keeps watching together during native autoplay when %s", async order => {
+        const { machine, ctx, play, page } = setup();
+        ctx.nextEpisodeFingerprint.mockReturnValue(personal.videoFingerprint);
+        play(watchUrl, host.videoFingerprint);
+        machine.receive(state, episode(host));
+        if (order === "host player announced first") {
+          page.fingerprint = null;
+          machine.receive(nextState, episode(personal));
+        }
+        page.href = personalUrl;
+        page.fingerprint = null;
+        machine.refresh();
+        if (order === "host metadata arrives late") machine.receive(nextState, personal);
+        if (order === "guest advances first") {
+          play(personalUrl, personal.videoFingerprint);
+          machine.refresh();
+          machine.receive(state, episode(host));
+        }
+        machine.receive(nextState, episode(personal));
+        await Promise.resolve();
+        play(personalUrl, personal.videoFingerprint);
+        machine.refresh();
+        expect(machine.together()).toBe(true);
+        expect(ctx.apply).toHaveBeenLastCalledWith(nextState, episode(personal));
+        expect(ctx.offer).not.toHaveBeenCalled();
+        expect(ctx.navigate).not.toHaveBeenCalled();
+        expect(ctx.continueEpisode).not.toHaveBeenCalled();
+      }
+    );
+
+    it.each(["host stays", "guest browses"])("ends the pending autoplay choice if %s", async reason => {
+      vi.useFakeTimers();
+      try {
+        const { ctx, machine, play, leave } = setup();
+        ctx.nextEpisodeFingerprint.mockReturnValue(personal.videoFingerprint);
+        play(watchUrl, host.videoFingerprint);
+        machine.receive(state, episode(host));
+        play(personalUrl, personal.videoFingerprint);
+        machine.refresh();
+        expect(ctx.offer).not.toHaveBeenCalled();
+        if (reason === "host stays") await vi.advanceTimersByTimeAsync(10_001);
+        else { leave(); machine.refresh(); }
+        expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
+        machine.receive(nextState, episode(personal));
+        expect(machine.together()).toBe(false);
+        expect(ctx.continueEpisode).not.toHaveBeenCalled();
+      } finally { vi.useRealTimers(); }
+    });
+  }
 
   it("synchronizes in place when both players have advanced to the exact same episode", async () => {
     const { ctx, machine, play } = setup();

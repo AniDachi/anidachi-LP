@@ -73,6 +73,7 @@ export interface VideoAdapter {
   getFingerprint(): string;
   getCurrentTime(): number;
   getState(): PlaybackState;
+  getNextEpisodeFingerprint?(): string | undefined;
   getSourceDescriptor(includeEpisodeSeries?: boolean): WatchSourceDescriptor | undefined;
   getPlaybackSnapshot(): AdapterPlaybackSnapshot;
   getPersonalResumeReadiness?(target: PersonalResumeTarget): Promise<PersonalResumeReadiness>;

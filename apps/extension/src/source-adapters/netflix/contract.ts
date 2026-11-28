@@ -15,6 +15,7 @@ export const NetflixMetadataSchema = z.strictObject({
 	identity: NetflixHistoryIdentitySchema,
 	title,
 	episodeTitle: title,
+	nextEpisodeId: NetflixProviderIdSchema.optional(),
 	seasonTitle: title.nullable(),
 	seasonNumber: z.number().int().nonnegative().max(1000).nullable(),
 	episodeNumber: z.number().int().nonnegative().max(10000).nullable(),
