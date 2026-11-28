@@ -1,8 +1,17 @@
-import { HBO_MAX_ORIGIN, hboMaxPlaybackId, isHboMaxOrigin, localizeHboMaxUrl, type WatchSourceDescriptor } from "@anidachi/protocol";
+import { HBO_MAX_ORIGIN, hboMaxDetail, hboMaxFingerprint, hboMaxPlaybackId, isHboMaxOrigin, localizeHboMaxUrl, type WatchSourceDescriptor } from "@anidachi/protocol";
 import { catalogRoomProvider, catalogWatchDestination, renderedHboMaxWatchUrl } from "../../catalog-room-routes";
+import { hasCatalogNavigation } from "../../popup-room-launch";
 import { observeHboMaxRoomSource, readHboMaxPlaybackMetadata } from "./metadata";
 import { resolveCanonicalSourceNavigation, withRoomHash } from "../core/source-navigation";
 import type { EnsureSourceResult, SourceNavigationContext } from "../core/types";
+
+/** HBO inserts the title into history while a directly opened player is loading. */
+export function isHboMaxPlayerStarting(doc: Document, fingerprint: string,
+  entryUrl = doc.defaultView?.performance.getEntriesByType?.("navigation")[0]?.name) {
+  if (!entryUrl || !hboMaxDetail(doc.location.href)) return false;
+  const id = hboMaxPlaybackId(entryUrl);
+  return !!id && hboMaxFingerprint(id) === fingerprint && !hasCatalogNavigation(doc, "hbomax");
+}
 
 export async function ensureHboMaxSource(
   source: WatchSourceDescriptor,
