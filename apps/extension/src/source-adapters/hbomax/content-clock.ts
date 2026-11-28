@@ -1,3 +1,4 @@
+import { HboMaxProviderIdSchema } from "@anidachi/protocol";
 import { HboCmsPlaybackSchema, type HboCmsPlayback } from "./cms-catalog";
 
 /** Both sides speak in seconds. Only the page-world reader talks to the HBO SDK. */
@@ -10,9 +11,10 @@ export interface HboContentClock {
   inMain: boolean;
   streamTarget?: number;
   episode?: HboCmsPlayback;
+  successor?: { videoId: string; creditsStart: number };
 }
 
-export function readHboClock(video: HTMLVideoElement, target?: number | "episode"): HboContentClock | null {
+export function readHboClock(video: HTMLVideoElement, target?: number | "episode" | "successor"): HboContentClock | null {
   let clock: HboContentClock | null = null;
   const receive = (event: Event) => {
     const value = (event as CustomEvent<HboContentClock>).detail;
@@ -22,6 +24,11 @@ export function readHboClock(video: HTMLVideoElement, target?: number | "episode
         (Number.isFinite(value.streamTarget) && value.streamTarget >= 0 && value.streamTarget <= video.duration))) {
       clock = { position: value.position, duration: value.duration, inMain: value.inMain, streamTarget: value.streamTarget };
       if (target === "episode" && value.episode) clock.episode = HboCmsPlaybackSchema.safeParse(value.episode).data;
+      const next = value.successor;
+      if (target === "successor" && next && HboMaxProviderIdSchema.safeParse(next.videoId).success &&
+          Number.isFinite(next.creditsStart) && next.creditsStart > 0 && next.creditsStart <= value.duration) {
+        clock.successor = { videoId: next.videoId, creditsStart: next.creditsStart };
+      }
     }
   };
   video.addEventListener(HBO_CLOCK_REPLY, receive);

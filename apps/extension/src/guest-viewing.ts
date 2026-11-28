@@ -37,12 +37,20 @@ function episodeSeries(source?: WatchSourceDescriptor) {
   return null;
 }
 
+function supportsNativeHandoff(provider: CatalogRoomProvider | null) {
+  return provider === "netflix" || provider === "disneyplus" || provider === "hbomax";
+}
+
+function hasNativeSeriesQueue(fingerprint: string, source?: WatchSourceDescriptor) {
+  return (fingerprint.startsWith("disneyplus|") && source?.disneyplusIdentity?.kind !== "movie") ||
+    (fingerprint.startsWith("hbomax|") && source?.hbomaxIdentity?.kind !== "movie");
+}
+
 function continuesEpisode(origin: SharedEpisode, fingerprint: string, source?: WatchSourceDescriptor) {
   const series = episodeSeries(source);
   if (series && origin.series) return series === origin.series;
-  // Direct Disney playback may supply its sequential episode before the catalog supplies a series ID.
-  return fingerprint.startsWith("disneyplus|") && origin.successor?.fingerprint === fingerprint &&
-    source?.disneyplusIdentity?.kind !== "movie";
+  // The native queue can identify the next episode before its catalogue metadata arrives.
+  return origin.successor?.fingerprint === fingerprint && hasNativeSeriesQueue(fingerprint, source);
 }
 
 /** Viewer opt-in belongs to this tab; it can continue between verified episodes of one series. */
@@ -127,7 +135,7 @@ export class GuestViewing {
     const origin = this.episode;
     if (origin && !this.navigating && this.following === origin.fingerprint && localFingerprint &&
         localFingerprint !== origin.fingerprint) {
-      const nativeHandoff = this.context.provider() === "netflix" || this.context.provider() === "disneyplus";
+      const nativeHandoff = supportsNativeHandoff(this.context.provider());
       const onHostEpisode = target?.state.videoFingerprint === localFingerprint;
       const hostSeries = episodeSeries(target?.source);
       const withinHandoff = origin.autoplayDeadline === undefined || Date.now() < origin.autoplayDeadline;
@@ -226,7 +234,7 @@ export class GuestViewing {
       const series = episodeSeries(target.source);
       const previous = this.episode?.fingerprint === fingerprint ? this.episode : null;
       const successor = this.context.episodeSuccessor?.() ?? previous?.successor;
-      if (series || (provider === "disneyplus" && successor && target.source?.disneyplusIdentity?.kind !== "movie")) {
+      if (series || (successor && hasNativeSeriesQueue(fingerprint, target.source))) {
         this.episode = { fingerprint, series: series ?? previous?.series ?? null, successor };
       }
       const firstPlayback = !this.playedHere || this.deferredOffer?.url === target.url || this.offered === target.url;
@@ -302,7 +310,7 @@ export class GuestViewing {
         }
         this.awaitingArrival = true;
         // The provider can already be loading this exact watch URL when host confirmation arrives.
-        const loadingInPlace = episodeOrigin && (provider === "netflix" || provider === "disneyplus") && this.onTarget();
+        const loadingInPlace = episodeOrigin && supportsNativeHandoff(provider) && this.onTarget();
         let arrived: boolean | void = true;
         if (!loadingInPlace) {
           arrived = episodeOrigin && target.source && this.context.continueEpisode

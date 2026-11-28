@@ -1,6 +1,7 @@
 import { hboMaxPlaybackId } from "@anidachi/protocol";
 import type { SourceAdapterDefinition } from "../core/types";
 import { HboMaxVideoAdapter } from "./adapter";
+import { readHboClock } from "./content-clock";
 import { hboMaxHistoryPolicy } from "./history";
 import { ensureHboMaxSource } from "./navigation";
 import { hboMaxMediaSource, hboMaxVideo } from "./player";
@@ -15,7 +16,7 @@ export function detectHboMaxAdapter(doc: Document): HboMaxVideoAdapter | null {
   const src = hboMaxMediaSource(video);
   const previous = bindings.get(video);
   // During SPA navigation the old media can outlive the URL.
-  if (!src || (previous && previous.id !== id && previous.src === src)) return null;
+  if (!src || (previous && previous.id !== id && previous.src === src && !readHboClock(video))) return null;
   if (previous?.id === id && previous.adapter.container === video.parentElement) {
     previous.src = src;
     return previous.adapter;

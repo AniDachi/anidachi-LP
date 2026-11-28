@@ -170,7 +170,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.offer).not.toHaveBeenCalled();
   });
 
-  if (provider === "netflix" || provider === "disneyplus") {
+  if (provider === "netflix" || provider === "disneyplus" || provider === "hbomax") {
     it.each(["guest advances first", "host player announced first", "host metadata arrives late"])(
       "keeps watching together during native autoplay when %s", async order => {
         const { machine, ctx, play, page } = setup();
@@ -263,7 +263,7 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     });
   }
 
-  if (provider === "disneyplus") it("continues direct playback using the native sequential episode before series metadata arrives", async () => {
+  if (provider === "disneyplus" || provider === "hbomax") it("continues direct playback using the native sequential episode before series metadata arrives", async () => {
     const { machine, ctx, play, page } = setup();
     ctx.episodeSuccessor.mockReturnValue({ fingerprint: personal.videoFingerprint, creditsStart: 700 });
     play(watchUrl, host.videoFingerprint);
