@@ -2867,7 +2867,7 @@ ${popupSettingsStyles}
     box-shadow: none;
     gap: 0;
     padding: 0;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 720;
     letter-spacing: 0;
     transition:
@@ -2875,18 +2875,17 @@ ${popupSettingsStyles}
       opacity 160ms ease;
   }
 
-  .popup-tab::after {
+  .popup-tab-label::after {
     content: "";
     position: absolute;
-    left: 50%;
+    inset-inline: 0;
     bottom: 0;
     display: block;
-    width: 24px;
     height: 2px;
     border-radius: 999px;
     background: linear-gradient(90deg, #ffad63, var(--ad-accent-strong));
     box-shadow: 0 0 8px rgba(249, 115, 22, 0.22);
-    transform: translateX(-50%) scaleX(0);
+    transform: scaleX(0);
     transform-origin: center;
     transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -2926,12 +2925,15 @@ ${popupSettingsStyles}
     box-shadow: none;
   }
 
-  .popup-tab[data-active="true"]::after {
-    transform: translateX(-50%) scaleX(1);
+  .popup-tab[data-active="true"] .popup-tab-label::after {
+    transform: scaleX(1);
   }
 
   .popup-tab .popup-tab-label {
-    display: inline;
+    position: relative;
+    display: inline-flex;
+    align-self: stretch;
+    align-items: center;
     min-width: 0;
     height: auto;
     margin: 0;
@@ -2945,7 +2947,6 @@ ${popupSettingsStyles}
   }
 
   .popup-tab[data-active="true"] .popup-tab-label {
-    display: inline;
     background: transparent;
     color: inherit;
     box-shadow: none;
@@ -2955,6 +2956,7 @@ ${popupSettingsStyles}
   .popup-tab[data-active="true"] .popup-tab-copy {
     position: relative;
     display: inline-flex;
+    align-self: stretch;
     align-items: center;
     min-width: 0;
     height: auto;
