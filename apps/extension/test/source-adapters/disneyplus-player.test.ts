@@ -109,6 +109,39 @@ describe("Disney+ player", () => {
     } finally { stop(); }
   });
 
+  it("keeps the credits clock out of the next episode and binds a confirmed new program on a reused MediaSource", () => {
+    const { adapter } = fixture();
+    const item = { type: "upNext", sequentialEpisode: false, item: { id: nextId } };
+    const ux = { visible: false };
+    const clock = { type: "VOD", playheadPositionMs: 754000, programDurationMs: 762095 };
+    const state = { playbackId: "first-session", streamDetails: { isVOD: true },
+      continuousPlay: { endCard: { ux } }, playbackCriteria: { current: { metadata: { upNextData: [item] } } },
+      timeline: { timeline: clock, markers: { editorial: [{ label: "up_next", startPositionMs: 689480 }] } } };
+    const command = vi.fn();
+    Object.assign(document.querySelector("disney-web-player-ui")!, { latestUiState: state, commandBus: { dispatchCommand: command } });
+    const stop = listenDisneyTransport(document);
+    try {
+      expect(adapter.getCurrentTime()).toBe(754);
+      expect(adapter.getEpisodeSuccessor()).toBeUndefined();
+      item.sequentialEpisode = true;
+      adapter.getPlaybackSnapshot();
+      expect(adapter.getEpisodeSuccessor()).toEqual({ fingerprint: "disneyplus|play/" + nextId, creditsStart: 689.48 });
+      ux.visible = true;
+      expect(adapter.getPlaybackSnapshot().phase).toBe("transition");
+      adapter.pause();
+      expect(command).not.toHaveBeenCalled();
+      setLocation(url(nextId));
+      ux.visible = false;
+      state.playbackId = "second-session";
+      expect(detectDisneyPlusAdapter(document)).toBeNull();
+      item.item.id = "f12d0b60-0000-4000-8000-0e3cc0627184";
+      clock.playheadPositionMs = 500;
+      const next = detectDisneyPlusAdapter(document)!;
+      expect(next.getSourceDescriptor()?.sourceUrl).toBe(url(nextId));
+      expect(next.getState().hostTime).toBe(0.5);
+    } finally { stop(); }
+  });
+
   it("selects the visible Hive movie and uses the native VOD slider for its content clock and full duration", () => {
     const { adapter, video } = fixture();
     expect(adapter.getSourceDescriptor()?.duration).toBe(3016);

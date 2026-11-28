@@ -38,6 +38,13 @@ export class DisneyPlusVideoAdapter extends Html5VideoAdapter {
     this.timeline.discardPrevious(previous.timeline);
   }
 
+  hasNewNativeProgram(): boolean { return this.timeline.hasNewNativeProgram(); }
+
+  getEpisodeSuccessor() {
+    const next = this.timeline.nextEpisode;
+    if (next && this.timeline.isCurrent()) return { fingerprint: disneyPlusFingerprint(next.id), creditsStart: next.creditsStart };
+  }
+
   override getFingerprint(): string { return disneyPlusFingerprint(this.timeline.id ?? "unknown"); }
 
   override getTitle(): string | null {

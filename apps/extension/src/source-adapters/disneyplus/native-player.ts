@@ -3,6 +3,8 @@ import { disneyControlsPortal } from "./dom";
 const requestEvent = "anidachi:disney-transport";
 const replyEvent = "anidachi:disney-transport-result";
 type Action = "read" | "play" | "pause" | number;
+// Keep this document-start bridge independent of the room protocol bundle.
+const episodeId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export type DisneyTransportState = {
   generation: number;
@@ -11,6 +13,7 @@ export type DisneyTransportState = {
   duration: number;
   gestureRequired: boolean;
   accepted: boolean;
+  nextEpisode?: { id: string; creditsStart: number };
 };
 
 type PlayerUI = HTMLElement & {
@@ -20,7 +23,14 @@ type PlayerUI = HTMLElement & {
     streamDetails?: { isVOD?: boolean; noSeek?: boolean };
     clickToPlayOverlay?: { visible?: boolean };
     interstitials?: { isInterstitialPlaying?: boolean };
-    timeline?: { timeline?: { type?: string; playheadPositionMs?: number; programDurationMs?: number } };
+    playbackCriteria?: { current?: { metadata?: { upNextData?: {
+      type?: string; sequentialEpisode?: boolean; item?: { id?: string };
+    }[] } } };
+    continuousPlay?: { endCard?: { ux?: { visible?: boolean } } };
+    timeline?: {
+      timeline?: { type?: string; playheadPositionMs?: number; programDurationMs?: number };
+      markers?: { editorial?: { label?: string; startPositionMs?: number }[] };
+    };
   };
 };
 
@@ -36,7 +46,12 @@ export function disneyTransport(doc: Document, action: Action): DisneyTransportS
       const value = JSON.parse(event.detail);
       if (value && Number.isSafeInteger(value.generation) && ["content", "interstitial", "transition"].includes(value.phase) &&
           Number.isFinite(value.currentTime) && Number.isFinite(value.duration) &&
-          typeof value.accepted === "boolean" && typeof value.gestureRequired === "boolean") result = value;
+          typeof value.accepted === "boolean" && typeof value.gestureRequired === "boolean") {
+        if (value.nextEpisode && !(typeof value.nextEpisode.id === "string" && episodeId.test(value.nextEpisode.id) &&
+            Number.isFinite(value.nextEpisode.creditsStart) && value.nextEpisode.creditsStart >= 0 &&
+            value.nextEpisode.creditsStart <= value.duration)) delete value.nextEpisode;
+        result = value;
+      }
     } catch { /* Ignore unrelated page events. */ }
   };
   portal.addEventListener(replyEvent, receive);
@@ -65,7 +80,12 @@ export function listenDisneyTransport(doc: Document): () => void {
     const position = timeline?.playheadPositionMs;
     const duration = timeline?.programDurationMs;
     const ad = state.interstitials?.isInterstitialPlaying === true;
-    const vod = !!playbackId && !ad && state.streamDetails?.isVOD === true && timeline?.type === "VOD" &&
+    const upNext = state.playbackCriteria?.current?.metadata?.upNextData?.[0];
+    const nextId = upNext?.type === "upNext" && upNext.sequentialEpisode === true ? upNext.item?.id : undefined;
+    // The end card changes the URL before the previous program clock is retired.
+    const handingOff = state.continuousPlay?.endCard?.ux?.visible === true ||
+      (!!nextId && location.pathname.replace(/\/$/, "").endsWith("/play/" + nextId));
+    const vod = !!playbackId && !ad && !handingOff && state.streamDetails?.isVOD === true && timeline?.type === "VOD" &&
       typeof duration === "number" && Number.isFinite(duration) && duration > 0 &&
       typeof position === "number" && Number.isFinite(position) && position >= 0 && position <= duration;
     let accepted = action === "read";
@@ -84,6 +104,11 @@ export function listenDisneyTransport(doc: Document): () => void {
       currentTime: vod ? position / 1000 : 0, duration: vod ? duration / 1000 : 0,
       accepted, gestureRequired: state.clickToPlayOverlay?.visible === true,
     };
+    if (vod && typeof nextId === "string" && episodeId.test(nextId)) {
+      const editorial = state.timeline?.markers?.editorial;
+      const start = Array.isArray(editorial) ? editorial.find(marker => marker.label === "up_next")?.startPositionMs : undefined;
+      result.nextEpisode = { id: nextId, creditsStart: typeof start === "number" && start >= 0 && start <= duration ? start / 1000 : duration / 1000 };
+    }
     ui.dispatchEvent(new CustomEvent(replyEvent, { detail: JSON.stringify(result) }));
   };
   doc.addEventListener(requestEvent, handle);

@@ -1,6 +1,6 @@
 import { composedClosest, disneyControlsPortal, findDisneyPlusElement, isDisneyPlusMainVideo } from "./dom";
 import { disneyPlusWatchId } from "./url";
-import { disneyTransport } from "./native-player";
+import { disneyTransport, type DisneyTransportState } from "./native-player";
 
 const SLIDER = ".progress-bar__seekable-range[role='slider']";
 const AD_UI = '[data-testid="ad-countdown"], .progress-bar__ad, [aria-label="Advertisement" i], [aria-label="Anúncio" i]';
@@ -22,6 +22,7 @@ export class DisneyPlusTimeline {
   private lastWake = -Infinity;
   private nativeGeneration: number | null = null;
   private previousGeneration: number | null = null;
+  nextEpisode?: DisneyTransportState["nextEpisode"];
 
   constructor(private video: HTMLVideoElement, private player: HTMLElement, readonly id: string | null) {}
 
@@ -42,6 +43,11 @@ export class DisneyPlusTimeline {
   discardPrevious(previous: DisneyPlusTimeline): void {
     this.stale = previous.anchor?.sample ?? previous.stale;
     if (this.id !== previous.id) this.previousGeneration = previous.nativeGeneration ?? previous.previousGeneration;
+  }
+
+  hasNewNativeProgram(): boolean {
+    const native = disneyTransport(this.video.ownerDocument, "read");
+    return this.nativeGeneration !== null && native?.phase === "content" && native.generation !== this.nativeGeneration;
   }
 
   private controlsRoot(): HTMLElement | null {
@@ -98,6 +104,7 @@ export class DisneyPlusTimeline {
     if (native) {
       if (native.phase !== "content" || native.generation === this.previousGeneration) return null;
       this.nativeGeneration = native.generation;
+      this.nextEpisode = native.nextEpisode;
       return { currentTime: native.currentTime, duration: native.duration };
     }
     if (!this.controlsRoot() || this.hasVisibleAdMarker()) {
