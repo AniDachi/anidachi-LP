@@ -1,9 +1,10 @@
 import { disneyControlsPortal } from "./dom";
-import { DisneyPlusProviderIdSchema, disneyPlusPlaybackId } from "@anidachi/protocol";
 
 const requestEvent = "anidachi:disney-transport";
 const replyEvent = "anidachi:disney-transport-result";
 type Action = "read" | "play" | "pause" | number;
+// Keep this document-start bridge independent of the room protocol bundle.
+const episodeId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export type DisneyTransportState = {
   generation: number;
@@ -46,7 +47,7 @@ export function disneyTransport(doc: Document, action: Action): DisneyTransportS
       if (value && Number.isSafeInteger(value.generation) && ["content", "interstitial", "transition"].includes(value.phase) &&
           Number.isFinite(value.currentTime) && Number.isFinite(value.duration) &&
           typeof value.accepted === "boolean" && typeof value.gestureRequired === "boolean") {
-        if (value.nextEpisode && !(DisneyPlusProviderIdSchema.safeParse(value.nextEpisode.id).success &&
+        if (value.nextEpisode && !(typeof value.nextEpisode.id === "string" && episodeId.test(value.nextEpisode.id) &&
             Number.isFinite(value.nextEpisode.creditsStart) && value.nextEpisode.creditsStart >= 0 &&
             value.nextEpisode.creditsStart <= value.duration)) delete value.nextEpisode;
         result = value;
@@ -83,7 +84,7 @@ export function listenDisneyTransport(doc: Document): () => void {
     const nextId = upNext?.type === "upNext" && upNext.sequentialEpisode === true ? upNext.item?.id : undefined;
     // The end card changes the URL before the previous program clock is retired.
     const handingOff = state.continuousPlay?.endCard?.ux?.visible === true ||
-      (!!nextId && disneyPlusPlaybackId(location.href) === nextId);
+      (!!nextId && location.pathname.replace(/\/$/, "").endsWith("/play/" + nextId));
     const vod = !!playbackId && !ad && !handingOff && state.streamDetails?.isVOD === true && timeline?.type === "VOD" &&
       typeof duration === "number" && Number.isFinite(duration) && duration > 0 &&
       typeof position === "number" && Number.isFinite(position) && position >= 0 && position <= duration;
@@ -103,7 +104,7 @@ export function listenDisneyTransport(doc: Document): () => void {
       currentTime: vod ? position / 1000 : 0, duration: vod ? duration / 1000 : 0,
       accepted, gestureRequired: state.clickToPlayOverlay?.visible === true,
     };
-    if (vod && nextId && DisneyPlusProviderIdSchema.safeParse(nextId).success) {
+    if (vod && typeof nextId === "string" && episodeId.test(nextId)) {
       const editorial = state.timeline?.markers?.editorial;
       const start = Array.isArray(editorial) ? editorial.find(marker => marker.label === "up_next")?.startPositionMs : undefined;
       result.nextEpisode = { id: nextId, creditsStart: typeof start === "number" && start >= 0 && start <= duration ? start / 1000 : duration / 1000 };
