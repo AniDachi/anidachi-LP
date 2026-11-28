@@ -64,6 +64,41 @@ it("withholds a recycled video while only the URL has changed", () => {
   expect(detectHboMaxAdapter(document)?.getFingerprint()).toBe("hbomax|video/watch/" + nextId);
 });
 
+it("rebinds a reused MediaSource only after the native timeline confirms the new episode", () => {
+  const { controls, adapter } = fixture();
+  go(url(nextId));
+  expect(detectHboMaxAdapter(document)).toBeNull();
+  controls._lastLoadedContentMetadata.videoId = nextId;
+  const next = detectHboMaxAdapter(document);
+  expect(next).not.toBe(adapter);
+  expect(next?.getFingerprint()).toBe("hbomax|video/watch/" + nextId);
+});
+
+it("reads the same-show Up Next queue only for the current episode and edition", () => {
+  const { adapter, controls, video } = fixture(15, 10);
+  video.currentTime = 100;
+  const showId = "fff09eaf-17c3-446b-be32-8a0d47e4ccf1";
+  Object.assign(controls._lastLoadedContentMetadata, { videoType: "EPISODE", showId });
+  Object.assign(controls._playbackEngineAdapter._activeStreamInfo, { videoAboutToEndMs: 3105000 });
+  const next = { videoId: nextId, showId, videoType: "EPISODE" };
+  const queue = { _videoId: id, _contentMetadata: { id: "edit" }, upNextContentMetaData: next };
+  Object.assign(controls, { _overlayCoordinator: { _overlays: [
+    { id: "up_next", _controller: { adaptors: new Map([["upNext", queue]]) } },
+  ] } });
+  expect(adapter.getEpisodeSuccessor()).toEqual({ fingerprint: "hbomax|video/watch/" + nextId, creditsStart: 3090 });
+  next.showId = id;
+  expect(adapter.getEpisodeSuccessor()).toBeUndefined();
+  next.showId = showId;
+  next.videoType = "MOVIE";
+  expect(adapter.getEpisodeSuccessor()).toBeUndefined();
+  next.videoType = "EPISODE";
+  queue._contentMetadata.id = "previous-edition";
+  expect(adapter.getEpisodeSuccessor()).toBeUndefined();
+  queue._contentMetadata.id = "edit";
+  queue._videoId = nextId;
+  expect(adapter.getEpisodeSuccessor()).toBeUndefined();
+});
+
 it("identifies the first episode of the next season from the loaded player when its catalog page is missing", () => {
   const { controls, video, player } = fixture();
   const showId = "fff09eaf-17c3-446b-be32-8a0d47e4ccf1";

@@ -2,15 +2,22 @@ import { hboMaxPlaybackId } from "@anidachi/protocol";
 import { HBO_CLOCK_REPLY, HBO_CLOCK_REQUEST, type HboContentClock } from "./content-clock";
 
 interface Period { type: string; startMs: number; durationMs: number }
+interface NativeEpisode { videoId?: string; videoType?: string; showId?: string }
+interface UpNext {
+  _videoId?: string;
+  _contentMetadata?: { id?: string };
+  upNextContentMetaData?: NativeEpisode;
+}
 interface PlayerControls {
   _rootElement?: Element;
+  _overlayCoordinator?: { _overlays?: { id?: string; _controller?: { adaptors?: Map<string, UpNext> } }[] };
   _lastLoadedContentMetadata?: {
     videoId?: string; id?: string; videoType?: string; showId?: string;
     title?: string; subtitle?: string; seasonNumber?: number; episodeNumber?: number;
   };
   _playbackEngineAdapter?: {
     _activeLoadContext?: { contentId?: string };
-    _activeStreamInfo?: { streamMode?: string; videoPeriods?: Period[] };
+    _activeStreamInfo?: { streamMode?: string; videoPeriods?: Period[]; videoAboutToEndMs?: number };
     _timelineManager?: {
       _videoElement?: HTMLVideoElement;
       _isInitialized?: boolean;
@@ -36,7 +43,7 @@ function controlsFor(video: HTMLVideoElement): PlayerControls | undefined {
   }
 }
 
-function nativeClock(video: HTMLVideoElement, target: number | "episode" | null): HboContentClock | undefined {
+function nativeClock(video: HTMLVideoElement, target: number | "episode" | "successor" | null): HboContentClock | undefined {
   const id = hboMaxPlaybackId(location.href);
   const controls = controlsFor(video);
   const engine = controls?._playbackEngineAdapter;
@@ -58,6 +65,18 @@ function nativeClock(video: HTMLVideoElement, target: number | "episode" | null)
   const duration = main.durationMs / 1000;
   const inMain = elapsed >= 0 && elapsed <= main.durationMs + 50;
   const clock: HboContentClock = { duration, inMain, position: Math.min(duration, Math.max(0, elapsed / 1000)) };
+  if (target === "successor" && inMain && metadata.videoType === "EPISODE" && metadata.showId &&
+      metadata.id && metadata.id === engine?._activeLoadContext?.contentId) {
+    const overlay = controls?._overlayCoordinator?._overlays?.find(item => item.id === "up_next");
+    const queue = overlay?._controller?.adaptors?.get("upNext");
+    const next = queue?.upNextContentMetaData;
+    if (queue?._videoId === id && queue._contentMetadata?.id === metadata.id && next?.videoType === "EPISODE" &&
+        next.showId === metadata.showId && next.videoId && next.videoId !== id) {
+      const marker = stream.videoAboutToEndMs;
+      const credits = typeof marker === "number" ? (marker - main.startMs) / 1000 : NaN;
+      clock.successor = { videoId: next.videoId, creditsStart: credits > 0 && credits <= duration ? credits : duration };
+    }
+  }
   // HBO can advance past the last episode in its cached catalog without fetching another player page.
   if (target === "episode" && inMain && metadata.id && metadata.id === engine?._activeLoadContext?.contentId &&
       metadata.videoType === "EPISODE" && metadata.showId && metadata.title && metadata.subtitle &&
@@ -84,7 +103,7 @@ export function startHboClock(doc: Document) {
     const video = event.target;
     const target = (event as CustomEvent).detail;
     if (!(video instanceof HTMLVideoElement) || !video.matches('[data-testid="playerContainer"] > video[data-testid="VideoElement"]') ||
-        !(target === null || target === "episode" || Number.isFinite(target))) return;
+        !(target === null || target === "episode" || target === "successor" || Number.isFinite(target))) return;
     try {
       const clock = nativeClock(video, target);
       if (clock) video.dispatchEvent(new CustomEvent(HBO_CLOCK_REPLY, { detail: clock }));

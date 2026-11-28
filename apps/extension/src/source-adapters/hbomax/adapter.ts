@@ -19,6 +19,12 @@ export class HboMaxVideoAdapter extends Html5VideoAdapter {
 
   override getFingerprint() { return hboMaxFingerprint(this.playbackId ?? "unknown"); }
 
+  getEpisodeSuccessor() {
+    if (this.playbackId !== hboMaxPlaybackId(location.href)) return;
+    const next = readHboClock(this.video, "successor")?.successor;
+    if (next) return { fingerprint: hboMaxFingerprint(next.videoId), creditsStart: next.creditsStart };
+  }
+
   private phase(clock = readHboClock(this.video)): AdapterPlaybackSnapshot["phase"] {
     const video = this.video;
     if (!this.playbackId || this.playbackId !== hboMaxPlaybackId(location.href) ||
