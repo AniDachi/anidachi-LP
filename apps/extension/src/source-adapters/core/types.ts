@@ -5,6 +5,8 @@ import type {
 } from "./overlay-geometry";
 import type { SourceAdapterHistoryPolicy } from "./history-policy";
 
+export type EpisodeSuccessor = { fingerprint: string; creditsStart: number };
+
 export type SourceProvider = WatchSourceDescriptor["provider"];
 
 export type AdapterPlaybackPhase =
@@ -73,7 +75,7 @@ export interface VideoAdapter {
   getFingerprint(): string;
   getCurrentTime(): number;
   getState(): PlaybackState;
-  getNextEpisodeFingerprint?(): string | undefined;
+  getEpisodeSuccessor?(): EpisodeSuccessor | undefined;
   getSourceDescriptor(includeEpisodeSeries?: boolean): WatchSourceDescriptor | undefined;
   getPlaybackSnapshot(): AdapterPlaybackSnapshot;
   getPersonalResumeReadiness?(target: PersonalResumeTarget): Promise<PersonalResumeReadiness>;

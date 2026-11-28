@@ -3685,7 +3685,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
       playbackSyncController.bindAdapter(activePlayer.current);
       void playbackSyncController.handleHostState(state, source, timing);
     },
-    nextEpisodeFingerprint: () => activePlayer.current?.getNextEpisodeFingerprint?.(),
+    episodeSuccessor: () => activePlayer.current?.getEpisodeSuccessor?.(),
     playerSource: () => activePlayer.current?.getSourceDescriptor(true),
     continueEpisode: (source, record, signal) => continueGuestEpisode(document, source, record, signal),
     suspend: () => playbackSyncController.suspend(),
