@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { WatchSourceDescriptorSchema, canonicalizeRoomSourceUrl, primeVideoSourceUrl } from "@anidachi/protocol";
 import { catalogRoomProvider, type CatalogRoomProvider } from "../src/catalog-room-routes";
 import { GuestViewing } from "../src/guest-viewing";
+import { isHboMaxPlayerStarting } from "../src/source-adapters/hbomax/navigation";
 import type { RoomSessionRecord } from "../src/room-session-storage";
 
 const first = "120ae1e6-2240-4924-a4ce-f8de6e28b0b1";
@@ -112,6 +113,49 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(timingSamples).toHaveBeenLastCalledWith({ align: false, receivedAt: expect.any(Number) });
     machine.receive(state, host, true);
     expect(timingSamples).toHaveBeenLastCalledWith({ align: true, receivedAt: expect.any(Number) });
+  });
+
+  if (provider === "hbomax") it.each(["sleeve", "host sync", "lands in catalog"])("handles %s through HBO's temporary title history entry", async action => {
+    const { machine, ctx, play, page } = setup();
+    play(personalUrl, personal.videoFingerprint);
+    machine.receive(state, host);
+    if (action === "host sync") { machine.receive(state, host, true); await Promise.resolve(); }
+    else await machine.join();
+    machine.bind(null);
+    const doc = document.implementation.createHTMLDocument();
+    vi.spyOn(doc, "location", "get").mockImplementation(() => new URL(page.href) as unknown as Location);
+    const detail = new URL("/show/" + first, watchUrl).href;
+    const restored = new GuestViewing({ ...ctx, playerStarting: fingerprint =>
+      isHboMaxPlayerStarting(doc, fingerprint, watchUrl) });
+    restored.bind(ctx.session());
+    page.href = watchUrl;
+    page.fingerprint = null;
+    ctx.offer.mockClear();
+    ctx.persist.mockClear();
+    restored.receive(state, host);
+    page.href = detail;
+    restored.refresh();
+    const later = { ...state, hostTime: 92 };
+    restored.receive(later, host);
+    expect(ctx.persist).not.toHaveBeenCalled();
+    expect(ctx.offer).not.toHaveBeenCalled();
+    if (action === "lands in catalog") {
+      doc.body.innerHTML = '<nav><div data-testid="navigationMenu"><a data-testid="my-stuff_button"></a><button data-testid="profile_button"></button></div></nav>';
+      restored.refresh();
+      expect(restored.together()).toBe(false);
+      expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
+      expect(ctx.apply).not.toHaveBeenCalled();
+      return;
+    }
+    play(watchUrl, host.videoFingerprint);
+    restored.refresh();
+    expect(restored.together()).toBe(true);
+    expect(ctx.apply).toHaveBeenLastCalledWith(later, host, { align: true, receivedAt: expect.any(Number) });
+    page.href = detail;
+    page.fingerprint = null;
+    restored.refresh();
+    expect(restored.together()).toBe(false);
+    expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
   });
 
   if (provider === "hbomax") it("keeps the original receipt time when a room snapshot replays the preceding heartbeat", () => {

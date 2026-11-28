@@ -14,6 +14,7 @@ type ViewingContext = {
   provider(): CatalogRoomProvider | null;
   href(): string;
   playerFingerprint(): string | null;
+  playerStarting?(fingerprint: string): boolean;
   episodeSuccessor?(): EpisodeSuccessor | undefined;
   playerSource?(): WatchSourceDescriptor | undefined;
   continueEpisode?(source: WatchSourceDescriptor, room: RoomSessionRecord, signal: AbortSignal): Promise<boolean>;
@@ -170,8 +171,8 @@ export class GuestViewing {
     if (!target) return;
     const href = this.context.href();
     const provider = this.context.provider();
-    // HBO and Netflix exit to title details. Disney can pass through details while entering playback.
-    const browsingCatalog = !localFingerprint && (provider === "hbomax" || provider === "netflix" ||
+    const browsingCatalog = !localFingerprint && (provider === "netflix" ||
+      (provider === "hbomax" && (this.playedHere || !this.following || !this.context.playerStarting?.(this.following))) ||
       (provider === "disneyplus" && !disneyPlusEntityId(href))) && catalogRoomProvider(href) === provider;
     if (this.navigationPath !== null) {
       const path = new URL(href).pathname;

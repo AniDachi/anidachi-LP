@@ -1,5 +1,5 @@
 import { continueGuestEpisode, navigateToGuestPlayback } from "./guest-playback-navigation";
-import { bindHboMaxGuestExit } from "./source-adapters/hbomax/navigation";
+import { bindHboMaxGuestExit, isHboMaxPlayerStarting } from "./source-adapters/hbomax/navigation";
 import { observeHboMaxRoomSource, clearHboMaxRoomSource } from "./source-adapters/hbomax/metadata";
 import { readCurrentResourceDisplay, type CurrentResourceDisplay } from "./current-resource-display";
 import { readHistoryRecordingEnabled } from "./history-recording-choice";
@@ -3687,6 +3687,7 @@ export function OverlayApp({ adapter, adapterActive = true, initialPrimeLaunch, 
     },
     href: () => location.href,
     playerFingerprint: () => adapterActiveRef.current && !browseMode.current ? activePlayer.current?.getFingerprint() ?? null : null,
+    playerStarting: fingerprint => isHboMaxPlayerStarting(document, fingerprint),
     apply: (state, source, timing) => {
       if (source?.provider === "disneyplus") observeDisneyPlusRoomSource(document, source);
       if (source?.provider === "hbomax") observeHboMaxRoomSource(document, source);
