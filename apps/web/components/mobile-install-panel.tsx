@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, Chrome, Share2, X } from "lucide-react";
 import { MobileInstallEmail } from "./mobile-install-email";
-import { InstallPlatformMarks } from "@/components/install-platform-marks";
 import { CHROME_WEB_STORE_URL, INSTALL_HUB_PATH } from "@/lib/install-cta";
 import { inferPageTemplateFromPath, trackConversion, trackStoreClick } from "@/lib/conversion-events";
 import { desktopInstallUrl } from "@/lib/mobile-install";
@@ -94,7 +93,6 @@ export function MobileInstallProvider({ children, mobilePreview = false }: { chi
             <input id={`${titleId}-link`} readOnly value={shareUrl} onFocus={(event) => event.currentTarget.select()} />
           </div> : null}
         </div>
-        <div className={styles.marks}><InstallPlatformMarks compact /></div>
       </div> : null}
     </dialog>
   </MobileInstallContext.Provider>;
