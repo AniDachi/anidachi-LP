@@ -236,15 +236,41 @@ describe.each(platforms)("%s guest playback choice", (_, provider, home, watchUr
     expect(ctx.offer).not.toHaveBeenCalled();
   });
 
-  if (provider === "disneyplus") it.each(["same document", "new document"])(
-    "restores the return button immediately when the guest opens Movies in the %s",
+  if (provider === "netflix") it.each(["/title/80057918", "/browse/genre/83", "/search?q=Lucifer"])(
+    "offers the current Netflix episode immediately after Back to Browse restores the session at %s",
+    async path => {
+      const { ctx, machine, mount, page, play } = setup();
+      play(watchUrl, host.videoFingerprint);
+      machine.receive(state, episode(host));
+      machine.bind(null);
+      page.href = new URL(path, home).href;
+      page.fingerprint = null;
+      const restored = mount();
+      restored.receive(state, episode(host));
+      expect(ctx.offer).toHaveBeenLastCalledWith(host.sourceUrl);
+      expect(restored.returning).toBe(true);
+      expect(ctx.persist).toHaveBeenLastCalledWith(expect.anything(), null);
+      restored.receive(nextState, episode(personal));
+      expect(ctx.continueEpisode).not.toHaveBeenCalled();
+      expect(ctx.navigate).not.toHaveBeenCalled();
+      await restored.join();
+      expect(ctx.navigate).toHaveBeenCalledExactlyOnceWith(personal.sourceUrl, expect.anything(), expect.any(AbortSignal));
+      expect(ctx.offer).toHaveBeenLastCalledWith(null);
+      play(personalUrl, personal.videoFingerprint);
+      restored.refresh();
+      expect(restored.together()).toBe(true);
+    },
+  );
+
+  if (provider === "disneyplus" || provider === "netflix") it.each(["same document", "new document"])(
+    "restores the return button immediately when the guest switches catalog pages in the %s",
     async transition => {
       const { ctx, machine, mount, page } = setup();
       machine.receive(state, host);
       await machine.join();
       machine.refresh();
       expect(ctx.offer).toHaveBeenLastCalledWith(null);
-      page.href = new URL("../browse/movies", watchUrl).href;
+      page.href = provider === "netflix" ? new URL("/title/80057918", home).href : new URL("../browse/movies", watchUrl).href;
       if (transition === "new document") {
         machine.bind(null);
         mount().receive(state, host);
