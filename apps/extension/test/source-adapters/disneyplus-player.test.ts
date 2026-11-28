@@ -115,7 +115,8 @@ describe("Disney+ player", () => {
     const ux = { visible: false };
     const clock = { type: "VOD", playheadPositionMs: 754000, programDurationMs: 762095 };
     const state = { playbackId: "first-session", streamDetails: { isVOD: true },
-      continuousPlay: { endCard: { ux } }, playbackCriteria: { current: { metadata: { upNextData: [item] } } },
+      continuousPlay: { endCard: { ux } }, playbackSession: { currentProgram: { availId: "episode-a" } },
+      playbackCriteria: { current: { metadata: { availId: "episode-a", upNextData: [item] } } },
       timeline: { timeline: clock, markers: { editorial: [{ label: "up_next", startPositionMs: 689480 }] } } };
     const command = vi.fn();
     Object.assign(document.querySelector("disney-web-player-ui")!, { latestUiState: state, commandBus: { dispatchCommand: command } });
@@ -135,6 +136,10 @@ describe("Disney+ player", () => {
       state.playbackId = "second-session";
       expect(detectDisneyPlusAdapter(document)).toBeNull();
       item.item.id = "f12d0b60-0000-4000-8000-0e3cc0627184";
+      state.playbackCriteria.current.metadata.availId = "episode-b";
+      // Manual Next closes the card and publishes fresh metadata before the previous clock is retired.
+      expect(detectDisneyPlusAdapter(document)).toBeNull();
+      state.playbackSession.currentProgram.availId = "episode-b";
       clock.playheadPositionMs = 500;
       const next = detectDisneyPlusAdapter(document)!;
       expect(next.getSourceDescriptor()?.sourceUrl).toBe(url(nextId));

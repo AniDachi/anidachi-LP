@@ -23,7 +23,8 @@ type PlayerUI = HTMLElement & {
     streamDetails?: { isVOD?: boolean; noSeek?: boolean };
     clickToPlayOverlay?: { visible?: boolean };
     interstitials?: { isInterstitialPlaying?: boolean };
-    playbackCriteria?: { current?: { metadata?: { upNextData?: {
+    playbackSession?: { currentProgram?: { availId?: string } };
+    playbackCriteria?: { current?: { metadata?: { availId?: string; upNextData?: {
       type?: string; sequentialEpisode?: boolean; item?: { id?: string };
     }[] } } };
     continuousPlay?: { endCard?: { ux?: { visible?: boolean } } };
@@ -80,10 +81,13 @@ export function listenDisneyTransport(doc: Document): () => void {
     const position = timeline?.playheadPositionMs;
     const duration = timeline?.programDurationMs;
     const ad = state.interstitials?.isInterstitialPlaying === true;
-    const upNext = state.playbackCriteria?.current?.metadata?.upNextData?.[0];
+    const metadata = state.playbackCriteria?.current?.metadata;
+    const programId = state.playbackSession?.currentProgram?.availId;
+    const upNext = metadata?.upNextData?.[0];
     const nextId = upNext?.type === "upNext" && upNext.sequentialEpisode === true ? upNext.item?.id : undefined;
-    // The end card changes the URL before the previous program clock is retired.
+    // Both Next and the end card can change the requested program before its clock switches.
     const handingOff = state.continuousPlay?.endCard?.ux?.visible === true ||
+      (!!programId && !!metadata?.availId && programId !== metadata.availId) ||
       (!!nextId && location.pathname.replace(/\/$/, "").endsWith("/play/" + nextId));
     const vod = !!playbackId && !ad && !handingOff && state.streamDetails?.isVOD === true && timeline?.type === "VOD" &&
       typeof duration === "number" && Number.isFinite(duration) && duration > 0 &&
