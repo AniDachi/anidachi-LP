@@ -2830,13 +2830,12 @@ ${popupSettingsStyles}
   }
 
   .popup-tabs {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-items: stretch;
     gap: 0;
     min-height: 42px;
-    margin: 0 0 8px;
+    margin: 0 2px 8px;
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -2856,7 +2855,7 @@ ${popupSettingsStyles}
     color: rgba(255, 255, 255, 0.58);
     box-shadow: none;
     gap: 0;
-    padding: 0 4px;
+    padding: 0;
     font-size: 14px;
     font-weight: 720;
     letter-spacing: 0;
@@ -2959,15 +2958,11 @@ ${popupSettingsStyles}
 
   .popup-tab .popup-tab-count,
   .popup-tab[data-active="true"] .popup-tab-count {
-    position: absolute;
-    left: calc(100% + 6px);
-    top: 50%;
-    transform: translateY(-50%);
     display: inline-grid;
     place-items: center;
     min-width: 18px;
     height: 18px;
-    margin: 0;
+    margin: 0 0 0 6px;
     padding: 0 4px;
     border-radius: 999px;
     background: var(--ad-accent-strong);
